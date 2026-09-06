@@ -1,6 +1,6 @@
 import sys
 import math
-from PySide6.QtCore import Qt, QPointF, QSize
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -52,15 +52,13 @@ class CardCanvasWidget(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 15, 20, 20)
 
-        # Title Label (Front Side / Back Side)
         lbl = QLabel(title_text)
         lbl.setFont(QFont("Segoe UI", 11, QFont.Bold))
         lbl.setStyleSheet("color: #374151; background: transparent;")
         layout.addWidget(lbl)
 
-        # Inner Card White Area (CR80 Aspect Ratio)
         card_white_box = QFrame()
-        card_white_box.setFixedSize(280, 175)  # CR80 Proportional Size
+        card_white_box.setFixedSize(280, 175)
         card_white_box.setStyleSheet("""
             background-color: #FFFFFF;
             border: 2px solid #525252;
@@ -72,7 +70,7 @@ class CardCanvasWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# Card Designer View (Image ပါအတိုင်း Design လုပ်သည့် Canvas)
+# Card Designer View
 # -------------------------------------------------------------
 class CardDesignerWidget(QWidget):
     def __init__(self, card_name="Credential Design 1", on_close_callback=None):
@@ -98,7 +96,7 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addWidget(purple_ribbon)
 
-        # 2. Designer Toolbar (Icons Bar)
+        # 2. Designer Toolbar
         toolbar = QFrame()
         toolbar.setFixedHeight(45)
         toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
@@ -142,12 +140,11 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addWidget(toolbar)
 
-        # 3. Canvas & Right Properties Area
+        # 3. Canvas Area
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
 
-        # Middle Canvas Area (Gray Background)
         canvas_scroll = QScrollArea()
         canvas_scroll.setWidgetResizable(True)
         canvas_scroll.setStyleSheet("background-color: #D4D4D4; border: none;")
@@ -156,14 +153,12 @@ class CardDesignerWidget(QWidget):
         canvas_layout = QVBoxLayout(canvas_container)
         canvas_layout.setContentsMargins(20, 15, 20, 15)
 
-        # Active Layer Status
         active_layer_lbl = QLabel("Active Design Layer: Color")
         active_layer_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
         active_layer_lbl.setStyleSheet("color: #374151;")
         active_layer_lbl.setAlignment(Qt.AlignCenter)
         canvas_layout.addWidget(active_layer_lbl)
 
-        # Cards Side-by-Side (Front Side & Back Side)
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(25)
 
@@ -202,7 +197,6 @@ class CardDesignerWidget(QWidget):
             }
         """)
 
-        # Tab 1: Properties
         properties_page = QWidget()
         prop_page_layout = QVBoxLayout(properties_page)
         prop_page_layout.setContentsMargins(15, 15, 15, 15)
@@ -222,7 +216,6 @@ class CardDesignerWidget(QWidget):
 
         prop_page_layout.addStretch()
 
-        # Tab 2: Layers
         layers_page = QWidget()
         layers_layout = QVBoxLayout(layers_page)
         layers_layout.addWidget(QLabel("Layer 1: Color\nLayer 2: Overlay", alignment=Qt.AlignTop))
@@ -266,7 +259,6 @@ class CardDesignerWidget(QWidget):
 
         close_btn = QPushButton("Close")
         close_btn.setStyleSheet(btn_style)
-        close_btn.setEnabled(False)
         if self.on_close_callback:
             close_btn.clicked.connect(self.on_close_callback)
 
@@ -430,7 +422,7 @@ class MainDashboardWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Navigation Bar
+        # 1. Top Navigation Bar
         nav_bar = QFrame()
         nav_bar.setFixedHeight(50)
         nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
@@ -454,7 +446,17 @@ class MainDashboardWidget(QWidget):
         nav_layout.addLayout(brand_box)
         nav_layout.addSpacing(25)
 
-        nav_btn_style = "QPushButton { background: transparent; border: none; color: #374151; font-size: 13px; font-weight: 600; padding: 14px 16px; } QPushButton:hover { color: #6B21A8; }"
+        nav_btn_style = """
+            QPushButton { 
+                background: transparent; 
+                border: none; 
+                color: #374151; 
+                font-size: 13px; 
+                font-weight: 600; 
+                padding: 14px 16px;
+            } 
+            QPushButton:hover { color: #6B21A8; }
+        """
 
         self.home_btn = QPushButton("Home")
         self.home_btn.setStyleSheet(nav_btn_style)
@@ -477,7 +479,7 @@ class MainDashboardWidget(QWidget):
         # 2. Main Stack Container
         self.main_stack = QStackedWidget()
 
-        # Dashboard View Area (With Tabs)
+        # Dashboard View Area
         self.dashboard_view = QWidget()
         dash_layout = QVBoxLayout(self.dashboard_view)
         dash_layout.setContentsMargins(0, 0, 0, 0)
@@ -492,21 +494,39 @@ class MainDashboardWidget(QWidget):
 
         self.purple_tab_stack = QStackedWidget()
 
+        # Home Sub-tabs (Credentials, System Logs)
         home_tabs_bar = QFrame()
         home_tabs_layout = QHBoxLayout(home_tabs_bar)
         home_tabs_layout.setContentsMargins(0, 0, 0, 0)
         self.cred_tab_btn = QPushButton("Credentials")
         self.logs_tab_btn = QPushButton("System Logs")
 
+        # Design Sub-tabs (Cards, Workflows)
         design_tabs_bar = QFrame()
         design_tabs_layout = QHBoxLayout(design_tabs_bar)
         design_tabs_layout.setContentsMargins(0, 0, 0, 0)
         self.cards_tab_btn = QPushButton("Cards")
         self.workflows_tab_btn = QPushButton("Workflows")
 
-        purple_tab_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 6px 16px; font-weight: bold; font-size: 12px; }"
+        purple_tab_style = """
+            QPushButton { 
+                background-color: #7C3AED; 
+                color: #EDE9FE; 
+                border: none; 
+                border-top-left-radius: 4px; 
+                border-top-right-radius: 4px; 
+                padding: 6px 16px; 
+                font-weight: bold; 
+                font-size: 12px; 
+            }
+            QPushButton:hover {
+                background-color: #8B5CF6;
+                color: #FFFFFF;
+            }
+        """
         for btn in [self.cred_tab_btn, self.logs_tab_btn, self.cards_tab_btn, self.workflows_tab_btn]:
             btn.setStyleSheet(purple_tab_style)
+            btn.setCursor(Qt.PointingHandCursor)
 
         home_tabs_layout.addWidget(self.cred_tab_btn)
         home_tabs_layout.addWidget(self.logs_tab_btn)
@@ -516,15 +536,46 @@ class MainDashboardWidget(QWidget):
         design_tabs_layout.addWidget(self.workflows_tab_btn)
         design_tabs_layout.addStretch()
 
-        self.purple_tab_stack.addWidget(home_tabs_bar)
-        self.purple_tab_stack.addWidget(design_tabs_bar)
+        self.purple_tab_stack.addWidget(home_tabs_bar)    # Index 0
+        self.purple_tab_stack.addWidget(design_tabs_bar)  # Index 1
 
         purple_layout.addWidget(self.purple_tab_stack)
         dash_layout.addWidget(purple_bar)
 
-        # Content Pages
+        # 3. Content Pages Stack
         self.content_stack = QStackedWidget()
 
+        # --- A. HOME PAGES ---
+        # 1. Credentials Page (Clean Area Without Card Templates Header & Create Button)
+        cred_page = QWidget()
+        cred_layout = QVBoxLayout(cred_page)
+        cred_layout.setContentsMargins(20, 20, 20, 20)
+        
+        toolbar_layout = QHBoxLayout()
+        grid_btn = QPushButton("田")
+        grid_btn.setFixedSize(32, 32)
+        grid_btn.setStyleSheet("background-color: #E2E8F0; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
+        list_btn = QPushButton("≡")
+        list_btn.setFixedSize(32, 32)
+        list_btn.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
+        toolbar_layout.addWidget(grid_btn)
+        toolbar_layout.addWidget(list_btn)
+        toolbar_layout.addStretch()
+        cred_layout.addLayout(toolbar_layout)
+
+        empty_cred_lbl = QLabel("No credentials available.")
+        empty_cred_lbl.setAlignment(Qt.AlignCenter)
+        empty_cred_lbl.setStyleSheet("color: #9CA3AF; font-size: 14px; margin-top: 80px;")
+        cred_layout.addWidget(empty_cred_lbl)
+        cred_layout.addStretch()
+
+        # 2. System Logs Page
+        logs_page = QWidget()
+        logs_layout = QVBoxLayout(logs_page)
+        logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
+
+        # --- B. DESIGN PAGES ---
+        # 3. Cards Tab Page (Here lies Card Templates and + Create Card Button)
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
@@ -532,45 +583,98 @@ class MainDashboardWidget(QWidget):
         cards_action_bar = QHBoxLayout()
         cards_title = QLabel("Card Templates")
         cards_title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        cards_title.setStyleSheet("color: #1F2937;")
         cards_action_bar.addWidget(cards_title)
         cards_action_bar.addStretch()
 
         create_card_btn = QPushButton("+ Create Card")
         create_card_btn.setFixedSize(130, 36)
         create_card_btn.setCursor(Qt.PointingHandCursor)
-        create_card_btn.setStyleSheet("QPushButton { background-color: #2563EB; color: white; font-weight: bold; border-none; border-radius: 6px; }")
+        create_card_btn.setStyleSheet("""
+            QPushButton { 
+                background-color: #2563EB; 
+                color: white; 
+                font-weight: bold; 
+                font-size: 13px;
+                border: none; 
+                border-radius: 6px; 
+            }
+            QPushButton:hover { background-color: #1D4ED8; }
+        """)
         create_card_btn.clicked.connect(self.open_create_card_flow)
         cards_action_bar.addWidget(create_card_btn)
 
         cards_layout.addLayout(cards_action_bar)
         cards_layout.addStretch()
 
-        self.content_stack.addWidget(cards_page)
+        # 4. Workflows Page
+        workflows_page = QWidget()
+        workflows_layout = QVBoxLayout(workflows_page)
+        workflows_layout.addWidget(QLabel("Workflows Manager Area", alignment=Qt.AlignCenter))
+
+        # Add to Content Stack
+        self.content_stack.addWidget(cred_page)      # Index 0
+        self.content_stack.addWidget(logs_page)      # Index 1
+        self.content_stack.addWidget(cards_page)     # Index 2
+        self.content_stack.addWidget(workflows_page) # Index 3
+
         dash_layout.addWidget(self.content_stack)
 
-        self.main_stack.addWidget(self.dashboard_view) # Index 0: Standard Dashboard
+        self.main_stack.addWidget(self.dashboard_view) # Index 0
 
         main_layout.addWidget(self.main_stack)
 
+        # Tab Switching Signals
+        self.cred_tab_btn.clicked.connect(lambda: self.switch_home_tab(0, self.cred_tab_btn))
+        self.logs_tab_btn.clicked.connect(lambda: self.switch_home_tab(1, self.logs_tab_btn))
+
+        self.cards_tab_btn.clicked.connect(lambda: self.switch_design_tab(2, self.cards_tab_btn))
+        self.workflows_tab_btn.clicked.connect(lambda: self.switch_design_tab(3, self.workflows_tab_btn))
+
         self.show_home_view()
+
+    def update_purple_tab_active(self, active_btn, btn_group):
+        active_style = "QPushButton { background-color: #FFFFFF; color: #6B21A8; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 6px 16px; font-weight: bold; font-size: 12px; }"
+        normal_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 6px 16px; font-weight: bold; font-size: 12px; } QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }"
+        for btn in btn_group:
+            btn.setStyleSheet(active_style if btn == active_btn else normal_style)
+
+    def switch_home_tab(self, index, btn):
+        self.content_stack.setCurrentIndex(index)
+        self.update_purple_tab_active(btn, [self.cred_tab_btn, self.logs_tab_btn])
+
+    def switch_design_tab(self, index, btn):
+        self.content_stack.setCurrentIndex(index)
+        self.update_purple_tab_active(btn, [self.cards_tab_btn, self.workflows_tab_btn])
+
+    def set_nav_active(self, active_btn):
+        active_style = "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; font-weight: bold; padding: 14px 16px; background: transparent; }"
+        normal_style = "QPushButton { color: #374151; border-bottom: 2px solid transparent; font-weight: 600; padding: 14px 16px; background: transparent; } QPushButton:hover { color: #6B21A8; }"
+
+        self.home_btn.setStyleSheet(active_style if active_btn == "home" else normal_style)
+        self.design_btn.setStyleSheet(active_style if active_btn == "design" else normal_style)
+        self.printer_btn.setStyleSheet(normal_style)
+
+    def show_home_view(self):
+        self.set_nav_active("home")
+        self.purple_tab_stack.setCurrentIndex(0)
+        self.switch_home_tab(0, self.cred_tab_btn)
+
+    def show_design_view(self):
+        self.set_nav_active("design")
+        self.purple_tab_stack.setCurrentIndex(1)
+        self.switch_design_tab(2, self.cards_tab_btn)
 
     def open_create_card_flow(self):
         dialog = CreateCardDialog(self)
         if dialog.exec() == QDialog.Accepted:
             card_name = dialog.get_card_name()
-            # Open Designer Canvas View
             designer_view = CardDesignerWidget(card_name=card_name, on_close_callback=self.close_designer_view)
             self.main_stack.addWidget(designer_view)
             self.main_stack.setCurrentWidget(designer_view)
 
     def close_designer_view(self):
         self.main_stack.setCurrentIndex(0)
-
-    def show_home_view(self):
-        self.purple_tab_stack.setCurrentIndex(0)
-
-    def show_design_view(self):
-        self.purple_tab_stack.setCurrentIndex(1)
 
 
 # -------------------------------------------------------------
