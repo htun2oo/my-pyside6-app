@@ -587,10 +587,34 @@ class MainDashboardWidget(QWidget):
         logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
 
         # --- B. DESIGN PAGES ---
-        # 3. Cards Tab Page (Clean Page - Removed Card Templates Header & Create Card Button)
+        # 3. Cards Tab Page (with + Create Button placed neatly at top right)
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
+
+        cards_top_action_bar = QHBoxLayout()
+        cards_top_action_bar.addStretch()
+
+        create_card_btn = QPushButton("+ Create")
+        create_card_btn.setFixedSize(110, 36)
+        create_card_btn.setCursor(Qt.PointingHandCursor)
+        create_card_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2563EB;
+                color: #FFFFFF;
+                font-size: 13px;
+                font-weight: bold;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+        """)
+        create_card_btn.clicked.connect(self.open_create_card_flow)
+
+        cards_top_action_bar.addWidget(create_card_btn)
+        cards_layout.addLayout(cards_top_action_bar)
         cards_layout.addStretch()
 
         # 4. Workflows Page
