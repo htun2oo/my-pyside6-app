@@ -4,8 +4,7 @@ from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QTabWidget,
-    QStackedWidget
+    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget
 )
 
 # -------------------------------------------------------------
@@ -128,10 +127,9 @@ class LoginWidget(QWidget):
 # Main Application Dashboard
 # -------------------------------------------------------------
 class MainDashboardWidget(QWidget):
-    def __init__(self, username, on_logout):
+    def __init__(self, username):
         super().__init__()
         self.username = username
-        self.on_logout = on_logout
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -197,7 +195,7 @@ class MainDashboardWidget(QWidget):
 
         main_layout.addWidget(nav_bar)
 
-        # 2. Purple Ribbon Bar (ခရမ်းရောင်တန်းပေါ်တွင် Tab များကို ထည့်သွင်းထားသည်)
+        # 2. Purple Ribbon Bar (ခရမ်းရောင်တန်း)
         purple_bar = QFrame()
         purple_bar.setFixedHeight(42)
         purple_bar.setStyleSheet("background-color: #6B21A8;")
@@ -205,7 +203,7 @@ class MainDashboardWidget(QWidget):
         purple_layout.setContentsMargins(20, 0, 20, 0)
         purple_layout.setSpacing(10)
 
-        # Purple Tabs (Home Tabs & Design Tabs များကို ခရမ်းရောင်တန်းပေါ်သို့ ရွှေ့ထားပါသည်)
+        # Purple Tabs (Home & Design Sub-tabs)
         self.purple_tab_stack = QStackedWidget()
 
         # Home Sub-tabs (Credentials, System Logs)
@@ -265,25 +263,11 @@ class MainDashboardWidget(QWidget):
         purple_layout.addWidget(self.purple_tab_stack)
         purple_layout.addStretch()
 
-        # User Info Section (Right Side)
-        user_lbl = QLabel(f"{self.username}")
-        user_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: bold;")
-
-        notif_btn = QPushButton("🔔 2")
-        notif_btn.setStyleSheet("background-color: #EF4444; color: white; border-radius: 10px; font-size: 10px; font-weight: bold; padding: 2px 6px; border: none;")
-
-        logout_btn = QPushButton("🚪 Logout")
-        logout_btn.setCursor(Qt.PointingHandCursor)
-        logout_btn.setStyleSheet("background: transparent; color: #FCA5A5; font-size: 11px; border: none; font-weight: bold;")
-        logout_btn.clicked.connect(self.on_logout)
-
-        purple_layout.addWidget(user_lbl)
-        purple_layout.addWidget(notif_btn)
-        purple_layout.addWidget(logout_btn)
+        # (ညာဘက်ခြမ်းမှ admin, notification နှင့် logout ခလုပ်များကို ဖျက်ထားပါသည်)
 
         main_layout.addWidget(purple_bar)
 
-        # 3. Content Body (Main Views Area)
+        # 3. Content Body
         self.content_stack = QStackedWidget()
 
         # --- A. HOME PAGES ---
@@ -444,7 +428,7 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.login_widget)
 
     def show_dashboard(self, username):
-        self.dashboard_widget = MainDashboardWidget(username, on_logout=self.show_login)
+        self.dashboard_widget = MainDashboardWidget(username)
         self.stack.addWidget(self.dashboard_widget)
         self.stack.setCurrentWidget(self.dashboard_widget)
 
