@@ -1,0 +1,44 @@
+name: Build PySide6 Windows Application
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build Executable with PyInstaller
+      run: |
+        $target = Get-ChildItem -Recurse -Filter app.py | Select-Object -First 1
+        if ($target) {
+            Write-Host "Found target script at: $($target.FullName)"
+            pyinstaller --noconfirm --onedir --windowed --name="InstantID" --collect-all PySide6 --hidden-import=PySide6 $target.FullName
+        } else {
+            Write-Error "app.py file not found in repository!"
+            exit 1
+        }
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Entrust-Instant-ID-Executable
+        path: dist/InstantID/
+        if-no-files-found: error
