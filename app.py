@@ -1,1 +1,780 @@
+import sys
+import math
+from PySide6.QtCore import Qt, QPointF
+from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
+    QDialog, QComboBox, QGridLayout, QTabWidget, QCheckBox, QScrollArea
+)
 
+# -------------------------------------------------------------
+# Instant PVC Vector Logo
+# -------------------------------------------------------------
+class InstantPVCLogo(QWidget):
+    def __init__(self, size=40, is_white=True):
+        super().__init__()
+        self.setFixedSize(size, size)
+        self.size_val = size
+        self.is_white = is_white
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        center = self.size_val / 2
+        radius = center - 3
+        points = [
+            QPointF(center + radius * math.cos(math.radians(60 * i - 30)),
+                    center + radius * math.sin(math.radians(60 * i - 30)))
+            for i in range(6)
+        ]
+
+        color = QColor("#FFFFFF") if self.is_white else QColor("#6B21A8")
+        painter.setPen(QPen(color, 2))
+        painter.setBrush(Qt.NoBrush)
+        painter.drawPolygon(QPolygonF(points))
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(color)
+        s = self.size_val / 70
+        painter.drawRoundedRect(22 * s, 22 * s, 26 * s, 18 * s, 2, 2)
+
+
+# -------------------------------------------------------------
+# Card Canvas Box (Front Side / Back Side Representation)
+# -------------------------------------------------------------
+class CardCanvasWidget(QFrame):
+    def __init__(self, title_text):
+        super().__init__()
+        self.setStyleSheet("background-color: #A3A3A3; border-radius: 4px;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 15, 20, 20)
+
+        lbl = QLabel(title_text)
+        lbl.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        lbl.setStyleSheet("color: #374151; background: transparent;")
+        layout.addWidget(lbl)
+
+        card_white_box = QFrame()
+        card_white_box.setFixedSize(280, 175)
+        card_white_box.setStyleSheet("""
+            background-color: #FFFFFF;
+            border: 2px solid #525252;
+            border-radius: 12px;
+        """)
+        
+        layout.addWidget(card_white_box, 0, Qt.AlignCenter)
+        layout.addStretch()
+
+
+# -------------------------------------------------------------
+# Card Designer View
+# -------------------------------------------------------------
+class CardDesignerWidget(QWidget):
+    def __init__(self, card_name="Credential Design 1", on_close_callback=None):
+        super().__init__()
+        self.on_close_callback = on_close_callback
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # 1. Purple Header Ribbon
+        purple_ribbon = QFrame()
+        purple_ribbon.setFixedHeight(40)
+        purple_ribbon.setStyleSheet("background-color: #6B21A8;")
+        purple_layout = QHBoxLayout(purple_ribbon)
+        purple_layout.setContentsMargins(15, 0, 15, 0)
+
+        title_lbl = QLabel(f"{card_name} ✏")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet("color: #FFFFFF;")
+        purple_layout.addWidget(title_lbl)
+        purple_layout.addStretch()
+
+        main_layout.addWidget(purple_ribbon)
+
+        # 2. Designer Toolbar
+        toolbar = QFrame()
+        toolbar.setFixedHeight(45)
+        toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
+        tb_layout = QHBoxLayout(toolbar)
+        tb_layout.setContentsMargins(10, 4, 10, 4)
+        tb_layout.setSpacing(4)
+
+        tools = ["↩", "↪", "✂", "📋", "🔤", "🖼", "📊", "⎯", "⬜", "⭕", "▦", "🔍+", "🔍-"]
+        for tool in tools:
+            btn = QPushButton(tool)
+            btn.setFixedSize(32, 32)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #FFFFFF;
+                    border: 1px solid #C0C0C0;
+                    border-radius: 3px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #374151;
+                }
+                QPushButton:hover {
+                    background-color: #F3F4F6;
+                    border-color: #7C3AED;
+                }
+            """)
+            tb_layout.addWidget(btn)
+
+        tb_layout.addSpacing(15)
+        zoom_lbl = QLabel("Zoom:")
+        zoom_lbl.setStyleSheet("color: #374151; font-weight: bold;")
+        tb_layout.addWidget(zoom_lbl)
+
+        zoom_combo = QComboBox()
+        zoom_combo.addItems(["100%", "75%", "50%", "150%", "200%"])
+        zoom_combo.setFixedWidth(75)
+        zoom_combo.setStyleSheet("background-color: white; border: 1px solid #C0C0C0; padding: 2px;")
+        tb_layout.addWidget(zoom_combo)
+
+        tb_layout.addStretch()
+
+        main_layout.addWidget(toolbar)
+
+        # 3. Canvas Area
+        body_layout = QHBoxLayout()
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(0)
+
+        canvas_scroll = QScrollArea()
+        canvas_scroll.setWidgetResizable(True)
+        canvas_scroll.setStyleSheet("background-color: #D4D4D4; border: none;")
+
+        canvas_container = QWidget()
+        canvas_layout = QVBoxLayout(canvas_container)
+        canvas_layout.setContentsMargins(20, 15, 20, 15)
+
+        active_layer_lbl = QLabel("Active Design Layer: Color")
+        active_layer_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        active_layer_lbl.setStyleSheet("color: #374151;")
+        active_layer_lbl.setAlignment(Qt.AlignCenter)
+        canvas_layout.addWidget(active_layer_lbl)
+
+        cards_layout = QHBoxLayout()
+        cards_layout.setSpacing(25)
+
+        self.front_card = CardCanvasWidget("Front Side")
+        self.back_card = CardCanvasWidget("Back Side")
+
+        cards_layout.addWidget(self.front_card)
+        cards_layout.addWidget(self.back_card)
+
+        canvas_layout.addLayout(cards_layout)
+        canvas_layout.addStretch()
+
+        canvas_scroll.setWidget(canvas_container)
+        body_layout.addWidget(canvas_scroll, stretch=1)
+
+        # Right Properties Panel
+        right_panel = QFrame()
+        right_panel.setFixedWidth(260)
+        right_panel.setStyleSheet("background-color: #F9FAFB; border-left: 1px solid #D1D5DB;")
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+
+        prop_tabs = QTabWidget()
+        prop_tabs.setStyleSheet("""
+            QTabWidget::pane { border: none; }
+            QTabBar::tab {
+                background: #E5E7EB;
+                color: #374151;
+                padding: 8px 16px;
+                font-weight: bold;
+                border: 1px solid #D1D5DB;
+            }
+            QTabBar::tab:selected {
+                background: #FFFFFF;
+                border-bottom: 2px solid #7C3AED;
+            }
+        """)
+
+        properties_page = QWidget()
+        prop_page_layout = QVBoxLayout(properties_page)
+        prop_page_layout.setContentsMargins(15, 15, 15, 15)
+
+        prop_title = QLabel("— Front Side Properties")
+        prop_title.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        prop_title.setStyleSheet("color: #374151;")
+        prop_page_layout.addWidget(prop_title)
+
+        chk1 = QCheckBox("Hopper print orientation 180 degrees")
+        chk1.setStyleSheet("color: #4B5563; font-size: 11px;")
+        prop_page_layout.addWidget(chk1)
+
+        chk2 = QCheckBox("Tactile Impression Module")
+        chk2.setStyleSheet("color: #4B5563; font-size: 11px;")
+        prop_page_layout.addWidget(chk2)
+
+        prop_page_layout.addStretch()
+
+        layers_page = QWidget()
+        layers_layout = QVBoxLayout(layers_page)
+        layers_layout.addWidget(QLabel("Layer 1: Color\nLayer 2: Overlay", alignment=Qt.AlignTop))
+
+        prop_tabs.addTab(properties_page, "Properties")
+        prop_tabs.addTab(layers_page, "Layers")
+
+        right_layout.addWidget(prop_tabs)
+        body_layout.addWidget(right_panel)
+
+        main_layout.addLayout(body_layout, stretch=1)
+
+        # 4. Bottom Footer Action Buttons
+        footer = QFrame()
+        footer.setFixedHeight(45)
+        footer.setStyleSheet("background-color: #E5E7EB; border-top: 1px solid #D1D5DB;")
+        footer_layout = QHBoxLayout(footer)
+        footer_layout.setContentsMargins(15, 0, 15, 0)
+        footer_layout.setSpacing(10)
+
+        btn_style = """
+            QPushButton {
+                background-color: #2563EB;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                border: none;
+                border-radius: 3px;
+                padding: 6px 16px;
+            }
+            QPushButton:hover { background-color: #1D4ED8; }
+            QPushButton:disabled { background-color: #9CA3AF; color: #F3F4F6; }
+        """
+
+        save_btn = QPushButton("Save")
+        save_btn.setStyleSheet(btn_style)
+
+        save_as_btn = QPushButton("Save As...")
+        save_as_btn.setStyleSheet(btn_style)
+        save_as_btn.setEnabled(False)
+
+        close_btn = QPushButton("Close")
+        close_btn.setStyleSheet(btn_style)
+        if self.on_close_callback:
+            close_btn.clicked.connect(self.on_close_callback)
+
+        print_sample_btn = QPushButton("Print Sample")
+        print_sample_btn.setStyleSheet(btn_style)
+        print_sample_btn.setEnabled(False)
+
+        footer_layout.addWidget(save_btn)
+        footer_layout.addWidget(save_as_btn)
+        footer_layout.addWidget(close_btn)
+        footer_layout.addWidget(print_sample_btn)
+        footer_layout.addStretch()
+
+        main_layout.addWidget(footer)
+
+
+# -------------------------------------------------------------
+# Create New Card Dialog (Pop-up Window)
+# -------------------------------------------------------------
+class CreateCardDialog(QDialog):
+    def __init__(self, parent=None, title="Create New Card Template"):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setFixedSize(480, 380)
+        self.setStyleSheet("""
+            QDialog { background-color: #FFFFFF; }
+            QLabel { color: #374151; font-size: 13px; font-weight: 600; }
+            QLineEdit, QComboBox {
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 13px;
+                color: #111827;
+            }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+
+        header_lbl = QLabel(title)
+        header_lbl.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        header_lbl.setStyleSheet("color: #4C1D95;")
+        layout.addWidget(header_lbl)
+
+        form_grid = QGridLayout()
+        form_grid.setSpacing(12)
+
+        form_grid.addWidget(QLabel("Name:"), 0, 0)
+        self.name_input = QLineEdit()
+        self.name_input.setText("New Item 1")
+        form_grid.addWidget(self.name_input, 0, 1)
+
+        form_grid.addWidget(QLabel("Preset / Type:"), 1, 0)
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItems(["Standard Configuration"])
+        form_grid.addWidget(self.preset_combo, 1, 1)
+
+        layout.addLayout(form_grid)
+        layout.addStretch()
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setFixedSize(90, 36)
+        cancel_btn.setStyleSheet("background-color: #E5E7EB; color: #374151; font-weight: 600; border: none; border-radius: 6px;")
+        cancel_btn.clicked.connect(self.reject)
+
+        create_btn = QPushButton("Create")
+        create_btn.setFixedSize(110, 36)
+        create_btn.setStyleSheet("background-color: #6B21A8; color: white; font-weight: bold; border: none; border-radius: 6px;")
+        create_btn.clicked.connect(self.accept)
+
+        btn_layout.addWidget(cancel_btn)
+        btn_layout.addWidget(create_btn)
+        layout.addLayout(btn_layout)
+
+    def get_name(self):
+        return self.name_input.text().strip() or "New Item"
+
+
+# -------------------------------------------------------------
+# Login Window
+# -------------------------------------------------------------
+class LoginWidget(QWidget):
+    def __init__(self, on_login_success):
+        super().__init__()
+        self.on_login_success = on_login_success
+        self.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4C1D95, stop:1 #2E1065);")
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setAlignment(Qt.AlignCenter)
+
+        center_box = QWidget()
+        center_box.setFixedWidth(420)
+        box_layout = QVBoxLayout(center_box)
+        box_layout.setSpacing(15)
+
+        box_layout.addWidget(InstantPVCLogo(size=70, is_white=True), 0, Qt.AlignCenter)
+
+        title_lbl = QLabel("INSTANT PVC")
+        title_lbl.setFont(QFont("Segoe UI", 22, QFont.Bold))
+        title_lbl.setStyleSheet("color: #FFFFFF; letter-spacing: 2px;")
+        title_lbl.setAlignment(Qt.AlignCenter)
+        box_layout.addWidget(title_lbl)
+
+        form_card = QFrame()
+        form_card.setStyleSheet("""
+            QFrame { background-color: #FFFFFF; border-radius: 8px; }
+            QLabel { color: #4B5563; font-size: 13px; font-weight: 600; }
+            QLineEdit {
+                background-color: #F9FAFB; border: 1px solid #D1D5DB;
+                border-radius: 6px; padding: 8px 10px; font-size: 13px; color: #111827;
+            }
+        """)
+        
+        card_layout = QVBoxLayout(form_card)
+        card_layout.setContentsMargins(25, 25, 25, 25)
+        card_layout.setSpacing(10)
+
+        card_layout.addWidget(QLabel("User ID"))
+        self.user_entry = QLineEdit()
+        self.user_entry.setFixedHeight(38)
+        card_layout.addWidget(self.user_entry)
+
+        card_layout.addWidget(QLabel("Password"))
+        self.pass_entry = QLineEdit()
+        self.pass_entry.setEchoMode(QLineEdit.Password)
+        self.pass_entry.setFixedHeight(38)
+        card_layout.addWidget(self.pass_entry)
+
+        box_layout.addWidget(form_card)
+
+        login_btn = QPushButton("Sign In")
+        login_btn.setFixedSize(120, 38)
+        login_btn.setCursor(Qt.PointingHandCursor)
+        login_btn.setStyleSheet("QPushButton { background-color: #2563EB; color: white; font-weight: bold; font-size: 14px; border: none; border-radius: 4px; }")
+        login_btn.clicked.connect(self.check_login)
+        box_layout.addWidget(login_btn, 0, Qt.AlignCenter)
+
+        main_layout.addWidget(center_box)
+
+    def check_login(self):
+        if self.user_entry.text().strip() == "admin" and self.pass_entry.text().strip() == "admin123":
+            self.on_login_success("admin")
+        else:
+            QMessageBox.critical(self, "Login Failed", "User ID သို့မဟုတ် Password မှားယွင်းနေပါသည်။\n(Default: admin / admin123)")
+
+
+# -------------------------------------------------------------
+# Main Dashboard Widget
+# -------------------------------------------------------------
+class MainDashboardWidget(QWidget):
+    def __init__(self, username):
+        super().__init__()
+        self.username = username
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # 1. Top Navigation Bar
+        nav_bar = QFrame()
+        nav_bar.setFixedHeight(50)
+        nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
+        nav_layout = QHBoxLayout(nav_bar)
+        nav_layout.setContentsMargins(20, 0, 20, 0)
+
+        brand_box = QHBoxLayout()
+        brand_box.setSpacing(8)
+        brand_box.addWidget(InstantPVCLogo(size=32, is_white=False))
+        
+        brand_title = QLabel("ENTRUST")
+        brand_title.setFont(QFont("Segoe UI", 13, QFont.Bold))
+        brand_title.setStyleSheet("color: #4C1D95;")
+        brand_box.addWidget(brand_title)
+
+        sub_brand = QLabel("Adaptive Issuance Instant ID")
+        sub_brand.setFont(QFont("Segoe UI", 9))
+        sub_brand.setStyleSheet("color: #6B7280; padding-left: 5px; border-left: 1px solid #D1D5DB;")
+        brand_box.addWidget(sub_brand)
+
+        nav_layout.addLayout(brand_box)
+        nav_layout.addSpacing(25)
+
+        nav_btn_style = """
+            QPushButton { 
+                background: transparent; 
+                border: none; 
+                color: #374151; 
+                font-size: 13px; 
+                font-weight: 600; 
+                padding: 14px 16px;
+            } 
+            QPushButton:hover { color: #6B21A8; }
+        """
+
+        self.home_btn = QPushButton("Home")
+        self.home_btn.setStyleSheet(nav_btn_style)
+        self.home_btn.clicked.connect(self.show_home_view)
+
+        self.design_btn = QPushButton("Design")
+        self.design_btn.setStyleSheet(nav_btn_style)
+        self.design_btn.clicked.connect(self.show_design_view)
+
+        self.printer_btn = QPushButton("Printer Queues")
+        self.printer_btn.setStyleSheet(nav_btn_style)
+
+        nav_layout.addWidget(self.home_btn)
+        nav_layout.addWidget(self.design_btn)
+        nav_layout.addWidget(self.printer_btn)
+        nav_layout.addStretch()
+
+        main_layout.addWidget(nav_bar)
+
+        # 2. Main Stack Container
+        self.main_stack = QStackedWidget()
+
+        # Dashboard View Area
+        self.dashboard_view = QWidget()
+        dash_layout = QVBoxLayout(self.dashboard_view)
+        dash_layout.setContentsMargins(0, 0, 0, 0)
+        dash_layout.setSpacing(0)
+
+        # Purple Ribbon Bar
+        purple_bar = QFrame()
+        purple_bar.setFixedHeight(42)
+        purple_bar.setStyleSheet("background-color: #6B21A8;")
+        purple_layout = QHBoxLayout(purple_bar)
+        purple_layout.setContentsMargins(20, 0, 20, 0)
+
+        self.purple_tab_stack = QStackedWidget()
+
+        # Home Sub-tabs (Credentials, System Logs)
+        home_tabs_bar = QFrame()
+        home_tabs_layout = QHBoxLayout(home_tabs_bar)
+        home_tabs_layout.setContentsMargins(0, 0, 0, 0)
+        self.cred_tab_btn = QPushButton("Credentials")
+        self.logs_tab_btn = QPushButton("System Logs")
+
+        # Design Sub-tabs (Cards, Workflows, Reports, Field Connections)
+        design_tabs_bar = QFrame()
+        design_tabs_layout = QHBoxLayout(design_tabs_bar)
+        design_tabs_layout.setContentsMargins(0, 0, 0, 0)
+        design_tabs_layout.setSpacing(4)
+        
+        self.cards_tab_btn = QPushButton("Cards")
+        self.workflows_tab_btn = QPushButton("Workflows")
+        self.reports_tab_btn = QPushButton("Reports")
+        self.field_conn_tab_btn = QPushButton("Field Connections")
+
+        purple_tab_style = """
+            QPushButton { 
+                background-color: #7C3AED; 
+                color: #EDE9FE; 
+                border: none; 
+                border-top-left-radius: 4px; 
+                border-top-right-radius: 4px; 
+                padding: 6px 16px; 
+                font-weight: bold; 
+                font-size: 12px; 
+            }
+            QPushButton:hover {
+                background-color: #8B5CF6;
+                color: #FFFFFF;
+            }
+        """
+        self.design_tab_buttons = [
+            self.cards_tab_btn, 
+            self.workflows_tab_btn, 
+            self.reports_tab_btn, 
+            self.field_conn_tab_btn
+        ]
+
+        for btn in [self.cred_tab_btn, self.logs_tab_btn] + self.design_tab_buttons:
+            btn.setStyleSheet(purple_tab_style)
+            btn.setCursor(Qt.PointingHandCursor)
+
+        home_tabs_layout.addWidget(self.cred_tab_btn)
+        home_tabs_layout.addWidget(self.logs_tab_btn)
+        home_tabs_layout.addStretch()
+
+        design_tabs_layout.addWidget(self.cards_tab_btn)
+        design_tabs_layout.addWidget(self.workflows_tab_btn)
+        design_tabs_layout.addWidget(self.reports_tab_btn)
+        design_tabs_layout.addWidget(self.field_conn_tab_btn)
+        design_tabs_layout.addStretch()
+
+        self.purple_tab_stack.addWidget(home_tabs_bar)    # Index 0
+        self.purple_tab_stack.addWidget(design_tabs_bar)  # Index 1
+
+        purple_layout.addWidget(self.purple_tab_stack)
+        dash_layout.addWidget(purple_bar)
+
+        # Helper Button Creator Style
+        create_btn_style = """
+            QPushButton {
+                background-color: #2563EB;
+                color: #FFFFFF;
+                font-size: 13px;
+                font-weight: bold;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+        """
+
+        # 3. Content Pages Stack
+        self.content_stack = QStackedWidget()
+
+        # --- A. HOME PAGES ---
+        # 1. Credentials Page
+        cred_page = QWidget()
+        cred_layout = QVBoxLayout(cred_page)
+        cred_layout.setContentsMargins(20, 20, 20, 20)
+        
+        toolbar_layout = QHBoxLayout()
+        grid_btn = QPushButton("田")
+        grid_btn.setFixedSize(32, 32)
+        grid_btn.setStyleSheet("background-color: #E2E8F0; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
+        list_btn = QPushButton("≡")
+        list_btn.setFixedSize(32, 32)
+        list_btn.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
+        toolbar_layout.addWidget(grid_btn)
+        toolbar_layout.addWidget(list_btn)
+        toolbar_layout.addStretch()
+        cred_layout.addLayout(toolbar_layout)
+
+        empty_cred_lbl = QLabel("No credentials available.")
+        empty_cred_lbl.setAlignment(Qt.AlignCenter)
+        empty_cred_lbl.setStyleSheet("color: #9CA3AF; font-size: 14px; margin-top: 80px;")
+        cred_layout.addWidget(empty_cred_lbl)
+        cred_layout.addStretch()
+
+        # 2. System Logs Page
+        logs_page = QWidget()
+        logs_layout = QVBoxLayout(logs_page)
+        logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
+
+        # --- B. DESIGN PAGES ---
+        # 3. Cards Tab Page
+        cards_page = QWidget()
+        cards_layout = QVBoxLayout(cards_page)
+        cards_layout.setContentsMargins(20, 20, 20, 20)
+
+        cards_top_action_bar = QHBoxLayout()
+        cards_top_action_bar.addStretch()
+
+        create_card_btn = QPushButton("+ Create")
+        create_card_btn.setFixedSize(110, 36)
+        create_card_btn.setCursor(Qt.PointingHandCursor)
+        create_card_btn.setStyleSheet(create_btn_style)
+        create_card_btn.clicked.connect(self.open_create_card_flow)
+
+        cards_top_action_bar.addWidget(create_card_btn)
+        cards_layout.addLayout(cards_top_action_bar)
+        cards_layout.addStretch()
+
+        # 4. Workflows Page (Added + Create Button)
+        workflows_page = QWidget()
+        workflows_layout = QVBoxLayout(workflows_page)
+        workflows_layout.setContentsMargins(20, 20, 20, 20)
+
+        workflows_top_action_bar = QHBoxLayout()
+        workflows_top_action_bar.addStretch()
+
+        create_workflow_btn = QPushButton("+ Create")
+        create_workflow_btn.setFixedSize(110, 36)
+        create_workflow_btn.setCursor(Qt.PointingHandCursor)
+        create_workflow_btn.setStyleSheet(create_btn_style)
+        create_workflow_btn.clicked.connect(self.open_create_workflow_flow)
+
+        workflows_top_action_bar.addWidget(create_workflow_btn)
+        workflows_layout.addLayout(workflows_top_action_bar)
+
+        wf_lbl = QLabel("Workflows Manager Area")
+        wf_lbl.setAlignment(Qt.AlignCenter)
+        workflows_layout.addWidget(wf_lbl)
+        workflows_layout.addStretch()
+
+        # 5. Reports Page (Added + Create Button)
+        reports_page = QWidget()
+        reports_layout = QVBoxLayout(reports_page)
+        reports_layout.setContentsMargins(20, 20, 20, 20)
+
+        reports_top_action_bar = QHBoxLayout()
+        reports_top_action_bar.addStretch()
+
+        create_report_btn = QPushButton("+ Create")
+        create_report_btn.setFixedSize(110, 36)
+        create_report_btn.setCursor(Qt.PointingHandCursor)
+        create_report_btn.setStyleSheet(create_btn_style)
+        create_report_btn.clicked.connect(self.open_create_report_flow)
+
+        reports_top_action_bar.addWidget(create_report_btn)
+        reports_layout.addLayout(reports_top_action_bar)
+
+        rpt_lbl = QLabel("Reports Area")
+        rpt_lbl.setAlignment(Qt.AlignCenter)
+        reports_layout.addWidget(rpt_lbl)
+        reports_layout.addStretch()
+
+        # 6. Field Connections Page
+        field_conn_page = QWidget()
+        field_conn_layout = QVBoxLayout(field_conn_page)
+        field_conn_layout.addWidget(QLabel("Field Connections Area", alignment=Qt.AlignCenter))
+
+        # Add to Content Stack
+        self.content_stack.addWidget(cred_page)       # Index 0
+        self.content_stack.addWidget(logs_page)       # Index 1
+        self.content_stack.addWidget(cards_page)      # Index 2
+        self.content_stack.addWidget(workflows_page)  # Index 3
+        self.content_stack.addWidget(reports_page)    # Index 4
+        self.content_stack.addWidget(field_conn_page) # Index 5
+
+        dash_layout.addWidget(self.content_stack)
+
+        self.main_stack.addWidget(self.dashboard_view) # Index 0
+
+        main_layout.addWidget(self.main_stack)
+
+        # Tab Switching Signals
+        self.cred_tab_btn.clicked.connect(lambda: self.switch_home_tab(0, self.cred_tab_btn))
+        self.logs_tab_btn.clicked.connect(lambda: self.switch_home_tab(1, self.logs_tab_btn))
+
+        self.cards_tab_btn.clicked.connect(lambda: self.switch_design_tab(2, self.cards_tab_btn))
+        self.workflows_tab_btn.clicked.connect(lambda: self.switch_design_tab(3, self.workflows_tab_btn))
+        self.reports_tab_btn.clicked.connect(lambda: self.switch_design_tab(4, self.reports_tab_btn))
+        self.field_conn_tab_btn.clicked.connect(lambda: self.switch_design_tab(5, self.field_conn_tab_btn))
+
+        self.show_home_view()
+
+    def update_purple_tab_active(self, active_btn, btn_group):
+        active_style = "QPushButton { background-color: #FFFFFF; color: #6B21A8; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 6px 16px; font-weight: bold; font-size: 12px; }"
+        normal_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 6px 16px; font-weight: bold; font-size: 12px; } QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }"
+        for btn in btn_group:
+            btn.setStyleSheet(active_style if btn == active_btn else normal_style)
+
+    def switch_home_tab(self, index, btn):
+        self.content_stack.setCurrentIndex(index)
+        self.update_purple_tab_active(btn, [self.cred_tab_btn, self.logs_tab_btn])
+
+    def switch_design_tab(self, index, btn):
+        self.content_stack.setCurrentIndex(index)
+        self.update_purple_tab_active(btn, self.design_tab_buttons)
+
+    def set_nav_active(self, active_btn):
+        active_style = "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; font-weight: bold; padding: 14px 16px; background: transparent; }"
+        normal_style = "QPushButton { color: #374151; border-bottom: 2px solid transparent; font-weight: 600; padding: 14px 16px; background: transparent; } QPushButton:hover { color: #6B21A8; }"
+
+        self.home_btn.setStyleSheet(active_style if active_btn == "home" else normal_style)
+        self.design_btn.setStyleSheet(active_style if active_btn == "design" else normal_style)
+        self.printer_btn.setStyleSheet(normal_style)
+
+    def show_home_view(self):
+        self.set_nav_active("home")
+        self.purple_tab_stack.setCurrentIndex(0)
+        self.switch_home_tab(0, self.cred_tab_btn)
+
+    def show_design_view(self):
+        self.set_nav_active("design")
+        self.purple_tab_stack.setCurrentIndex(1)
+        self.switch_design_tab(2, self.cards_tab_btn)
+
+    def open_create_card_flow(self):
+        dialog = CreateCardDialog(self, title="Create New Card Template")
+        if dialog.exec() == QDialog.Accepted:
+            card_name = dialog.get_name()
+            designer_view = CardDesignerWidget(card_name=card_name, on_close_callback=self.close_designer_view)
+            self.main_stack.addWidget(designer_view)
+            self.main_stack.setCurrentWidget(designer_view)
+
+    def open_create_workflow_flow(self):
+        dialog = CreateCardDialog(self, title="Create New Workflow")
+        if dialog.exec() == QDialog.Accepted:
+            QMessageBox.information(self, "Workflow Created", f"Workflow '{dialog.get_name()}' was created successfully!")
+
+    def open_create_report_flow(self):
+        dialog = CreateCardDialog(self, title="Create New Report Template")
+        if dialog.exec() == QDialog.Accepted:
+            QMessageBox.information(self, "Report Created", f"Report Template '{dialog.get_name()}' was created successfully!")
+
+    def close_designer_view(self):
+        self.main_stack.setCurrentIndex(0)
+
+
+# -------------------------------------------------------------
+# Main Window Controller
+# -------------------------------------------------------------
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ENTRUST Adaptive Issuance - Instant PVC")
+        self.resize(1200, 750)
+
+        self.stack = QStackedWidget()
+        self.setCentralWidget(self.stack)
+
+        self.show_login()
+
+    def show_login(self):
+        self.login_widget = LoginWidget(self.show_dashboard)
+        self.stack.addWidget(self.login_widget)
+        self.stack.setCurrentWidget(self.login_widget)
+
+    def show_dashboard(self, username):
+        self.dashboard_widget = MainDashboardWidget(username)
+        self.stack.addWidget(self.dashboard_widget)
+        self.stack.setCurrentWidget(self.dashboard_widget)
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
