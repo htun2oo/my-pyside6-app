@@ -304,36 +304,56 @@ class CredentialDesignerWidget(QWidget):
 
         # Toolbar Frame
         toolbar_frame = QFrame()
-        toolbar_frame.setFixedHeight(40)
-        toolbar_frame.setStyleSheet("background-color: #F3F4F6; border-bottom: 1px solid #CBD5E1;")
+        toolbar_frame.setFixedHeight(48)  # Height ကို အနည်းငယ် မြှင့်ထားသည်
+        toolbar_frame.setStyleSheet("""
+            QFrame {
+                background-color: #F3F4F6; 
+                border-bottom: 1px solid #CBD5E1;
+            }
+            QPushButton {
+                background-color: #FFFFFF; 
+                border: 1px solid #CBD5E1; 
+                border-radius: 4px;
+                font-size: 16px;          /* Icon / Text အရွယ်အစားကို ကြီးပေးထားသည် */
+                font-weight: bold;
+                color: #1F2937;
+            }
+            QPushButton:hover {
+                background-color: #E2E8F0;
+                border-color: #9CA3AF;
+            }
+            QPushButton:pressed {
+                background-color: #CBD5E1;
+            }
+        """)
         tb_layout = QHBoxLayout(toolbar_frame)
-        tb_layout.setContentsMargins(5, 0, 5, 0)
+        tb_layout.setContentsMargins(8, 4, 8, 4)
+        tb_layout.setSpacing(6)
 
         tools = [
-            ("↶", "Undo"), ("↷", "Redo"), ("📄", "Copy"), ("✂️", "Cut"), ("📋", "Paste"),
+            ("↶", "Undo"), ("↷", "Redo"), ("📋", "Copy"), ("✂️", "Cut"), ("📑", "Paste"),
             ("|", None),
             ("T⁭", "Text"), ("T", "Static Text"), ("👤", "Photo"), ("🖼️", "Graphic"),
             ("|", None),
-            ("||||", "Bar Code"), ("💳", "Mag Stripe"), ("🎛️", "Chip")
+            ("║█║", "Bar Code"), ("💳", "Mag Stripe"), ("🎛️", "Chip")
         ]
 
         for icon, tooltip in tools:
             if icon == "|":
                 line = QFrame()
                 line.setFrameShape(QFrame.VLine)
-                line.setStyleSheet("color: #CBD5E1;")
+                line.setStyleSheet("color: #CBD5E1; max-height: 24px;")
                 tb_layout.addWidget(line)
             else:
                 btn = QPushButton(icon)
-                btn.setFixedSize(28, 26)
-                btn.setStyleSheet("QPushButton { background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; } QPushButton:hover { background-color: #E2E8F0; }")
+                btn.setFixedSize(36, 36)  # Button Size ကို 28x26 မှ 36x36 သို့ တိုးမြှင့်ထားသည်
                 if tooltip:
                     btn.setToolTip(tooltip)
                 tb_layout.addWidget(btn)
 
         tb_layout.addStretch()
         main_layout.addWidget(toolbar_frame)
-
+        
         # Workspace Area
         workspace = QFrame()
         workspace.setStyleSheet("background-color: #D1D5DB;")
