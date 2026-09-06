@@ -5,8 +5,7 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
-    QDialog, QComboBox, QDoubleSpinBox, QRadioButton, QButtonGroup, QGridLayout,
-    QTabWidget, QCheckBox, QScrollArea
+    QDialog, QComboBox, QGridLayout, QTabWidget, QCheckBox, QScrollArea
 )
 
 # -------------------------------------------------------------
@@ -43,7 +42,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Canvas Box (Front Side / Back Side Card Representation)
+# Card Canvas Box (Front Side / Back Side Representation)
 # -------------------------------------------------------------
 class CardCanvasWidget(QFrame):
     def __init__(self, title_text):
@@ -286,7 +285,7 @@ class CreateCardDialog(QDialog):
         self.setStyleSheet("""
             QDialog { background-color: #FFFFFF; }
             QLabel { color: #374151; font-size: 13px; font-weight: 600; }
-            QLineEdit, QComboBox, QDoubleSpinBox {
+            QLineEdit, QComboBox {
                 background-color: #F9FAFB;
                 border: 1px solid #D1D5DB;
                 border-radius: 6px;
@@ -501,12 +500,16 @@ class MainDashboardWidget(QWidget):
         self.cred_tab_btn = QPushButton("Credentials")
         self.logs_tab_btn = QPushButton("System Logs")
 
-        # Design Sub-tabs (Cards, Workflows)
+        # Design Sub-tabs (Cards, Workflows, Reports, Field Connections)
         design_tabs_bar = QFrame()
         design_tabs_layout = QHBoxLayout(design_tabs_bar)
         design_tabs_layout.setContentsMargins(0, 0, 0, 0)
+        design_tabs_layout.setSpacing(4)
+        
         self.cards_tab_btn = QPushButton("Cards")
         self.workflows_tab_btn = QPushButton("Workflows")
+        self.reports_tab_btn = QPushButton("Reports")
+        self.field_conn_tab_btn = QPushButton("Field Connections")
 
         purple_tab_style = """
             QPushButton { 
@@ -524,7 +527,14 @@ class MainDashboardWidget(QWidget):
                 color: #FFFFFF;
             }
         """
-        for btn in [self.cred_tab_btn, self.logs_tab_btn, self.cards_tab_btn, self.workflows_tab_btn]:
+        self.design_tab_buttons = [
+            self.cards_tab_btn, 
+            self.workflows_tab_btn, 
+            self.reports_tab_btn, 
+            self.field_conn_tab_btn
+        ]
+
+        for btn in [self.cred_tab_btn, self.logs_tab_btn] + self.design_tab_buttons:
             btn.setStyleSheet(purple_tab_style)
             btn.setCursor(Qt.PointingHandCursor)
 
@@ -534,6 +544,8 @@ class MainDashboardWidget(QWidget):
 
         design_tabs_layout.addWidget(self.cards_tab_btn)
         design_tabs_layout.addWidget(self.workflows_tab_btn)
+        design_tabs_layout.addWidget(self.reports_tab_btn)
+        design_tabs_layout.addWidget(self.field_conn_tab_btn)
         design_tabs_layout.addStretch()
 
         self.purple_tab_stack.addWidget(home_tabs_bar)    # Index 0
@@ -546,7 +558,7 @@ class MainDashboardWidget(QWidget):
         self.content_stack = QStackedWidget()
 
         # --- A. HOME PAGES ---
-        # 1. Credentials Page (Clean Area Without Card Templates Header & Create Button)
+        # 1. Credentials Page
         cred_page = QWidget()
         cred_layout = QVBoxLayout(cred_page)
         cred_layout.setContentsMargins(20, 20, 20, 20)
@@ -575,36 +587,10 @@ class MainDashboardWidget(QWidget):
         logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
 
         # --- B. DESIGN PAGES ---
-        # 3. Cards Tab Page (Here lies Card Templates and + Create Card Button)
+        # 3. Cards Tab Page (Clean Page - Removed Card Templates Header & Create Card Button)
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
-
-        cards_action_bar = QHBoxLayout()
-        cards_title = QLabel("Card Templates")
-        cards_title.setFont(QFont("Segoe UI", 14, QFont.Bold))
-        cards_title.setStyleSheet("color: #1F2937;")
-        cards_action_bar.addWidget(cards_title)
-        cards_action_bar.addStretch()
-
-        create_card_btn = QPushButton("+ Create Card")
-        create_card_btn.setFixedSize(130, 36)
-        create_card_btn.setCursor(Qt.PointingHandCursor)
-        create_card_btn.setStyleSheet("""
-            QPushButton { 
-                background-color: #2563EB; 
-                color: white; 
-                font-weight: bold; 
-                font-size: 13px;
-                border: none; 
-                border-radius: 6px; 
-            }
-            QPushButton:hover { background-color: #1D4ED8; }
-        """)
-        create_card_btn.clicked.connect(self.open_create_card_flow)
-        cards_action_bar.addWidget(create_card_btn)
-
-        cards_layout.addLayout(cards_action_bar)
         cards_layout.addStretch()
 
         # 4. Workflows Page
@@ -612,11 +598,23 @@ class MainDashboardWidget(QWidget):
         workflows_layout = QVBoxLayout(workflows_page)
         workflows_layout.addWidget(QLabel("Workflows Manager Area", alignment=Qt.AlignCenter))
 
+        # 5. Reports Page
+        reports_page = QWidget()
+        reports_layout = QVBoxLayout(reports_page)
+        reports_layout.addWidget(QLabel("Reports Area", alignment=Qt.AlignCenter))
+
+        # 6. Field Connections Page
+        field_conn_page = QWidget()
+        field_conn_layout = QVBoxLayout(field_conn_page)
+        field_conn_layout.addWidget(QLabel("Field Connections Area", alignment=Qt.AlignCenter))
+
         # Add to Content Stack
-        self.content_stack.addWidget(cred_page)      # Index 0
-        self.content_stack.addWidget(logs_page)      # Index 1
-        self.content_stack.addWidget(cards_page)     # Index 2
-        self.content_stack.addWidget(workflows_page) # Index 3
+        self.content_stack.addWidget(cred_page)       # Index 0
+        self.content_stack.addWidget(logs_page)       # Index 1
+        self.content_stack.addWidget(cards_page)      # Index 2
+        self.content_stack.addWidget(workflows_page)  # Index 3
+        self.content_stack.addWidget(reports_page)    # Index 4
+        self.content_stack.addWidget(field_conn_page) # Index 5
 
         dash_layout.addWidget(self.content_stack)
 
@@ -630,6 +628,8 @@ class MainDashboardWidget(QWidget):
 
         self.cards_tab_btn.clicked.connect(lambda: self.switch_design_tab(2, self.cards_tab_btn))
         self.workflows_tab_btn.clicked.connect(lambda: self.switch_design_tab(3, self.workflows_tab_btn))
+        self.reports_tab_btn.clicked.connect(lambda: self.switch_design_tab(4, self.reports_tab_btn))
+        self.field_conn_tab_btn.clicked.connect(lambda: self.switch_design_tab(5, self.field_conn_tab_btn))
 
         self.show_home_view()
 
@@ -645,7 +645,7 @@ class MainDashboardWidget(QWidget):
 
     def switch_design_tab(self, index, btn):
         self.content_stack.setCurrentIndex(index)
-        self.update_purple_tab_active(btn, [self.cards_tab_btn, self.workflows_tab_btn])
+        self.update_purple_tab_active(btn, self.design_tab_buttons)
 
     def set_nav_active(self, active_btn):
         active_style = "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; font-weight: bold; padding: 14px 16px; background: transparent; }"
