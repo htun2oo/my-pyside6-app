@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QTabWidget, QCheckBox, QScrollArea, QComboBox
 )
 
-
 # -------------------------------------------------------------
 # Clickable Card Canvas Box
 # -------------------------------------------------------------
@@ -97,7 +96,7 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addWidget(purple_ribbon)
 
-        # 2. Designer Toolbar (Exact UI Match Image 2)
+        # 2. Designer Toolbar (Exact UI Match)
         toolbar = QFrame()
         toolbar.setFixedHeight(40)
         toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
@@ -306,3 +305,24 @@ class CardDesignerWidget(QWidget):
         self.back_card.set_selected(True)
         self.active_layer_lbl.setText("Active Design Layer: Black")
         self.prop_title.setText("— Back Side Properties")
+
+
+# -------------------------------------------------------------
+# Standalone Application Launcher
+# -------------------------------------------------------------
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Card Designer View")
+        self.resize(1100, 700)
+
+        # Direct View Display
+        self.designer = CardDesignerWidget(card_name="Credential Design 1")
+        self.setCentralWidget(self.designer)
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
