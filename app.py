@@ -125,7 +125,7 @@ class LoginWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Main Application Dashboard (Integrated Header Navigation)
+# Main Application Dashboard
 # -------------------------------------------------------------
 class MainDashboardWidget(QWidget):
     def __init__(self, username, on_logout):
@@ -197,16 +197,14 @@ class MainDashboardWidget(QWidget):
 
         main_layout.addWidget(nav_bar)
 
-        # 2. Purple User Info Bar
+        # 2. Purple User Info Bar (Last Login Time ကို ဖယ်ရှားထားပါသည်)
         purple_bar = QFrame()
         purple_bar.setFixedHeight(35)
         purple_bar.setStyleSheet("background-color: #6B21A8;")
         purple_layout = QHBoxLayout(purple_bar)
         purple_layout.setContentsMargins(20, 0, 20, 0)
 
-        login_info = QLabel("Last Login at Sun Sep 06 13:00:15 MMT 2026 from 127.0.0.1")
-        login_info.setStyleSheet("color: #E9D5FF; font-size: 11px;")
-        purple_layout.addWidget(login_info)
+        # ဘယ်ဘက်ခြမ်းကို ခဲထားပြီး ညာဘက်ခြမ်းတွင် User Info နှင့် Logout ကိုသာ ပြသထားပါသည်
         purple_layout.addStretch()
 
         user_lbl = QLabel(f"{self.username}")
