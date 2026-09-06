@@ -278,9 +278,9 @@ class CardDesignerWidget(QWidget):
 # Create New Card Dialog (Pop-up Window)
 # -------------------------------------------------------------
 class CreateCardDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, title="Create New Card Template"):
         super().__init__(parent)
-        self.setWindowTitle("Create New Card Template")
+        self.setWindowTitle(title)
         self.setFixedSize(480, 380)
         self.setStyleSheet("""
             QDialog { background-color: #FFFFFF; }
@@ -299,7 +299,7 @@ class CreateCardDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(16)
 
-        header_lbl = QLabel("New Card Template")
+        header_lbl = QLabel(title)
         header_lbl.setFont(QFont("Segoe UI", 16, QFont.Bold))
         header_lbl.setStyleSheet("color: #4C1D95;")
         layout.addWidget(header_lbl)
@@ -307,14 +307,14 @@ class CreateCardDialog(QDialog):
         form_grid = QGridLayout()
         form_grid.setSpacing(12)
 
-        form_grid.addWidget(QLabel("Card Name:"), 0, 0)
-        self.card_name_input = QLineEdit()
-        self.card_name_input.setText("Credential Design 1")
-        form_grid.addWidget(self.card_name_input, 0, 1)
+        form_grid.addWidget(QLabel("Name:"), 0, 0)
+        self.name_input = QLineEdit()
+        self.name_input.setText("New Item 1")
+        form_grid.addWidget(self.name_input, 0, 1)
 
-        form_grid.addWidget(QLabel("Preset Size:"), 1, 0)
+        form_grid.addWidget(QLabel("Preset / Type:"), 1, 0)
         self.preset_combo = QComboBox()
-        self.preset_combo.addItems(["CR80 Standard ID Card (85.60 x 53.98 mm)"])
+        self.preset_combo.addItems(["Standard Configuration"])
         form_grid.addWidget(self.preset_combo, 1, 1)
 
         layout.addLayout(form_grid)
@@ -337,8 +337,8 @@ class CreateCardDialog(QDialog):
         btn_layout.addWidget(create_btn)
         layout.addLayout(btn_layout)
 
-    def get_card_name(self):
-        return self.card_name_input.text().strip() or "Credential Design 1"
+    def get_name(self):
+        return self.name_input.text().strip() or "New Item"
 
 
 # -------------------------------------------------------------
@@ -554,6 +554,21 @@ class MainDashboardWidget(QWidget):
         purple_layout.addWidget(self.purple_tab_stack)
         dash_layout.addWidget(purple_bar)
 
+        # Helper Button Creator Style
+        create_btn_style = """
+            QPushButton {
+                background-color: #2563EB;
+                color: #FFFFFF;
+                font-size: 13px;
+                font-weight: bold;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+        """
+
         # 3. Content Pages Stack
         self.content_stack = QStackedWidget()
 
@@ -587,7 +602,7 @@ class MainDashboardWidget(QWidget):
         logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
 
         # --- B. DESIGN PAGES ---
-        # 3. Cards Tab Page (with + Create Button placed neatly at top right)
+        # 3. Cards Tab Page
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
@@ -598,34 +613,56 @@ class MainDashboardWidget(QWidget):
         create_card_btn = QPushButton("+ Create")
         create_card_btn.setFixedSize(110, 36)
         create_card_btn.setCursor(Qt.PointingHandCursor)
-        create_card_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2563EB;
-                color: #FFFFFF;
-                font-size: 13px;
-                font-weight: bold;
-                border: none;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #1D4ED8;
-            }
-        """)
+        create_card_btn.setStyleSheet(create_btn_style)
         create_card_btn.clicked.connect(self.open_create_card_flow)
 
         cards_top_action_bar.addWidget(create_card_btn)
         cards_layout.addLayout(cards_top_action_bar)
         cards_layout.addStretch()
 
-        # 4. Workflows Page
+        # 4. Workflows Page (Added + Create Button)
         workflows_page = QWidget()
         workflows_layout = QVBoxLayout(workflows_page)
-        workflows_layout.addWidget(QLabel("Workflows Manager Area", alignment=Qt.AlignCenter))
+        workflows_layout.setContentsMargins(20, 20, 20, 20)
 
-        # 5. Reports Page
+        workflows_top_action_bar = QHBoxLayout()
+        workflows_top_action_bar.addStretch()
+
+        create_workflow_btn = QPushButton("+ Create")
+        create_workflow_btn.setFixedSize(110, 36)
+        create_workflow_btn.setCursor(Qt.PointingHandCursor)
+        create_workflow_btn.setStyleSheet(create_btn_style)
+        create_workflow_btn.clicked.connect(self.open_create_workflow_flow)
+
+        workflows_top_action_bar.addWidget(create_workflow_btn)
+        workflows_layout.addLayout(workflows_top_action_bar)
+
+        wf_lbl = QLabel("Workflows Manager Area")
+        wf_lbl.setAlignment(Qt.AlignCenter)
+        workflows_layout.addWidget(wf_lbl)
+        workflows_layout.addStretch()
+
+        # 5. Reports Page (Added + Create Button)
         reports_page = QWidget()
         reports_layout = QVBoxLayout(reports_page)
-        reports_layout.addWidget(QLabel("Reports Area", alignment=Qt.AlignCenter))
+        reports_layout.setContentsMargins(20, 20, 20, 20)
+
+        reports_top_action_bar = QHBoxLayout()
+        reports_top_action_bar.addStretch()
+
+        create_report_btn = QPushButton("+ Create")
+        create_report_btn.setFixedSize(110, 36)
+        create_report_btn.setCursor(Qt.PointingHandCursor)
+        create_report_btn.setStyleSheet(create_btn_style)
+        create_report_btn.clicked.connect(self.open_create_report_flow)
+
+        reports_top_action_bar.addWidget(create_report_btn)
+        reports_layout.addLayout(reports_top_action_bar)
+
+        rpt_lbl = QLabel("Reports Area")
+        rpt_lbl.setAlignment(Qt.AlignCenter)
+        reports_layout.addWidget(rpt_lbl)
+        reports_layout.addStretch()
 
         # 6. Field Connections Page
         field_conn_page = QWidget()
@@ -690,12 +727,22 @@ class MainDashboardWidget(QWidget):
         self.switch_design_tab(2, self.cards_tab_btn)
 
     def open_create_card_flow(self):
-        dialog = CreateCardDialog(self)
+        dialog = CreateCardDialog(self, title="Create New Card Template")
         if dialog.exec() == QDialog.Accepted:
-            card_name = dialog.get_card_name()
+            card_name = dialog.get_name()
             designer_view = CardDesignerWidget(card_name=card_name, on_close_callback=self.close_designer_view)
             self.main_stack.addWidget(designer_view)
             self.main_stack.setCurrentWidget(designer_view)
+
+    def open_create_workflow_flow(self):
+        dialog = CreateCardDialog(self, title="Create New Workflow")
+        if dialog.exec() == QDialog.Accepted:
+            QMessageBox.information(self, "Workflow Created", f"Workflow '{dialog.get_name()}' was created successfully!")
+
+    def open_create_report_flow(self):
+        dialog = CreateCardDialog(self, title="Create New Report Template")
+        if dialog.exec() == QDialog.Accepted:
+            QMessageBox.information(self, "Report Created", f"Report Template '{dialog.get_name()}' was created successfully!")
 
     def close_designer_view(self):
         self.main_stack.setCurrentIndex(0)
