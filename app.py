@@ -1,8 +1,9 @@
 import sys
 import os
+import math
 from PIL import Image
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPixmap, QFont
+from PySide6.QtCore import Qt, QSize, QPointF
+from PySide6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QComboBox, QCheckBox, QTextEdit,
@@ -10,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Icon Helper Function
+# Helper Function for Local File Icons
 # -------------------------------------------------------------
 def get_pixmap(icon_name, size=(24, 24)):
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,173 @@ def get_pixmap(icon_name, size=(24, 24)):
             if not pix.isNull():
                 return pix.scaled(size[0], size[1], Qt.KeepAspectRatio, Qt.SmoothTransformation)
     return None
+
+
+# -------------------------------------------------------------
+# Instant PVC Vector Logo
+# -------------------------------------------------------------
+class InstantPVCLogo(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(70, 70)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        center_x, center_y, radius = 35, 35, 30
+        points = []
+        for i in range(6):
+            angle_rad = math.radians(60 * i - 30)
+            x = center_x + radius * math.cos(angle_rad)
+            y = center_y + radius * math.sin(angle_rad)
+            points.append(QPointF(x, y))
+
+        pen = QPen(QColor("#FFFFFF"), 3)
+        painter.setPen(pen)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawPolygon(QPolygonF(points))
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor("#FFFFFF"))
+        painter.drawRoundedRect(22, 22, 26, 18, 3, 3)
+        
+        painter.setBrush(QColor("#4C1D95"))
+        painter.drawRect(25, 26, 7, 7)
+        painter.drawRect(34, 26, 11, 2)
+        painter.drawRect(34, 30, 11, 2)
+        painter.drawRect(25, 35, 20, 2)
+
+
+# -------------------------------------------------------------
+# Login Window (Redesigned for Instant PVC)
+# -------------------------------------------------------------
+class LoginWidget(QWidget):
+    def __init__(self, on_login_success):
+        super().__init__()
+        self.on_login_success = on_login_success
+        
+        self.setStyleSheet("""
+            QWidget#LoginMain {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4C1D95, stop:1 #2E1065);
+            }
+        """)
+        self.setObjectName("LoginMain")
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setAlignment(Qt.AlignCenter)
+
+        center_box = QWidget()
+        center_box.setFixedWidth(420)
+        box_layout = QVBoxLayout(center_box)
+        box_layout.setContentsMargins(0, 0, 0, 0)
+        box_layout.setSpacing(15)
+
+        logo_container = QHBoxLayout()
+        logo_container.addWidget(InstantPVCLogo(), 0, Qt.AlignCenter)
+        box_layout.addLayout(logo_container)
+
+        title_lbl = QLabel("INSTANT PVC")
+        title_lbl.setFont(QFont("Segoe UI", 22, QFont.Bold))
+        title_lbl.setStyleSheet("color: #FFFFFF; letter-spacing: 2px;")
+        title_lbl.setAlignment(Qt.AlignCenter)
+        box_layout.addWidget(title_lbl)
+
+        subtitle_lbl = QLabel("Card Issuance Suite")
+        subtitle_lbl.setFont(QFont("Segoe UI", 11))
+        subtitle_lbl.setStyleSheet("color: #DDD6FE; margin-bottom: 5px;")
+        subtitle_lbl.setAlignment(Qt.AlignCenter)
+        box_layout.addWidget(subtitle_lbl)
+
+        form_card = QFrame()
+        form_card.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-radius: 8px;
+            }
+            QLabel {
+                color: #4B5563;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            QLineEdit {
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 8px 10px;
+                font-size: 13px;
+                color: #111827;
+            }
+            QLineEdit:focus {
+                border: 2px solid #7C3AED;
+                background-color: #FFFFFF;
+            }
+        """)
+        
+        card_layout = QVBoxLayout(form_card)
+        card_layout.setContentsMargins(25, 25, 25, 25)
+        card_layout.setSpacing(10)
+
+        card_layout.addWidget(QLabel("User ID"))
+        self.user_entry = QLineEdit()
+        self.user_entry.setFixedHeight(38)
+        card_layout.addWidget(self.user_entry)
+
+        card_layout.addWidget(QLabel("Password"))
+        self.pass_entry = QLineEdit()
+        self.pass_entry.setEchoMode(QLineEdit.Password)
+        self.pass_entry.setFixedHeight(38)
+        card_layout.addWidget(self.pass_entry)
+
+        box_layout.addWidget(form_card)
+
+        forgot_btn = QPushButton("Forgot Password?")
+        forgot_btn.setCursor(Qt.PointingHandCursor)
+        forgot_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                color: #E9D5FF;
+                font-size: 12px;
+                font-weight: 500;
+                border: none;
+            }
+            QPushButton:hover {
+                color: #FFFFFF;
+                text-decoration: underline;
+            }
+        """)
+        box_layout.addWidget(forgot_btn, 0, Qt.AlignCenter)
+
+        login_btn = QPushButton("Sign In")
+        login_btn.setFixedWidth(120)
+        login_btn.setFixedHeight(38)
+        login_btn.setCursor(Qt.PointingHandCursor)
+        login_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2563EB;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border: none;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+            QPushButton:pressed {
+                background-color: #1E40AF;
+            }
+        """)
+        login_btn.clicked.connect(self.check_login)
+        box_layout.addWidget(login_btn, 0, Qt.AlignCenter)
+
+        main_layout.addWidget(center_box)
+
+    def check_login(self):
+        if self.user_entry.text().strip() == "admin" and self.pass_entry.text().strip() == "admin123":
+            self.on_login_success("admin")
+        else:
+            QMessageBox.critical(self, "Login Failed", "User ID သို့မဟုတ် Password မှားယွင်းနေပါသည်။\n(Default: admin / admin123)")
 
 
 # -------------------------------------------------------------
@@ -56,7 +224,6 @@ class EditPropertiesDialog(QDialog):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Header Frame
         header = QFrame()
         header.setFixedHeight(40)
         header.setStyleSheet("background-color: #6B21A8;")
@@ -75,7 +242,6 @@ class EditPropertiesDialog(QDialog):
 
         main_layout.addWidget(header)
 
-        # Form Layout
         form_frame = QWidget()
         form_layout = QVBoxLayout(form_frame)
         form_layout.setContentsMargins(20, 15, 20, 15)
@@ -131,7 +297,6 @@ class EditPropertiesDialog(QDialog):
 
         main_layout.addWidget(form_frame)
 
-        # Bottom Buttons
         btn_bar = QFrame()
         btn_bar.setFixedHeight(45)
         btn_bar.setStyleSheet("background-color: #E5E7EB;")
@@ -184,75 +349,7 @@ class EditPropertiesDialog(QDialog):
 
 
 # -------------------------------------------------------------
-# Login Window
-# -------------------------------------------------------------
-class LoginWidget(QWidget):
-    def __init__(self, on_login_success):
-        super().__init__()
-        self.on_login_success = on_login_success
-        self.setStyleSheet("background-color: #5D2E8C;")
-
-        layout = QVBoxLayout(self)
-        
-        card = QFrame()
-        card.setFixedSize(420, 480)
-        card.setStyleSheet("QFrame { background-color: #FFFFFF; border-radius: 15px; }")
-        
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(30, 25, 30, 25)
-
-        title = QLabel("ENTRUST")
-        title.setFont(QFont("Arial Black", 22))
-        title.setStyleSheet("color: #2B2B2B;")
-        title.setAlignment(Qt.AlignCenter)
-
-        subtitle = QLabel("Adaptive Issuance™\nInstant ID")
-        subtitle.setFont(QFont("Arial", 12, QFont.Bold))
-        subtitle.setStyleSheet("color: #4A4A4A;")
-        subtitle.setAlignment(Qt.AlignCenter)
-
-        notice_box = QTextEdit()
-        notice_box.setReadOnly(True)
-        notice_box.setFixedHeight(65)
-        notice_box.setText("An evaluation license is in effect, which provides the features of Instant ID Professional edition. The license expires on October 5, 2026.")
-        notice_box.setStyleSheet("background-color: #F1C40F; color: #5B4500; font-size: 11px; border-radius: 5px; border: none;")
-
-        self.user_entry = QLineEdit()
-        self.user_entry.setPlaceholderText("User ID")
-        self.user_entry.setFixedHeight(35)
-        self.user_entry.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 5px; padding: 5px;")
-
-        self.pass_entry = QLineEdit()
-        self.pass_entry.setPlaceholderText("Password")
-        self.pass_entry.setEchoMode(QLineEdit.Password)
-        self.pass_entry.setFixedHeight(35)
-        self.pass_entry.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 5px; padding: 5px;")
-
-        login_btn = QPushButton("Log In")
-        login_btn.setFixedHeight(35)
-        login_btn.setStyleSheet("QPushButton { background-color: #5D2E8C; color: white; font-weight: bold; border-radius: 5px; } QPushButton:hover { background-color: #4A2370; }")
-        login_btn.clicked.connect(self.check_login)
-
-        card_layout.addWidget(title)
-        card_layout.addWidget(subtitle)
-        card_layout.addWidget(notice_box)
-        card_layout.addWidget(QLabel("User ID"))
-        card_layout.addWidget(self.user_entry)
-        card_layout.addWidget(QLabel("Password"))
-        card_layout.addWidget(self.pass_entry)
-        card_layout.addWidget(login_btn)
-
-        layout.addWidget(card, 0, Qt.AlignCenter)
-
-    def check_login(self):
-        if self.user_entry.text().strip() == "admin" and self.pass_entry.text().strip() == "admin123":
-            self.on_login_success("admin")
-        else:
-            QMessageBox.critical(self, "Login Failed", "User ID သို့မဟုတ် Password မှားယွင်းနေပါသည်။\n(Default: admin / admin123)")
-
-
-# -------------------------------------------------------------
-# Designer Interface
+# Designer Interface (Updated Icons & Toolbar)
 # -------------------------------------------------------------
 class CredentialDesignerWidget(QWidget):
     def __init__(self, on_close):
@@ -274,7 +371,6 @@ class CredentialDesignerWidget(QWidget):
         self.design_title_lbl.setStyleSheet("color: white; font-size: 18px; font-weight: bold;")
         ribbon_layout.addWidget(self.design_title_lbl)
 
-        # Edit Title Pencil Button
         self.edit_btn = QPushButton()
         self.edit_btn.setFixedSize(60, 60)
         self.edit_btn.setToolTip("Edit Properties")
@@ -302,9 +398,9 @@ class CredentialDesignerWidget(QWidget):
 
         main_layout.addWidget(ribbon)
 
-        # Toolbar Frame
+        # Prominent Toolbar Section
         toolbar_frame = QFrame()
-        toolbar_frame.setFixedHeight(48)  # Height ကို အနည်းငယ် မြှင့်ထားသည်
+        toolbar_frame.setFixedHeight(48)
         toolbar_frame.setStyleSheet("""
             QFrame {
                 background-color: #F3F4F6; 
@@ -314,7 +410,7 @@ class CredentialDesignerWidget(QWidget):
                 background-color: #FFFFFF; 
                 border: 1px solid #CBD5E1; 
                 border-radius: 4px;
-                font-size: 16px;          /* Icon / Text အရွယ်အစားကို ကြီးပေးထားသည် */
+                font-size: 16px;
                 font-weight: bold;
                 color: #1F2937;
             }
@@ -346,14 +442,14 @@ class CredentialDesignerWidget(QWidget):
                 tb_layout.addWidget(line)
             else:
                 btn = QPushButton(icon)
-                btn.setFixedSize(36, 36)  # Button Size ကို 28x26 မှ 36x36 သို့ တိုးမြှင့်ထားသည်
+                btn.setFixedSize(36, 36)
                 if tooltip:
                     btn.setToolTip(tooltip)
                 tb_layout.addWidget(btn)
 
         tb_layout.addStretch()
         main_layout.addWidget(toolbar_frame)
-        
+
         # Workspace Area
         workspace = QFrame()
         workspace.setStyleSheet("background-color: #D1D5DB;")
@@ -407,12 +503,12 @@ class CredentialDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Main Application Window
+# Main Window Frame
 # -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Entrust Adaptive Issuance - Instant ID")
+        self.setWindowTitle("Instant PVC")
         self.resize(1200, 720)
 
         self.login_widget = LoginWidget(self.show_dashboard)
