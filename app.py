@@ -125,20 +125,19 @@ class LoginWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Main Dashboard Window
+# Main Application Dashboard (Integrated Header Navigation)
 # -------------------------------------------------------------
-class DashboardWidget(QWidget):
-    def __init__(self, username, on_logout, on_open_tab):
+class MainDashboardWidget(QWidget):
+    def __init__(self, username, on_logout):
         super().__init__()
         self.username = username
         self.on_logout = on_logout
-        self.on_open_tab = on_open_tab
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Navigation Bar (With Direct Tabs)
+        # 1. Top Navigation Bar (Home | Design | Printer Queues)
         nav_bar = QFrame()
         nav_bar.setFixedHeight(50)
         nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
@@ -169,44 +168,31 @@ class DashboardWidget(QWidget):
                 color: #374151; 
                 font-size: 13px; 
                 font-weight: 600; 
-                padding: 6px 12px; 
+                padding: 14px 16px;
+                border-bottom: 2px solid transparent;
             } 
             QPushButton:hover { 
                 color: #6B21A8; 
-                background-color: #F3E8FF;
-                border-radius: 4px;
             }
         """
 
-        # Direct Tabs
-        home_btn = QPushButton("Home")
-        home_btn.setStyleSheet(nav_btn_style + "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; border-radius: 0px; }")
+        self.home_btn = QPushButton("Home")
+        self.home_btn.setCursor(Qt.PointingHandCursor)
+        self.home_btn.setStyleSheet(nav_btn_style)
+        self.home_btn.clicked.connect(self.show_home_view)
 
-        cards_btn = QPushButton("Cards")
-        cards_btn.setStyleSheet(nav_btn_style)
-        cards_btn.clicked.connect(lambda: self.on_open_tab(0))
+        self.design_btn = QPushButton("Design")
+        self.design_btn.setCursor(Qt.PointingHandCursor)
+        self.design_btn.setStyleSheet(nav_btn_style)
+        self.design_btn.clicked.connect(self.show_design_view)
 
-        workflows_btn = QPushButton("Workflows")
-        workflows_btn.setStyleSheet(nav_btn_style)
-        workflows_btn.clicked.connect(lambda: self.on_open_tab(1))
+        self.printer_btn = QPushButton("Printer Queues")
+        self.printer_btn.setCursor(Qt.PointingHandCursor)
+        self.printer_btn.setStyleSheet(nav_btn_style)
 
-        reports_btn = QPushButton("Reports")
-        reports_btn.setStyleSheet(nav_btn_style)
-        reports_btn.clicked.connect(lambda: self.on_open_tab(2))
-
-        field_conn_btn = QPushButton("Field Connections")
-        field_conn_btn.setStyleSheet(nav_btn_style)
-        field_conn_btn.clicked.connect(lambda: self.on_open_tab(3))
-
-        printer_btn = QPushButton("Printer Queues")
-        printer_btn.setStyleSheet(nav_btn_style)
-
-        nav_layout.addWidget(home_btn)
-        nav_layout.addWidget(cards_btn)
-        nav_layout.addWidget(workflows_btn)
-        nav_layout.addWidget(reports_btn)
-        nav_layout.addWidget(field_conn_btn)
-        nav_layout.addWidget(printer_btn)
+        nav_layout.addWidget(self.home_btn)
+        nav_layout.addWidget(self.design_btn)
+        nav_layout.addWidget(self.printer_btn)
         nav_layout.addStretch()
 
         main_layout.addWidget(nav_bar)
@@ -240,20 +226,21 @@ class DashboardWidget(QWidget):
 
         main_layout.addWidget(purple_bar)
 
-        # 3. Main Home Content Area
-        content_area = QWidget()
-        content_area.setStyleSheet("background-color: #F9FAFB;")
-        content_layout = QVBoxLayout(content_area)
-        content_layout.setContentsMargins(20, 15, 20, 15)
+        # 3. Main Views (Stacked Widget for Home View & Design View)
+        self.main_stack = QStackedWidget()
 
-        tabs = QTabWidget()
-        tabs.setStyleSheet("""
+        # --- A. HOME VIEW ---
+        home_view = QWidget()
+        home_layout = QVBoxLayout(home_view)
+        home_layout.setContentsMargins(20, 15, 20, 15)
+
+        home_tabs = QTabWidget()
+        home_tabs.setStyleSheet("""
             QTabWidget::pane { border: 1px solid #E5E7EB; background-color: #FFFFFF; top: -1px; }
             QTabBar::tab { background-color: #E5E7EB; color: #4B5563; font-weight: bold; padding: 8px 20px; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-right: 4px; }
             QTabBar::tab:selected { background-color: #FFFFFF; color: #1F2937; border-top: 3px solid #6B21A8; }
         """)
 
-        # Credentials Sub-Tab
         cred_tab = QWidget()
         cred_layout = QVBoxLayout(cred_tab)
         cred_layout.setContentsMargins(15, 15, 15, 15)
@@ -262,101 +249,92 @@ class DashboardWidget(QWidget):
         grid_btn = QPushButton("田")
         grid_btn.setFixedSize(32, 32)
         grid_btn.setStyleSheet("background-color: #E2E8F0; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
-        
         list_btn = QPushButton("≡")
         list_btn.setFixedSize(32, 32)
         list_btn.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 16px;")
-
         toolbar_layout.addWidget(grid_btn)
         toolbar_layout.addWidget(list_btn)
         toolbar_layout.addStretch()
 
         cred_layout.addLayout(toolbar_layout)
 
-        empty_box = QLabel("No credentials available. Select Cards, Workflows, Reports or Field Connections from top menu.")
+        empty_box = QLabel("No credentials available. Click 'Design' in top menu to manage templates.")
         empty_box.setAlignment(Qt.AlignCenter)
         empty_box.setStyleSheet("color: #9CA3AF; font-size: 14px; margin-top: 80px;")
         cred_layout.addWidget(empty_box)
         cred_layout.addStretch()
 
-        # System Reports Sub-Tab
-        reports_tab = QWidget()
-        reports_layout = QVBoxLayout(reports_tab)
-        reports_layout.addWidget(QLabel("Reports Dashboard", alignment=Qt.AlignCenter))
+        system_logs_tab = QWidget()
+        logs_layout = QVBoxLayout(system_logs_tab)
+        logs_layout.addWidget(QLabel("System Logs Dashboard", alignment=Qt.AlignCenter))
 
-        tabs.addTab(cred_tab, "Credentials")
-        tabs.addTab(reports_tab, "System Logs")
+        home_tabs.addTab(cred_tab, "Credentials")
+        home_tabs.addTab(system_logs_tab, "System Logs")
+        home_layout.addWidget(home_tabs)
 
-        content_layout.addWidget(tabs)
-        main_layout.addWidget(content_area)
+        # --- B. DESIGN VIEW (Cards, Workflows, Reports, Field Connections Tabs) ---
+        design_view = QWidget()
+        design_layout = QVBoxLayout(design_view)
+        design_layout.setContentsMargins(20, 15, 20, 15)
 
-
-# -------------------------------------------------------------
-# Main Design & Configuration Workspace (Tabs)
-# -------------------------------------------------------------
-class DesignWorkspaceWidget(QWidget):
-    def __init__(self, on_close, initial_tab=0):
-        super().__init__()
-        self.on_close = on_close
-        
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        # Header Banner
-        ribbon = QFrame()
-        ribbon.setFixedHeight(50)
-        ribbon.setStyleSheet("background-color: #6B21A8;")
-        ribbon_layout = QHBoxLayout(ribbon)
-        ribbon_layout.setContentsMargins(15, 0, 15, 0)
-
-        title_lbl = QLabel("Design & Management Workspace")
-        title_lbl.setStyleSheet("color: white; font-size: 15px; font-weight: bold;")
-        ribbon_layout.addWidget(title_lbl)
-        ribbon_layout.addStretch()
-
-        back_btn = QPushButton("Back to Home")
-        back_btn.setStyleSheet("background-color: #581C87; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold;")
-        back_btn.clicked.connect(self.on_close)
-        ribbon_layout.addWidget(back_btn)
-
-        main_layout.addWidget(ribbon)
-
-        # Tab Views for Cards, Workflows, Reports, Field Connections
-        self.tabs = QTabWidget()
-        self.tabs.setStyleSheet("""
-            QTabWidget::pane { border: none; background-color: #F9FAFB; }
-            QTabBar::tab { background-color: #E5E7EB; color: #4B5563; font-weight: bold; padding: 12px 28px; margin-right: 2px; font-size: 13px; }
-            QTabBar::tab:selected { background-color: #FFFFFF; color: #6B21A8; border-bottom: 3px solid #6B21A8; }
+        self.design_tabs = QTabWidget()
+        self.design_tabs.setStyleSheet("""
+            QTabWidget::pane { border: 1px solid #E5E7EB; background-color: #FFFFFF; top: -1px; }
+            QTabBar::tab { background-color: #E5E7EB; color: #4B5563; font-weight: bold; padding: 10px 24px; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-right: 4px; font-size: 13px; }
+            QTabBar::tab:selected { background-color: #FFFFFF; color: #6B21A8; border-top: 3px solid #6B21A8; }
         """)
 
-        # 1. Cards
-        cards_widget = QWidget()
-        cards_layout = QVBoxLayout(cards_widget)
-        cards_layout.addWidget(QLabel("Cards Canvas & ID Design Area", alignment=Qt.AlignCenter))
-        
-        # 2. Workflows
-        workflows_widget = QWidget()
-        workflows_layout = QVBoxLayout(workflows_widget)
-        workflows_layout.addWidget(QLabel("Workflows & Issuance Process Configuration", alignment=Qt.AlignCenter))
+        # 1. Cards Tab
+        cards_tab = QWidget()
+        cards_layout = QVBoxLayout(cards_tab)
+        cards_layout.addWidget(QLabel("Cards Design Canvas Area", alignment=Qt.AlignCenter))
 
-        # 3. Reports
-        reports_widget = QWidget()
-        reports_layout = QVBoxLayout(reports_widget)
-        reports_layout.addWidget(QLabel("Custom Design Reports & Analytics", alignment=Qt.AlignCenter))
+        # 2. Workflows Tab
+        workflows_tab = QWidget()
+        workflows_layout = QVBoxLayout(workflows_tab)
+        workflows_layout.addWidget(QLabel("Workflows & Issuance Rules Manager", alignment=Qt.AlignCenter))
 
-        # 4. Field Connections
-        field_conn_widget = QWidget()
-        field_conn_layout = QVBoxLayout(field_conn_widget)
+        # 3. Reports Tab
+        reports_tab = QWidget()
+        reports_layout = QVBoxLayout(reports_tab)
+        reports_layout.addWidget(QLabel("Reports Template Generator", alignment=Qt.AlignCenter))
+
+        # 4. Field Connections Tab
+        field_conn_tab = QWidget()
+        field_conn_layout = QVBoxLayout(field_conn_tab)
         field_conn_layout.addWidget(QLabel("Database & Field Connections Mapping Workspace", alignment=Qt.AlignCenter))
 
-        self.tabs.addTab(cards_widget, "Cards")
-        self.tabs.addTab(workflows_widget, "Workflows")
-        self.tabs.addTab(reports_widget, "Reports")
-        self.tabs.addTab(field_conn_widget, "Field Connections")
+        self.design_tabs.addTab(cards_tab, "Cards")
+        self.design_tabs.addTab(workflows_tab, "Workflows")
+        self.design_tabs.addTab(reports_tab, "Reports")
+        self.design_tabs.addTab(field_conn_tab, "Field Connections")
 
-        self.tabs.setCurrentIndex(initial_tab)
-        main_layout.addWidget(self.tabs)
+        design_layout.addWidget(self.design_tabs)
+
+        # Add Views to Main Stack
+        self.main_stack.addWidget(home_view)    # Index 0
+        self.main_stack.addWidget(design_view)  # Index 1
+
+        main_layout.addWidget(self.main_stack)
+        
+        # Show Home View by Default
+        self.show_home_view()
+
+    def set_nav_active(self, active_btn):
+        active_style = "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; font-weight: bold; padding: 14px 16px; background: transparent; }"
+        normal_style = "QPushButton { color: #374151; border-bottom: 2px solid transparent; font-weight: 600; padding: 14px 16px; background: transparent; } QPushButton:hover { color: #6B21A8; }"
+
+        self.home_btn.setStyleSheet(active_style if active_btn == "home" else normal_style)
+        self.design_btn.setStyleSheet(active_style if active_btn == "design" else normal_style)
+        self.printer_btn.setStyleSheet(normal_style)
+
+    def show_home_view(self):
+        self.set_nav_active("home")
+        self.main_stack.setCurrentIndex(0)
+
+    def show_design_view(self):
+        self.set_nav_active("design")
+        self.main_stack.setCurrentIndex(1)
 
 
 # -------------------------------------------------------------
@@ -379,14 +357,9 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.login_widget)
 
     def show_dashboard(self, username):
-        self.dashboard_widget = DashboardWidget(username, on_logout=self.show_login, on_open_tab=self.show_design_tab)
+        self.dashboard_widget = MainDashboardWidget(username, on_logout=self.show_login)
         self.stack.addWidget(self.dashboard_widget)
         self.stack.setCurrentWidget(self.dashboard_widget)
-
-    def show_design_tab(self, tab_index=0):
-        self.design_workspace = DesignWorkspaceWidget(on_close=lambda: self.stack.setCurrentWidget(self.dashboard_widget), initial_tab=tab_index)
-        self.stack.addWidget(self.design_workspace)
-        self.stack.setCurrentWidget(self.design_workspace)
 
 
 if __name__ == "__main__":
