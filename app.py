@@ -4,7 +4,8 @@ from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget
+    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
+    QDialog, QComboBox, QDoubleSpinBox, QRadioButton, QButtonGroup, QGridLayout
 )
 
 # -------------------------------------------------------------
@@ -38,6 +39,147 @@ class InstantPVCLogo(QWidget):
         painter.setBrush(color)
         s = self.size_val / 70
         painter.drawRoundedRect(22 * s, 22 * s, 26 * s, 18 * s, 2, 2)
+
+
+# -------------------------------------------------------------
+# Create New Card Dialog (Pop-up Window)
+# -------------------------------------------------------------
+class CreateCardDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Create New Card Template")
+        self.setFixedSize(480, 420)
+        self.setStyleSheet("""
+            QDialog { background-color: #FFFFFF; }
+            QLabel { color: #374151; font-size: 13px; font-weight: 600; }
+            QLineEdit, QComboBox, QDoubleSpinBox {
+                background-color: #F9FAFB;
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 13px;
+                color: #111827;
+            }
+            QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus {
+                border: 2px solid #7C3AED;
+                background-color: #FFFFFF;
+            }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+
+        # Header Title
+        header_lbl = QLabel("New Card Template")
+        header_lbl.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        header_lbl.setStyleSheet("color: #4C1D95;")
+        layout.addWidget(header_lbl)
+
+        # Form Layout
+        form_grid = QGridLayout()
+        form_grid.setSpacing(12)
+
+        # 1. Card Name
+        form_grid.addWidget(QLabel("Card Name:"), 0, 0)
+        self.card_name_input = QLineEdit()
+        self.card_name_input.setPlaceholderText("e.g. Employee ID Card")
+        form_grid.addWidget(self.card_name_input, 0, 1, 1, 2)
+
+        # 2. Preset Sizes
+        form_grid.addWidget(QLabel("Preset Size:"), 1, 0)
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItems([
+            "CR80 Standard ID Card (85.60 x 53.98 mm)",
+            "CR100 Oversized ID Card (98.50 x 67.00 mm)",
+            "Custom Size"
+        ])
+        self.preset_combo.currentIndexChanged.connect(self.on_preset_changed)
+        form_grid.addWidget(self.preset_combo, 1, 1, 1, 2)
+
+        # 3. Dimensions (Width & Height)
+        form_grid.addWidget(QLabel("Width (mm):"), 2, 0)
+        self.width_spin = QDoubleSpinBox()
+        self.width_spin.setRange(10.0, 500.0)
+        self.width_spin.setValue(85.60)
+        self.width_spin.setDecimals(2)
+        form_grid.addWidget(self.width_spin, 2, 1)
+
+        form_grid.addWidget(QLabel("Height (mm):"), 3, 0)
+        self.height_spin = QDoubleSpinBox()
+        self.height_spin.setRange(10.0, 500.0)
+        self.height_spin.setValue(53.98)
+        self.height_spin.setDecimals(2)
+        form_grid.addWidget(self.height_spin, 3, 1)
+
+        # 4. Orientation
+        form_grid.addWidget(QLabel("Orientation:"), 4, 0)
+        orient_box = QHBoxLayout()
+        self.radio_landscape = QRadioButton("Landscape")
+        self.radio_portrait = QRadioButton("Portrait")
+        self.radio_landscape.setChecked(True)
+
+        self.orient_group = QButtonGroup()
+        self.orient_group.addButton(self.radio_landscape)
+        self.orient_group.addButton(self.radio_portrait)
+
+        orient_box.addWidget(self.radio_landscape)
+        orient_box.addWidget(self.radio_portrait)
+        orient_box.addStretch()
+        form_grid.addLayout(orient_box, 4, 1, 1, 2)
+
+        layout.addLayout(form_grid)
+        layout.addStretch()
+
+        # Action Buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setFixedSize(90, 36)
+        cancel_btn.setCursor(Qt.PointingHandCursor)
+        cancel_btn.setStyleSheet("""
+            QPushButton { background-color: #E5E7EB; color: #374151; font-weight: 600; border: none; border-radius: 6px; }
+            QPushButton:hover { background-color: #D1D5DB; }
+        """)
+        cancel_btn.clicked.connect(self.reject)
+
+        create_btn = QPushButton("Create")
+        create_btn.setFixedSize(110, 36)
+        create_btn.setCursor(Qt.PointingHandCursor)
+        create_btn.setStyleSheet("""
+            QPushButton { background-color: #6B21A8; color: white; font-weight: bold; border: none; border-radius: 6px; }
+            QPushButton:hover { background-color: #581C87; }
+        """)
+        create_btn.clicked.connect(self.accept)
+
+        btn_layout.addWidget(cancel_btn)
+        btn_layout.addWidget(create_btn)
+
+        layout.addLayout(btn_layout)
+
+    def on_preset_changed(self, index):
+        if index == 0:  # CR80
+            self.width_spin.setValue(85.60)
+            self.height_spin.setValue(53.98)
+            self.width_spin.setEnabled(False)
+            self.height_spin.setEnabled(False)
+        elif index == 1:  # CR100
+            self.width_spin.setValue(98.50)
+            self.height_spin.setValue(67.00)
+            self.width_spin.setEnabled(False)
+            self.height_spin.setEnabled(False)
+        else:  # Custom
+            self.width_spin.setEnabled(True)
+            self.height_spin.setEnabled(True)
+
+    def get_card_data(self):
+        return {
+            "name": self.card_name_input.text().strip() or "Untitled Card",
+            "width": self.width_spin.value(),
+            "height": self.height_spin.value(),
+            "orientation": "Landscape" if self.radio_landscape.isChecked() else "Portrait"
+        }
 
 
 # -------------------------------------------------------------
@@ -203,10 +345,10 @@ class MainDashboardWidget(QWidget):
         purple_layout.setContentsMargins(20, 0, 20, 0)
         purple_layout.setSpacing(10)
 
-        # Purple Tabs (Home & Design Sub-tabs)
+        # Purple Tabs
         self.purple_tab_stack = QStackedWidget()
 
-        # Home Sub-tabs (Credentials, System Logs)
+        # Home Sub-tabs
         home_tabs_bar = QFrame()
         home_tabs_layout = QHBoxLayout(home_tabs_bar)
         home_tabs_layout.setContentsMargins(0, 0, 0, 0)
@@ -215,7 +357,7 @@ class MainDashboardWidget(QWidget):
         self.cred_tab_btn = QPushButton("Credentials")
         self.logs_tab_btn = QPushButton("System Logs")
 
-        # Design Sub-tabs (Cards, Workflows, Reports, Field Connections)
+        # Design Sub-tabs
         design_tabs_bar = QFrame()
         design_tabs_layout = QHBoxLayout(design_tabs_bar)
         design_tabs_layout.setContentsMargins(0, 0, 0, 0)
@@ -226,7 +368,6 @@ class MainDashboardWidget(QWidget):
         self.reports_tab_btn = QPushButton("Reports")
         self.field_conn_tab_btn = QPushButton("Field Connections")
 
-        # Style Sub-Tabs on Purple Bar
         purple_tab_style = """
             QPushButton {
                 background-color: #7C3AED;
@@ -263,8 +404,6 @@ class MainDashboardWidget(QWidget):
         purple_layout.addWidget(self.purple_tab_stack)
         purple_layout.addStretch()
 
-        # (ညာဘက်ခြမ်းမှ admin, notification နှင့် logout ခလုပ်များကို ဖျက်ထားပါသည်)
-
         main_layout.addWidget(purple_bar)
 
         # 3. Content Body
@@ -273,7 +412,6 @@ class MainDashboardWidget(QWidget):
         # --- A. HOME PAGES ---
         self.home_content_stack = QStackedWidget()
 
-        # 1. Credentials Content Page
         cred_page = QWidget()
         cred_layout = QVBoxLayout(cred_page)
         cred_layout.setContentsMargins(20, 15, 20, 15)
@@ -297,7 +435,6 @@ class MainDashboardWidget(QWidget):
         cred_layout.addWidget(empty_box)
         cred_layout.addStretch()
 
-        # 2. System Logs Content Page
         logs_page = QWidget()
         logs_layout = QVBoxLayout(logs_page)
         logs_layout.addWidget(QLabel("System Logs Dashboard", alignment=Qt.AlignCenter))
@@ -308,10 +445,53 @@ class MainDashboardWidget(QWidget):
         # --- B. DESIGN PAGES ---
         self.design_content_stack = QStackedWidget()
 
+        # --- 1. CARDS TAB PAGE (WITH CREATE BUTTON) ---
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
-        cards_layout.addWidget(QLabel("Cards Design Canvas Area", alignment=Qt.AlignCenter))
+        cards_layout.setContentsMargins(20, 20, 20, 20)
 
+        # Action Header Bar
+        cards_action_bar = QHBoxLayout()
+        
+        cards_title = QLabel("Card Templates")
+        cards_title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        cards_title.setStyleSheet("color: #1F2937;")
+        cards_action_bar.addWidget(cards_title)
+        cards_action_bar.addStretch()
+
+        # "+ Create Card" Button
+        self.create_card_btn = QPushButton("+ Create Card")
+        self.create_card_btn.setFixedSize(130, 36)
+        self.create_card_btn.setCursor(Qt.PointingHandCursor)
+        self.create_card_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2563EB;
+                color: #FFFFFF;
+                font-weight: bold;
+                font-size: 13px;
+                border: none;
+                border-radius: 6px;
+            }
+            QPushButton:hover {
+                background-color: #1D4ED8;
+            }
+        """)
+        self.create_card_btn.clicked.connect(self.open_create_card_dialog)
+        cards_action_bar.addWidget(self.create_card_btn)
+
+        cards_layout.addLayout(cards_action_bar)
+
+        # Card Template List Display Area
+        self.cards_display_area = QVBoxLayout()
+        self.no_cards_lbl = QLabel("No card templates created yet.\nClick '+ Create Card' button above to create one.")
+        self.no_cards_lbl.setAlignment(Qt.AlignCenter)
+        self.no_cards_lbl.setStyleSheet("color: #6B7280; font-size: 14px; margin-top: 60px;")
+        self.cards_display_area.addWidget(self.no_cards_lbl)
+
+        cards_layout.addLayout(self.cards_display_area)
+        cards_layout.addStretch()
+
+        # Other Design Pages
         workflows_page = QWidget()
         workflows_layout = QVBoxLayout(workflows_page)
         workflows_layout.addWidget(QLabel("Workflows & Issuance Rules Manager", alignment=Qt.AlignCenter))
@@ -346,6 +526,19 @@ class MainDashboardWidget(QWidget):
 
         # Show Home View by Default
         self.show_home_view()
+
+    def open_create_card_dialog(self):
+        dialog = CreateCardDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            card_info = dialog.get_card_data()
+            self.no_cards_lbl.hide()
+            
+            # ဥပမာ - ကတ်အသစ်ဖန်တီးပြီးကြောင်း ပြသပေးခြင်း
+            card_item = QLabel(f"✓ Created Card: {card_info['name']} ({card_info['width']}x{card_info['height']} mm) - {card_info['orientation']}")
+            card_item.setStyleSheet("background-color: #F3F4F6; color: #1E293B; border-left: 4px solid #2563EB; padding: 12px; font-weight: bold; border-radius: 4px;")
+            self.cards_display_area.addWidget(card_item)
+
+            QMessageBox.information(self, "Success", f"Card Template '{card_info['name']}' ကို အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ။")
 
     def update_purple_tab_active(self, active_btn, btn_group):
         active_style = """
