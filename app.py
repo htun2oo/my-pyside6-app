@@ -6,26 +6,19 @@ from PySide6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox
 )
 
+
 class LoginWidget(QWidget):
     def __init__(self):
         super().__init__()
-
-        # Background Color
         self.setStyleSheet("background-color: #1E2530;")
 
-        # Main Layout
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        # Login Card Container
+        # Card Container
         card = QFrame()
-        card.setFixedSize(360, 420)
-        card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border-radius: 10px;
-            }
-        """)
+        card.setFixedSize(360, 380)
+        card.setStyleSheet("background-color: #FFFFFF; border-radius: 10px;")
 
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(35, 35, 35, 35)
@@ -49,7 +42,7 @@ class LoginWidget(QWidget):
         self.user_input.setPlaceholderText("Enter username")
         self.user_input.setStyleSheet("""
             QLineEdit {
-                border: 1.5px solid #8E44AD;
+                border: 1.5px solid #BDC3C7;
                 border-radius: 5px;
                 padding: 8px;
                 background-color: #FAFAFA;
@@ -57,7 +50,7 @@ class LoginWidget(QWidget):
                 font-size: 13px;
             }
             QLineEdit:focus {
-                border: 2px solid #6C5CE7;
+                border: 2px solid #7B2CBF;
                 background-color: #FFFFFF;
             }
         """)
@@ -81,14 +74,14 @@ class LoginWidget(QWidget):
                 font-size: 13px;
             }
             QLineEdit:focus {
-                border: 2px solid #6C5CE7;
+                border: 2px solid #7B2CBF;
                 background-color: #FFFFFF;
             }
         """)
         self.pass_input.returnPressed.connect(self.handle_login)
         card_layout.addWidget(self.pass_input)
 
-        card_layout.addSpacing(10)
+        card_layout.addSpacing(15)
 
         # Sign In Button
         login_btn = QPushButton("Sign In")
@@ -109,25 +102,6 @@ class LoginWidget(QWidget):
         login_btn.clicked.connect(self.handle_login)
         card_layout.addWidget(login_btn)
 
-        # Forgot Password Button
-        forgot_btn = QPushButton("Forgot Password?")
-        forgot_btn.setCursor(Qt.PointingHandCursor)
-        forgot_btn.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                border: none;
-                color: #2563EB;
-                font-size: 12px;
-                font-weight: 600;
-                text-decoration: underline;
-            }
-            QPushButton:hover {
-                color: #1D4ED8;
-            }
-        """)
-        forgot_btn.clicked.connect(self.handle_forgot_password)
-        card_layout.addWidget(forgot_btn, alignment=Qt.AlignCenter)
-
         layout.addWidget(card)
 
     def handle_login(self):
@@ -139,19 +113,13 @@ class LoginWidget(QWidget):
         else:
             QMessageBox.warning(self, "Login Error", "Invalid Username or Password!")
 
-    def handle_forgot_password(self):
-        QMessageBox.information(self, "Reset Password", "Please contact your system administrator to reset your password.")
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Instant Card Studio - Login")
+        self.setWindowTitle("Instant Card Studio")
         self.resize(1100, 700)
-
-        # Set Login Widget as Central Widget directly
-        self.login_widget = LoginWidget()
-        self.setCentralWidget(self.login_widget)
+        self.setCentralWidget(LoginWidget())
 
 
 if __name__ == "__main__":
