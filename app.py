@@ -42,63 +42,49 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Clickable Card Canvas Box (Matching Image Style)
+# Clickable Card Canvas Box (Clean Layout matching Image 3)
 # -------------------------------------------------------------
-class SelectableCardWidget(QFrame):
+class SelectableCardWidget(QWidget):
     clicked = Signal()
 
     def __init__(self, title_text):
         super().__init__()
-        self.setFixedSize(360, 400)
+        self.setFixedWidth(360)
         self.setCursor(Qt.PointingHandCursor)
-        self.is_selected = False
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
 
-        # Title (Front Side / Back Side)
+        # Title Label (Front Side / Back Side)
         self.title_lbl = QLabel(title_text)
         self.title_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
         self.title_lbl.setStyleSheet("color: #374151; background: transparent;")
         layout.addWidget(self.title_lbl)
 
-        # Gray Canvas Container Box
+        # Main Gray Canvas Container (No Blue Outline Borders)
         self.gray_box = QFrame()
-        self.gray_box.setStyleSheet("background-color: #8C8C8C; border-radius: 0px;")
+        self.gray_box.setFixedHeight(380)
+        self.gray_box.setStyleSheet("background-color: #939393; border: none; border-radius: 0px;")
         
         gray_layout = QVBoxLayout(self.gray_box)
-        gray_layout.setContentsMargins(20, 35, 20, 35)
+        gray_layout.setContentsMargins(20, 60, 20, 60)
 
-        # White PVC Card Box
+        # White PVC Card Area
         self.white_card = QFrame()
-        self.white_card.setFixedHeight(200)
+        self.white_card.setFixedHeight(210)
         self.white_card.setStyleSheet("""
             background-color: #FFFFFF;
-            border: 1px solid #333333;
+            border: 1px solid #2D2D2D;
             border-radius: 12px;
         """)
 
         gray_layout.addWidget(self.white_card)
         layout.addWidget(self.gray_box)
 
-        self.update_selection_style()
-
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
-
-    def set_selected(self, selected: bool):
-        self.is_selected = selected
-        self.update_selection_style()
-
-    def update_selection_style(self):
-        if self.is_selected:
-            self.setStyleSheet("QFrame { background-color: #E5E7EB; border: 1px solid #7C3AED; }")
-            self.gray_box.setStyleSheet("background-color: #808080; border: None;")
-        else:
-            self.setStyleSheet("QFrame { background-color: transparent; border: 1px solid transparent; }")
-            self.gray_box.setStyleSheet("background-color: #8C8C8C; border: None;")
 
 
 # -------------------------------------------------------------
@@ -128,7 +114,7 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addWidget(purple_ribbon)
 
-        # 2. Designer Toolbar (Exact Icons)
+        # 2. Designer Toolbar
         toolbar = QFrame()
         toolbar.setFixedHeight(40)
         toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
@@ -186,33 +172,35 @@ class CardDesignerWidget(QWidget):
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
 
-        # Scroll Canvas
+        # Scroll Canvas Area
         canvas_scroll = QScrollArea()
         canvas_scroll.setWidgetResizable(True)
         canvas_scroll.setStyleSheet("background-color: #F3F4F6; border: none;")
 
         canvas_container = QWidget()
         canvas_layout = QVBoxLayout(canvas_container)
-        canvas_layout.setContentsMargins(10, 10, 10, 10)
+        canvas_layout.setContentsMargins(15, 15, 15, 15)
 
-        self.active_layer_lbl = QLabel("Active Design Layer: Color")
-        self.active_layer_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        self.active_layer_lbl.setStyleSheet("color: #374151;")
-        self.active_layer_lbl.setAlignment(Qt.AlignCenter)
-        canvas_layout.addWidget(self.active_layer_lbl)
-
-        cards_layout = QHBoxLayout()
-        cards_layout.setSpacing(15)
+        cards_outer_layout = QHBoxLayout()
+        cards_outer_layout.setSpacing(20)
 
         self.front_card = SelectableCardWidget("Front Side")
+
+        # Center Label Placement matching Image 3
+        self.active_layer_lbl = QLabel("Active Design Layer: Color")
+        self.active_layer_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.active_layer_lbl.setStyleSheet("color: #374151; background: transparent;")
+        self.active_layer_lbl.setAlignment(Qt.AlignCenter)
+
         self.back_card = SelectableCardWidget("Back Side")
 
-        cards_layout.addStretch()
-        cards_layout.addWidget(self.front_card)
-        cards_layout.addWidget(self.back_card)
-        cards_layout.addStretch()
+        cards_outer_layout.addStretch()
+        cards_outer_layout.addWidget(self.front_card)
+        cards_outer_layout.addWidget(self.active_layer_lbl)
+        cards_outer_layout.addWidget(self.back_card)
+        cards_outer_layout.addStretch()
 
-        canvas_layout.addLayout(cards_layout)
+        canvas_layout.addLayout(cards_outer_layout)
         canvas_layout.addStretch()
 
         canvas_scroll.setWidget(canvas_container)
@@ -324,14 +312,10 @@ class CardDesignerWidget(QWidget):
         self.select_front_side()
 
     def select_front_side(self):
-        self.front_card.set_selected(True)
-        self.back_card.set_selected(False)
         self.active_layer_lbl.setText("Active Design Layer: Color")
         self.prop_title.setText("— Front Side Properties")
 
     def select_back_side(self):
-        self.front_card.set_selected(False)
-        self.back_card.set_selected(True)
         self.active_layer_lbl.setText("Active Design Layer: Black")
         self.prop_title.setText("— Back Side Properties")
 
@@ -592,7 +576,6 @@ class MainDashboardWidget(QWidget):
         cards_layout.addLayout(cards_top_action_bar)
         cards_layout.addStretch()
 
-        # Other dummy pages
         workflows_page = QWidget()
         reports_page = QWidget()
         field_conn_page = QWidget()
