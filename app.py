@@ -5,8 +5,52 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
-    QTabWidget, QCheckBox, QScrollArea, QComboBox
+    QTabWidget, QCheckBox, QScrollArea, QComboBox, QListWidget, QListWidgetItem
 )
+
+# -------------------------------------------------------------
+# Custom Layer Item Widget for "Layers Tab"
+# -------------------------------------------------------------
+class LayerItemWidget(QWidget):
+    def __init__(self, layer_name, is_selected=False, is_checked=False):
+        super().__init__()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(8)
+
+        # Eye Icon Indicator
+        self.eye_lbl = QLabel("👁")
+        self.eye_lbl.setFont(QFont("Segoe UI", 8))
+        self.eye_lbl.setStyleSheet("color: #6B7280; background: transparent;")
+        layout.addWidget(self.eye_lbl)
+
+        # Layer Name Label
+        self.name_lbl = QLabel(layer_name)
+        self.name_lbl.setFont(QFont("Segoe UI", 9))
+        self.name_lbl.setStyleSheet("background: transparent;")
+        layout.addWidget(self.name_lbl, stretch=1)
+
+        # Checkbox Indicator
+        self.chk = QCheckBox()
+        self.chk.setChecked(is_checked)
+        self.chk.setStyleSheet("""
+            QCheckBox::indicator {
+                width: 13px; height: 13px;
+                border: 1px solid #9CA3AF; background-color: #FFFFFF;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #2563EB; border-color: #2563EB;
+            }
+        """)
+        layout.addWidget(self.chk)
+
+        if is_selected:
+            self.setStyleSheet("background-color: #B2C8E6;")
+            self.name_lbl.setStyleSheet("color: #1E3A8A; font-weight: bold;")
+        else:
+            self.setStyleSheet("background-color: transparent;")
+            self.name_lbl.setStyleSheet("color: #374151;")
+
 
 # -------------------------------------------------------------
 # Logo Widget
@@ -42,7 +86,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Clickable Card Canvas Box with Aligned Header
+# Selectable Card Canvas Box
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
@@ -56,7 +100,6 @@ class SelectableCardWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        # Header Row (Front/Back Side on left, Active Layer on right)
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -74,7 +117,6 @@ class SelectableCardWidget(QWidget):
 
         layout.addLayout(header_layout)
 
-        # Main Gray Canvas Container
         self.gray_box = QFrame()
         self.gray_box.setFixedHeight(280)
         self.gray_box.setStyleSheet("background-color: #8C8C8C; border: none;")
@@ -82,7 +124,6 @@ class SelectableCardWidget(QWidget):
         gray_layout = QVBoxLayout(self.gray_box)
         gray_layout.setContentsMargins(20, 25, 20, 25)
 
-        # White Card Area
         self.white_card = QFrame()
         self.white_card.setFixedHeight(210)
         self.white_card.setStyleSheet("""
@@ -103,7 +144,7 @@ class SelectableCardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Designer View
+# Card Designer View with Properties & Layers Tabs
 # -------------------------------------------------------------
 class CardDesignerWidget(QWidget):
     def __init__(self, card_name="Credential Design 1", on_close_callback=None):
@@ -114,7 +155,7 @@ class CardDesignerWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Ribbon Bar
+        # 1. Header Ribbon
         purple_ribbon = QFrame()
         purple_ribbon.setFixedHeight(36)
         purple_ribbon.setStyleSheet("background-color: #5B21B6;")
@@ -175,12 +216,12 @@ class CardDesignerWidget(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(toolbar)
 
-        # 3. Canvas & Properties Body
+        # 3. Canvas & Properties Section
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
 
-        # Scroll Canvas Area
+        # Canvas Area
         canvas_scroll = QScrollArea()
         canvas_scroll.setWidgetResizable(True)
         canvas_scroll.setStyleSheet("background-color: #EFEFEF; border: none;")
@@ -192,7 +233,6 @@ class CardDesignerWidget(QWidget):
         cards_outer_layout = QHBoxLayout()
         cards_outer_layout.setSpacing(40)
 
-        # Front & Back Side Widgets
         self.front_card = SelectableCardWidget("Front Side")
         self.back_card = SelectableCardWidget("Back Side")
 
@@ -207,50 +247,107 @@ class CardDesignerWidget(QWidget):
         canvas_scroll.setWidget(canvas_container)
         body_layout.addWidget(canvas_scroll, stretch=1)
 
-        # Right Side Panel
+        # Right Side Panel (Properties / Layers Tab)
         right_panel = QFrame()
-        right_panel.setFixedWidth(230)
-        right_panel.setStyleSheet("background-color: #F9FAFB; border-left: 1px solid #D1D5DB;")
+        right_panel.setFixedWidth(270)
+        right_panel.setStyleSheet("background-color: #E5E7EB; border-left: 1px solid #C0C0C0;")
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setContentsMargins(6, 6, 6, 6)
 
-        prop_tabs = QTabWidget()
-        prop_tabs.setStyleSheet("""
-            QTabWidget::pane { border: none; }
-            QTabBar::tab {
-                background: #E5E7EB; color: #374151; padding: 5px 14px;
-                font-size: 11px; border: 1px solid #D1D5DB;
+        self.prop_tabs = QTabWidget()
+        self.prop_tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #C0C0C0;
+                background-color: #E5E7EB;
+                top: -1px;
             }
-            QTabBar::tab:selected { background: #FFFFFF; border-bottom: 2px solid #6B21A8; }
+            QTabBar::tab {
+                background: #D1D5DB;
+                color: #374151;
+                padding: 6px 20px;
+                font-size: 11px;
+                font-weight: bold;
+                border: 1px solid #C0C0C0;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: #FFFFFF;
+                border-bottom: 1px solid #FFFFFF;
+                color: #111827;
+            }
         """)
 
+        # --- Properties Tab Page ---
         properties_page = QWidget()
+        properties_page.setStyleSheet("background-color: #E5E7EB;")
         prop_page_layout = QVBoxLayout(properties_page)
-        prop_page_layout.setContentsMargins(10, 12, 10, 12)
+        prop_page_layout.setContentsMargins(8, 12, 8, 12)
 
-        self.prop_title = QLabel("— Front Side Properties")
+        prop_box = QFrame()
+        prop_box.setStyleSheet("background-color: #DCDCDC; border: 1px solid #C0C0C0;")
+        box_layout = QVBoxLayout(prop_box)
+        box_layout.setContentsMargins(10, 10, 10, 10)
+        box_layout.setSpacing(10)
+
+        self.prop_title = QLabel("- Front Side Properties")
         self.prop_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        self.prop_title.setStyleSheet("color: #374151;")
-        prop_page_layout.addWidget(self.prop_title)
+        self.prop_title.setStyleSheet("color: #1F2937; border: none; background: transparent;")
+        box_layout.addWidget(self.prop_title)
 
-        chk1 = QCheckBox("Rotate print orientation 180 degrees")
-        chk1.setStyleSheet("color: #4B5563; font-size: 11px;")
-        prop_page_layout.addWidget(chk1)
+        chk1 = QCheckBox("Rotate print orientation 180\ndegrees")
+        chk1.setStyleSheet("color: #374151; font-size: 11px; border: none; background: transparent;")
+        box_layout.addWidget(chk1)
 
         chk2 = QCheckBox("Tactile Impression Module")
-        chk2.setStyleSheet("color: #4B5563; font-size: 11px;")
-        prop_page_layout.addWidget(chk2)
+        chk2.setStyleSheet("color: #374151; font-size: 11px; border: none; background: transparent;")
+        box_layout.addWidget(chk2)
 
+        prop_page_layout.addWidget(prop_box)
         prop_page_layout.addStretch()
 
+        # --- Layers Tab Page ---
         layers_page = QWidget()
-        layers_layout = QVBoxLayout(layers_page)
-        layers_layout.addWidget(QLabel("Layer 1: Color\nLayer 2: Black", alignment=Qt.AlignTop))
+        layers_page.setStyleSheet("background-color: #E5E7EB;")
+        layers_page_layout = QVBoxLayout(layers_page)
+        layers_page_layout.setContentsMargins(8, 12, 8, 12)
 
-        prop_tabs.addTab(properties_page, "Properties")
-        prop_tabs.addTab(layers_page, "Layers")
+        layer_container = QFrame()
+        layer_container.setStyleSheet("background-color: #E5E7EB; border: 1px solid #C0C0C0;")
+        layer_box_layout = QVBoxLayout(layer_container)
+        layer_box_layout.setContentsMargins(6, 8, 6, 8)
+        layer_box_layout.setSpacing(4)
 
-        right_layout.addWidget(prop_tabs)
+        self.layer_header_lbl = QLabel("Front Side")
+        self.layer_header_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.layer_header_lbl.setStyleSheet("color: #1F2937; border: none; background: transparent;")
+        layer_box_layout.addWidget(self.layer_header_lbl)
+
+        # Layer Items Data according to Image 2
+        layer_data = [
+            ("All layers", False, False),
+            ("Background", False, False),
+            ("Color", True, True),
+            ("Black", False, False),
+            ("Topcoat", False, True),
+            ("Retransfer Material", False, False),
+            ("Luster/Fluorescent", False, False),
+            ("Non-printable area", False, False),
+            ("Lamination", False, False),
+            ("Emboss or indent", False, False),
+            ("Magnetic stripe", False, False)
+        ]
+
+        for name, is_sel, is_chk in layer_data:
+            item_w = LayerItemWidget(name, is_selected=is_sel, is_checked=is_chk)
+            layer_box_layout.addWidget(item_w)
+
+        layer_box_layout.addStretch()
+        layers_page_layout.addWidget(layer_container)
+
+        self.prop_tabs.addTab(properties_page, "Properties")
+        self.prop_tabs.addTab(layers_page, "Layers")
+
+        right_layout.addWidget(self.prop_tabs)
         body_layout.addWidget(right_panel)
 
         main_layout.addLayout(body_layout, stretch=1)
@@ -304,12 +401,14 @@ class CardDesignerWidget(QWidget):
     def select_front_side(self):
         self.front_card.set_layer_text("Active Design Layer: Color")
         self.back_card.set_layer_text("")
-        self.prop_title.setText("— Front Side Properties")
+        self.prop_title.setText("- Front Side Properties")
+        self.layer_header_lbl.setText("Front Side")
 
     def select_back_side(self):
         self.front_card.set_layer_text("")
         self.back_card.set_layer_text("Active Design Layer: Black")
-        self.prop_title.setText("— Back Side Properties")
+        self.prop_title.setText("- Back Side Properties")
+        self.layer_header_lbl.setText("Back Side")
 
 
 # -------------------------------------------------------------
@@ -394,7 +493,6 @@ class MainDashboardWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Top Bar
         nav_bar = QFrame()
         nav_bar.setFixedHeight(45)
         nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
@@ -448,7 +546,6 @@ class MainDashboardWidget(QWidget):
 
         main_layout.addWidget(nav_bar)
 
-        # Main Container Stack
         self.main_stack = QStackedWidget()
 
         self.dashboard_view = QWidget()
