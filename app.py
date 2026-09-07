@@ -1,7 +1,7 @@
 import sys
 import math
-from PySide6.QtCore import Qt, QPointF, Signal, QPoint
-from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF, QCursor
+from PySide6.QtCore import Qt, QPointF, Signal, QPoint, QRectF
+from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
@@ -12,13 +12,10 @@ from PySide6.QtWidgets import (
 # Horizontal Ruler Widget
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
-    start_h_guide = Signal(int)
-
     def __init__(self, height=26, offset=25):
         super().__init__()
         self.setFixedHeight(height)
         self.offset = offset
-        self.setCursor(Qt.SizeVerCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -61,23 +58,15 @@ class HorizontalRulerWidget(QWidget):
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 5, x, self.height())
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            global_y = event.globalPosition().toPoint().y()
-            self.start_h_guide.emit(global_y)
-
 
 # -------------------------------------------------------------
 # Vertical Ruler Widget
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
-    start_v_guide = Signal(int)
-
     def __init__(self, width=26, offset=30):
         super().__init__()
         self.setFixedWidth(width)
         self.offset = offset
-        self.setCursor(Qt.SizeHorCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -120,135 +109,140 @@ class VerticalRulerWidget(QWidget):
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 5, y, self.width(), y)
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            global_x = event.globalPosition().toPoint().x()
-            self.start_v_guide.emit(global_x)
-
 
 # -------------------------------------------------------------
-# Transparent Guideline Overlay Panel (Card အပေါ်မှ Line ပေါ်စေရန်)
+# Single Integrated Interactive Card View (Fixed Guideline Drawing)
 # -------------------------------------------------------------
-class GuidelineOverlay(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+class InteractiveCardCanvas(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(380, 310)
+        self.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
+
+        # Guidelines Data
         self.h_guides = []
         self.v_guides = []
         self.active_drag = None
         self.drag_type = None
+
         self.setMouseTracking(True)
 
+        # Rulers
+        self.h_ruler = HorizontalRulerWidget(height=26, offset=25)
+        self.h_ruler.setParent(self)
+        self.h_ruler.setGeometry(26, 0, 354, 26)
+
+        self.v_ruler = VerticalRulerWidget(width=26, offset=30)
+        self.v_ruler.setParent(self)
+        self.v_ruler.setGeometry(0, 26, 26, 284)
+
+        # Corner box
+        self.corner_box = QWidget(self)
+        self.corner_box.setGeometry(0, 0, 26, 26)
+        self.corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
+
     def paintEvent(self, event):
+        super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiased)
 
-        # Photoshop Standard Cyan Guideline (#00FFFF)
-        photoshop_cyan = QPen(QColor("#00FFFF"), 1.5, Qt.SolidLine)
-        painter.setPen(photoshop_cyan)
+        # 1. Dark Gray Background
+        gray_rect = QRectF(26, 26, 354, 284)
+        painter.fillRect(gray_rect, QColor("#6B7280"))
 
-        # Horizontal Lines
+        # 2. Inner White Card
+        card_rect = QRectF(51, 56, 304, 224)
+        painter.setBrush(QColor("#FFFFFF"))
+        painter.setPen(QPen(QColor("#1F2937"), 1))
+        painter.drawRoundedRect(card_rect, 12, 12)
+
+        # 3. Cyan Guidelines (Draw Over Everything)
+        cyan_pen = QPen(QColor("#00FFFF"), 1.5, Qt.SolidLine)
+        painter.setPen(cyan_pen)
+
         for y in self.h_guides:
             if 0 <= y <= self.height():
-                painter.drawLine(0, y, self.width(), y)
+                painter.drawLine(26, y, self.width(), y)
 
-        # Vertical Lines
         for x in self.v_guides:
             if 0 <= x <= self.width():
-                painter.drawLine(x, 0, x, self.height())
-
-
-# -------------------------------------------------------------
-# Canvas Overlay Frame
-# -------------------------------------------------------------
-class CanvasOverlayFrame(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.setStyleSheet("background-color: #6B7280; border: none;")
-
-        self.gray_layout = QVBoxLayout(self)
-        self.gray_layout.setContentsMargins(25, 30, 25, 30)
-
-        # White Card Window
-        self.white_card = QFrame()
-        self.white_card.setFixedHeight(210)
-        self.white_card.setStyleSheet("background-color: #FFFFFF; border: 1px solid #1F2937; border-radius: 12px;")
-        self.gray_layout.addWidget(self.white_card)
-
-        # Guideline Overlay Widget (Card အပေါ်မှ ပေါ်လာအောင် ထားရှိခြင်း)
-        self.overlay = GuidelineOverlay(self)
-        self.overlay.raise_()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.overlay.resize(self.size())
-
-    def start_new_h_guide(self, global_y):
-        local_y = self.mapFromGlobal(QPoint(0, global_y)).y()
-        self.overlay.h_guides.append(local_y)
-        self.overlay.active_drag = len(self.overlay.h_guides) - 1
-        self.overlay.drag_type = 'H'
-        self.grabMouse()
-        self.overlay.update()
-
-    def start_new_v_guide(self, global_x):
-        local_x = self.mapFromGlobal(QPoint(global_x, 0)).x()
-        self.overlay.v_guides.append(local_x)
-        self.overlay.active_drag = len(self.overlay.v_guides) - 1
-        self.overlay.drag_type = 'V'
-        self.grabMouse()
-        self.overlay.update()
+                painter.drawLine(x, 26, x, self.height())
 
     def mousePressEvent(self, event):
         pos = event.position().toPoint()
-        for idx, y in enumerate(self.overlay.h_guides):
+
+        # Check existing guidelines click
+        for idx, y in enumerate(self.h_guides):
             if abs(pos.y() - y) <= 5:
-                self.overlay.active_drag = idx
-                self.overlay.drag_type = 'H'
+                self.active_drag = idx
+                self.drag_type = 'H'
                 self.grabMouse()
                 return
-        for idx, x in enumerate(self.overlay.v_guides):
+
+        for idx, x in enumerate(self.v_guides):
             if abs(pos.x() - x) <= 5:
-                self.overlay.active_drag = idx
-                self.overlay.drag_type = 'V'
+                self.active_drag = idx
+                self.drag_type = 'V'
                 self.grabMouse()
                 return
+
+        # Check Ruler clicks for NEW guidelines
+        if pos.y() <= 26 and pos.x() > 26:
+            self.h_guides.append(pos.y())
+            self.active_drag = len(self.h_guides) - 1
+            self.drag_type = 'H'
+            self.grabMouse()
+            self.update()
+            return
+
+        if pos.x() <= 26 and pos.y() > 26:
+            self.v_guides.append(pos.x())
+            self.active_drag = len(self.v_guides) - 1
+            self.drag_type = 'V'
+            self.grabMouse()
+            self.update()
+            return
+
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         pos = event.position().toPoint()
-        if self.overlay.active_drag is not None:
-            if self.overlay.drag_type == 'H':
-                self.overlay.h_guides[self.overlay.active_drag] = pos.y()
-            elif self.overlay.drag_type == 'V':
-                self.overlay.v_guides[self.overlay.active_drag] = pos.x()
-            self.overlay.update()
+
+        if self.active_drag is not None:
+            if self.drag_type == 'H':
+                self.h_guides[self.active_drag] = pos.y()
+            elif self.drag_type == 'V':
+                self.v_guides[self.active_drag] = pos.x()
+            self.update()
         else:
-            over_h = any(abs(pos.y() - y) <= 5 for y in self.overlay.h_guides)
-            over_v = any(abs(pos.x() - x) <= 5 for x in self.overlay.v_guides)
-            if over_h:
+            over_h = any(abs(pos.y() - y) <= 5 for y in self.h_guides)
+            over_v = any(abs(pos.x() - x) <= 5 for x in self.v_guides)
+
+            if over_h or (pos.y() <= 26 and pos.x() > 26):
                 self.setCursor(Qt.SizeVerCursor)
-            elif over_v:
+            elif over_v or (pos.x() <= 26 and pos.y() > 26):
                 self.setCursor(Qt.SizeHorCursor)
             else:
                 self.setCursor(Qt.ArrowCursor)
+
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if self.overlay.active_drag is not None:
+        if self.active_drag is not None:
             pos = event.position().toPoint()
-            if self.overlay.drag_type == 'H':
-                if pos.y() < 0 or pos.y() > self.height():
-                    self.overlay.h_guides.pop(self.overlay.active_drag)
-            elif self.overlay.drag_type == 'V':
-                if pos.x() < 0 or pos.x() > self.width():
-                    self.overlay.v_guides.pop(self.overlay.active_drag)
+            if self.drag_type == 'H':
+                if pos.y() < 26 or pos.y() > self.height():
+                    self.h_guides.pop(self.active_drag)
+            elif self.drag_type == 'V':
+                if pos.x() < 26 or pos.x() > self.width():
+                    self.v_guides.pop(self.active_drag)
 
-            self.overlay.active_drag = None
-            self.overlay.drag_type = None
+            self.active_drag = None
+            self.drag_type = None
             self.releaseMouse()
             self.setCursor(Qt.ArrowCursor)
-            self.overlay.update()
+            self.update()
+
         super().mouseReleaseEvent(event)
 
 
@@ -391,31 +385,7 @@ class SelectableCardWidget(QWidget):
 
         layout.addLayout(header_layout)
 
-        self.canvas_frame = QFrame()
-        self.canvas_frame.setFixedHeight(310)
-        self.canvas_frame.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
-
-        grid_layout = QGridLayout(self.canvas_frame)
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        grid_layout.setSpacing(0)
-
-        corner_box = QWidget()
-        corner_box.setFixedSize(26, 26)
-        corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
-        grid_layout.addWidget(corner_box, 0, 0)
-
-        self.h_ruler = HorizontalRulerWidget(height=26, offset=25)
-        self.v_ruler = VerticalRulerWidget(width=26, offset=30)
-
-        grid_layout.addWidget(self.h_ruler, 0, 1)
-        grid_layout.addWidget(self.v_ruler, 1, 0)
-
-        self.gray_box = CanvasOverlayFrame()
-        grid_layout.addWidget(self.gray_box, 1, 1)
-
-        self.h_ruler.start_h_guide.connect(self.gray_box.start_new_h_guide)
-        self.v_ruler.start_v_guide.connect(self.gray_box.start_new_v_guide)
-
+        self.canvas_frame = InteractiveCardCanvas()
         layout.addWidget(self.canvas_frame)
 
     def set_layer_text(self, text):
