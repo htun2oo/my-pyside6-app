@@ -325,7 +325,7 @@ class CardDesignerWidget(QWidget):
 
         # Purple Ribbon Title
         purple_ribbon = QFrame()
-        purple_ribbon.setFixedHeight(50)
+        purple_ribbon.setFixedHeight(45)
         purple_ribbon.setStyleSheet("background-color: #830093;")
         
         purple_layout = QHBoxLayout(purple_ribbon)
@@ -333,7 +333,7 @@ class CardDesignerWidget(QWidget):
         purple_layout.setSpacing(12)
 
         title_lbl = QLabel(card_name)
-        title_lbl.setFont(QFont("Segoe UI", 16, QFont.Medium))
+        title_lbl.setFont(QFont("Segoe UI", 14, QFont.Medium))
         title_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
         purple_layout.addWidget(title_lbl)
 
@@ -410,7 +410,77 @@ class CardDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 4. Main Dashboard Matching Image 2
+# 4. Design View Widget (With + Create Card Button at Top-Left)
+# -------------------------------------------------------------
+
+class DesignViewWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.stack = QStackedWidget()
+
+        # View 1: Button Container at Top-Left
+        self.landing_page = QWidget()
+        lp_layout = QVBoxLayout(self.landing_page)
+        lp_layout.setContentsMargins(15, 15, 15, 15)
+        lp_layout.setSpacing(10)
+
+        top_left_bar = QHBoxLayout()
+        
+        self.create_card_btn = QPushButton("+ Create Card")
+        self.create_card_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        self.create_card_btn.setCursor(Qt.PointingHandCursor)
+        self.create_card_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #8E44AD;
+                color: #FFFFFF;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+            }
+            QPushButton:hover {
+                background-color: #7D3C98;
+            }
+        """)
+        self.create_card_btn.clicked.connect(self.open_editor)
+
+        # Place Button at Top-Left
+        top_left_bar.addWidget(self.create_card_btn)
+        top_left_bar.addStretch()
+
+        lp_layout.addLayout(top_left_bar)
+
+        # Blank/Placeholder Content Area
+        placeholder_area = QFrame()
+        placeholder_area.setStyleSheet("background-color: #F8F9FA; border: 1px dashed #CBD5E0; border-radius: 6px;")
+        
+        pa_layout = QVBoxLayout(placeholder_area)
+        pa_lbl = QLabel("Click '+ Create Card' at top-left to start designing.")
+        pa_lbl.setFont(QFont("Segoe UI", 11))
+        pa_lbl.setStyleSheet("color: #A0AEC0; border: none;")
+        pa_lbl.setAlignment(Qt.AlignCenter)
+        pa_layout.addWidget(pa_lbl)
+
+        lp_layout.addWidget(placeholder_area, stretch=1)
+
+        # View 2: Card Editor
+        self.editor_page = CardDesignerWidget("Credential Design 1")
+
+        self.stack.addWidget(self.landing_page) # Index 0
+        self.stack.addWidget(self.editor_page)  # Index 1
+
+        layout.addWidget(self.stack)
+
+    def open_editor(self):
+        self.stack.setCurrentIndex(1)
+
+
+# -------------------------------------------------------------
+# 5. Main Dashboard Widget
 # -------------------------------------------------------------
 
 class DashboardWidget(QWidget):
@@ -421,29 +491,24 @@ class DashboardWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # --- Top White Navigation Bar ---
+        # --- White Top Header Bar ---
         top_bar = QFrame()
         top_bar.setFixedHeight(48)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
         
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(20, 0, 20, 0)
-        top_layout.setSpacing(25)
 
-        # Title/Logo Area replacement
+        # Left Branding
         title_lbl = QLabel("Instant Card Studio")
         title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
         title_lbl.setStyleSheet("color: #444444; border: none;")
         top_layout.addWidget(title_lbl)
 
-        # Separator line like Image 2
-        sep = QFrame()
-        sep.setFrameShape(QFrame.VLine)
-        sep.setFrameShadow(QFrame.Sunken)
-        sep.setStyleSheet("color: #CCCCCC; max-height: 24px;")
-        top_layout.addWidget(sep)
+        # Push tabs to Center
+        top_layout.addStretch()
 
-        # Top Tabs (Home, Design ▾, Printer Queues)
+        # Centered Navigation Tabs (Home, Design ▾, Printer Queues)
         self.nav_tabs = QTabWidget()
         self.nav_tabs.setStyleSheet("""
             QTabWidget::pane {
@@ -454,40 +519,37 @@ class DashboardWidget(QWidget):
                 color: #555555;
                 font-weight: 600;
                 font-size: 13px;
-                padding: 12px 18px;
+                padding: 12px 22px;
                 border: none;
             }
             QTabBar::tab:selected {
                 color: #000000;
                 font-weight: bold;
+                border-bottom: 3px solid #8E44AD;
             }
             QTabBar::tab:hover {
-                color: #830093;
+                color: #8E44AD;
             }
         """)
 
         top_layout.addWidget(self.nav_tabs)
-        top_layout.addStretch()
 
-        # Right-side user status metadata like Image 2
-        status_lbl = QLabel("Last Login at Mon Sep 07 23:44:38 MMT 2026  |  admin ▾")
-        status_lbl.setFont(QFont("Segoe UI", 9))
-        status_lbl.setStyleSheet("color: #777777; border: none;")
-        top_layout.addWidget(status_lbl)
+        # Balance Stretch so tabs remain in exact center
+        top_layout.addStretch()
 
         layout.addWidget(top_bar)
 
-        # --- Sub Header Purple Ribbon & Content ---
-        self.sub_container = QWidget()
-        sub_layout = QVBoxLayout(self.sub_container)
-        sub_layout.setContentsMargins(0, 0, 0, 0)
-        sub_layout.setSpacing(0)
+        # --- Sub Container for Home & Content ---
+        self.home_container = QWidget()
+        home_layout = QVBoxLayout(self.home_container)
+        home_layout.setContentsMargins(0, 0, 0, 0)
+        home_layout.setSpacing(0)
 
         # Purple Bar Header
         purple_bar = QFrame()
         purple_bar.setFixedHeight(40)
         purple_bar.setStyleSheet("background-color: #8E44AD;")
-        sub_layout.addWidget(purple_bar)
+        home_layout.addWidget(purple_bar)
 
         # Sub-Tabs for Home (Credentials & Reports)
         self.home_sub_tabs = QTabWidget()
@@ -513,17 +575,17 @@ class DashboardWidget(QWidget):
 
         self.home_sub_tabs.addTab(self.create_credentials_view(), "Credentials")
         self.home_sub_tabs.addTab(self.create_reports_view(), "Reports")
-        sub_layout.addWidget(self.home_sub_tabs)
+        home_layout.addWidget(self.home_sub_tabs)
 
-        # Populate Navigation Tabs
-        self.nav_tabs.addTab(self.sub_container, "Home")
-        self.nav_tabs.addTab(CardDesignerWidget("Credential Design 1"), "Design ▾")
+        # Adding pages to Main Centered Navigation Tabs
+        self.nav_tabs.addTab(self.home_container, "Home")
+        self.nav_tabs.addTab(DesignViewWidget(), "Design ▾")
         self.nav_tabs.addTab(self.create_printer_queues_view(), "Printer Queues")
 
         layout.addWidget(self.nav_tabs)
 
     # ---------------------------------------------------------
-    # Views/Sub-tabs Layouts
+    # Helper Views
     # ---------------------------------------------------------
 
     def create_credentials_view(self):
@@ -531,7 +593,6 @@ class DashboardWidget(QWidget):
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(15, 15, 15, 15)
 
-        # Top Control Icons Row
         btn_bar = QHBoxLayout()
         grid_btn = QToolButton()
         grid_btn.setText("田")
@@ -543,7 +604,6 @@ class DashboardWidget(QWidget):
 
         layout.addLayout(btn_bar)
 
-        # Canvas/List Area
         content_frame = QFrame()
         content_frame.setStyleSheet("background-color: #EAEAEA; border: 1px solid #D1D1D1;")
         layout.addWidget(content_frame, stretch=1)
@@ -600,7 +660,7 @@ class DashboardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 5. Main Window Container
+# 6. Main Window Container
 # -------------------------------------------------------------
 
 class MainWindow(QMainWindow):
