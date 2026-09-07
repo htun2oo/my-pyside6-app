@@ -9,47 +9,46 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Top Horizontal Ruler Widget (တတိယပုံအတိုင်း ပိုမိုပြတ်သားအောင် ပြင်ဆင်ထားသည်)
+# Top Horizontal Ruler Widget (Scale မျဉ်းကြောင်းများ ပေါ်လာစေရန် အထူးပြုပြင်ထားသည်)
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
-    def __init__(self, height=22):
+    def __init__(self, height=26):
         super().__init__()
         self.setFixedHeight(height)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiased)
         
         # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
         
-        # Border
+        # Border Line
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        # Scale Line Pen & Text Font
-        line_pen = QPen(QColor("#1F2937"), 1)
-        font = QFont("Segoe UI", 8, QFont.Bold)
+        # Scale Pens and Font
+        line_pen = QPen(QColor("#000000"), 1)
+        font = QFont("Arial", 8, QFont.Bold)
         painter.setFont(font)
 
-        step = 6            # Small ticks interval
-        major_step = 30     # Major tick interval (for numbers 0, 2, 4...)
+        step = 8            # Small tick interval
+        major_step = 40     # Major tick interval (for numbers 0, 2, 4...)
         val = 0
 
         for x in range(0, self.width(), step):
             if x % major_step == 0:
                 # Major Tick (Long Line)
                 painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 12, x, self.height())
+                painter.drawLine(x, self.height() - 14, x, self.height())
                 
-                # Number (0, 2, 4...)
-                painter.setPen(QPen(QColor("#111827")))
-                painter.drawText(x + 2, 1, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
+                # Number Display (0, 2, 4...)
+                painter.setPen(QPen(QColor("#000000")))
+                painter.drawText(x + 2, 1, 24, 14, Qt.AlignLeft | Qt.AlignTop, str(val))
                 val += 2
             elif x % (step * 2) == 0:
                 # Medium Tick
                 painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 8, x, self.height())
+                painter.drawLine(x, self.height() - 9, x, self.height())
             else:
                 # Small Tick
                 painter.setPen(line_pen)
@@ -57,47 +56,46 @@ class HorizontalRulerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Left Vertical Ruler Widget (တတိယပုံအတိုင်း ပိုမိုပြတ်သားအောင် ပြင်ဆင်ထားသည်)
+# Left Vertical Ruler Widget (Scale မျဉ်းကြောင်းများ ပေါ်လာစေရန် အထူးပြုပြင်ထားသည်)
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
-    def __init__(self, width=22):
+    def __init__(self, width=26):
         super().__init__()
         self.setFixedWidth(width)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiased)
 
         # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
         
-        # Border
+        # Border Line
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        # Scale Line Pen & Text Font
-        line_pen = QPen(QColor("#1F2937"), 1)
-        font = QFont("Segoe UI", 8, QFont.Bold)
+        # Scale Pens and Font
+        line_pen = QPen(QColor("#000000"), 1)
+        font = QFont("Arial", 8, QFont.Bold)
         painter.setFont(font)
 
-        step = 6            # Small ticks interval
-        major_step = 30     # Major tick interval
+        step = 8            # Small tick interval
+        major_step = 40     # Major tick interval
         val = 0
 
         for y in range(0, self.height(), step):
             if y % major_step == 0:
                 # Major Tick (Long Line)
                 painter.setPen(line_pen)
-                painter.drawLine(self.width() - 12, y, self.width(), y)
+                painter.drawLine(self.width() - 14, y, self.width(), y)
                 
-                # Number (0, 2, 4...)
-                painter.setPen(QPen(QColor("#111827")))
-                painter.drawText(2, y + 2, 16, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
+                # Number Display (0, 2, 4...)
+                painter.setPen(QPen(QColor("#000000")))
+                painter.drawText(2, y + 2, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
                 val += 2
             elif y % (step * 2) == 0:
                 # Medium Tick
                 painter.setPen(line_pen)
-                painter.drawLine(self.width() - 8, y, self.width(), y)
+                painter.drawLine(self.width() - 9, y, self.width(), y)
             else:
                 # Small Tick
                 painter.setPen(line_pen)
@@ -105,7 +103,7 @@ class VerticalRulerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Dynamic & Interactive Layer Item Widget
+# Layer Item Widget
 # -------------------------------------------------------------
 class LayerItemWidget(QFrame):
     item_selected = Signal(str)
@@ -125,17 +123,12 @@ class LayerItemWidget(QFrame):
         layout.setContentsMargins(6, 2, 6, 2)
         layout.setSpacing(8)
 
-        # Eye Icon Toggle
+        # Eye Icon Toggle Button
         self.eye_btn = QPushButton("👁" if is_visible else "❌")
         self.eye_btn.setFixedSize(20, 20)
         self.eye_btn.setFont(QFont("Segoe UI", 8))
         self.eye_btn.setCursor(Qt.PointingHandCursor)
-        self.eye_btn.setStyleSheet("""
-            QPushButton {
-                background: transparent; border: none; color: #4B5563;
-            }
-            QPushButton:hover { color: #2563EB; }
-        """)
+        self.eye_btn.setStyleSheet("QPushButton { background: transparent; border: none; color: #4B5563; } QPushButton:hover { color: #2563EB; }")
         self.eye_btn.clicked.connect(self.toggle_eye)
         layout.addWidget(self.eye_btn)
 
@@ -145,19 +138,11 @@ class LayerItemWidget(QFrame):
         self.name_lbl.setStyleSheet("background: transparent;")
         layout.addWidget(self.name_lbl, stretch=1)
 
-        # Interactive Checkbox
+        # Checkbox
         self.chk = QCheckBox()
         self.chk.setChecked(is_checked)
         self.chk.setCursor(Qt.PointingHandCursor)
-        self.chk.setStyleSheet("""
-            QCheckBox::indicator {
-                width: 13px; height: 13px;
-                border: 1px solid #9CA3AF; background-color: #FFFFFF;
-            }
-            QCheckBox::indicator:checked {
-                background-color: #2563EB; border-color: #2563EB;
-            }
-        """)
+        self.chk.setStyleSheet("QCheckBox::indicator { width: 13px; height: 13px; border: 1px solid #9CA3AF; background-color: #FFFFFF; } QCheckBox::indicator:checked { background-color: #2563EB; border-color: #2563EB; }")
         self.chk.toggled.connect(self.on_checkbox_toggled)
         layout.addWidget(self.chk)
 
@@ -198,7 +183,7 @@ class LayerItemWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# Logo Widget
+# Instant PVC Logo Widget
 # -------------------------------------------------------------
 class InstantPVCLogo(QWidget):
     def __init__(self, size=40, is_white=True):
@@ -231,7 +216,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Canvas Box
+# Card Canvas Box (Corner Box & Ruler Container)
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
@@ -246,7 +231,6 @@ class SelectableCardWidget(QWidget):
         layout.setSpacing(6)
 
         header_layout = QHBoxLayout()
-
         self.side_lbl = QLabel(side_text)
         self.side_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
         self.side_lbl.setStyleSheet("color: #374151; background: transparent;")
@@ -269,13 +253,15 @@ class SelectableCardWidget(QWidget):
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_layout.setSpacing(0)
 
+        # Top-Left Corner Box
         corner_box = QWidget()
-        corner_box.setFixedSize(22, 22)
+        corner_box.setFixedSize(26, 26)
         corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
         grid_layout.addWidget(corner_box, 0, 0)
 
-        grid_layout.addWidget(HorizontalRulerWidget(height=22), 0, 1)
-        grid_layout.addWidget(VerticalRulerWidget(width=22), 1, 0)
+        # Rulers
+        grid_layout.addWidget(HorizontalRulerWidget(height=26), 0, 1)
+        grid_layout.addWidget(VerticalRulerWidget(width=26), 1, 0)
 
         self.gray_box = QFrame()
         self.gray_box.setStyleSheet("background-color: #6B7280; border: none;")
@@ -285,11 +271,7 @@ class SelectableCardWidget(QWidget):
 
         self.white_card = QFrame()
         self.white_card.setFixedHeight(210)
-        self.white_card.setStyleSheet("""
-            background-color: #FFFFFF;
-            border: 1px solid #1F2937;
-            border-radius: 12px;
-        """)
+        self.white_card.setStyleSheet("background-color: #FFFFFF; border: 1px solid #1F2937; border-radius: 12px;")
 
         gray_layout.addWidget(self.white_card)
         grid_layout.addWidget(self.gray_box, 1, 1)
@@ -305,7 +287,7 @@ class SelectableCardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Designer View
+# Card Designer Main View
 # -------------------------------------------------------------
 class CardDesignerWidget(QWidget):
     def __init__(self, card_name="Credential Design 1", on_close_callback=None):
@@ -317,7 +299,7 @@ class CardDesignerWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Ribbon
+        # Top Purple Ribbon
         purple_ribbon = QFrame()
         purple_ribbon.setFixedHeight(36)
         purple_ribbon.setStyleSheet("background-color: #5B21B6;")
@@ -340,22 +322,12 @@ class CardDesignerWidget(QWidget):
         tb_layout.setContentsMargins(10, 2, 10, 2)
         tb_layout.setSpacing(3)
 
-        tools = [
-            "↩", "↪", "📄+", "✂", "📋", "T", "T_i", "👤", "🖼", "📊", "〰", "||||", 
-            "💳", "💻", "╱", "⬜", "⭕", "📱", "▦", "🔍+", "🔍-"
-        ]
-        
+        tools = ["↩", "↪", "📄+", "✂", "📋", "T", "T_i", "👤", "🖼", "📊", "〰", "||||", "💳", "💻", "╱", "⬜", "⭕", "📱", "▦", "🔍+", "🔍-"]
         for tool in tools:
             btn = QPushButton(tool)
             btn.setFixedSize(26, 26)
             btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #FFFFFF; border: 1px solid #D1D5DB;
-                    border-radius: 2px; font-size: 11px; font-weight: bold; color: #374151;
-                }
-                QPushButton:hover { background-color: #F3F4F6; border-color: #6B21A8; }
-            """)
+            btn.setStyleSheet("QPushButton { background-color: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 2px; font-size: 11px; font-weight: bold; color: #374151; } QPushButton:hover { background-color: #F3F4F6; border-color: #6B21A8; }")
             tb_layout.addWidget(btn)
 
         tb_layout.addSpacing(8)
@@ -368,7 +340,7 @@ class CardDesignerWidget(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(toolbar)
 
-        # Canvas Area
+        # Main Body Area
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
@@ -398,7 +370,7 @@ class CardDesignerWidget(QWidget):
         canvas_scroll.setWidget(canvas_container)
         body_layout.addWidget(canvas_scroll, stretch=1)
 
-        # Right Panel (Properties & Layers Tab)
+        # Right Panel (Properties & Layers)
         right_panel = QFrame()
         right_panel.setFixedWidth(270)
         right_panel.setStyleSheet("background-color: #E5E7EB; border-left: 1px solid #C0C0C0;")
@@ -406,16 +378,9 @@ class CardDesignerWidget(QWidget):
         right_layout.setContentsMargins(6, 6, 6, 6)
 
         self.prop_tabs = QTabWidget()
-        self.prop_tabs.setStyleSheet("""
-            QTabWidget::pane { border: 1px solid #C0C0C0; background-color: #E5E7EB; top: -1px; }
-            QTabBar::tab {
-                background: #D1D5DB; color: #374151; padding: 6px 20px;
-                font-size: 11px; font-weight: bold; border: 1px solid #C0C0C0; margin-right: 2px;
-            }
-            QTabBar::tab:selected { background: #FFFFFF; border-bottom: 1px solid #FFFFFF; color: #111827; }
-        """)
+        self.prop_tabs.setStyleSheet("QTabWidget::pane { border: 1px solid #C0C0C0; background-color: #E5E7EB; top: -1px; } QTabBar::tab { background: #D1D5DB; color: #374151; padding: 6px 20px; font-size: 11px; font-weight: bold; border: 1px solid #C0C0C0; margin-right: 2px; } QTabBar::tab:selected { background: #FFFFFF; border-bottom: 1px solid #FFFFFF; color: #111827; }")
 
-        # Properties Tab
+        # Properties Page
         properties_page = QWidget()
         properties_page.setStyleSheet("background-color: #E5E7EB;")
         prop_page_layout = QVBoxLayout(properties_page)
@@ -438,7 +403,7 @@ class CardDesignerWidget(QWidget):
         prop_page_layout.addWidget(prop_box)
         prop_page_layout.addStretch()
 
-        # Layers Tab
+        # Layers Page
         layers_page = QWidget()
         layers_page.setStyleSheet("background-color: #E5E7EB;")
         layers_page_layout = QVBoxLayout(layers_page)
@@ -456,17 +421,10 @@ class CardDesignerWidget(QWidget):
         layer_box_layout.addWidget(self.layer_header_lbl)
 
         layer_data = [
-            ("All layers", False, False),
-            ("Background", False, False),
-            ("Color", True, True),
-            ("Black", False, False),
-            ("Topcoat", False, True),
-            ("Retransfer Material", False, False),
-            ("Luster/Fluorescent", False, False),
-            ("Non-printable area", False, False),
-            ("Lamination", False, False),
-            ("Emboss or indent", False, False),
-            ("Magnetic stripe", False, False)
+            ("All layers", False, False), ("Background", False, False), ("Color", True, True),
+            ("Black", False, False), ("Topcoat", False, True), ("Retransfer Material", False, False),
+            ("Luster/Fluorescent", False, False), ("Non-printable area", False, False),
+            ("Lamination", False, False), ("Emboss or indent", False, False), ("Magnetic stripe", False, False)
         ]
 
         for name, is_sel, is_chk in layer_data:
@@ -474,7 +432,6 @@ class CardDesignerWidget(QWidget):
             item_w.item_selected.connect(self.on_layer_selected)
             item_w.visibility_toggled.connect(self.on_layer_visibility_toggled)
             item_w.check_toggled.connect(self.on_layer_check_toggled)
-            
             self.layer_widgets[name] = item_w
             layer_box_layout.addWidget(item_w)
 
@@ -489,7 +446,7 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addLayout(body_layout, stretch=1)
 
-        # Footer Bar
+        # Footer Actions
         footer = QFrame()
         footer.setFixedHeight(36)
         footer.setStyleSheet("background-color: #E5E7EB; border-top: 1px solid #D1D5DB;")
@@ -497,14 +454,7 @@ class CardDesignerWidget(QWidget):
         footer_layout.setContentsMargins(15, 0, 15, 0)
         footer_layout.setSpacing(6)
 
-        btn_style = """
-            QPushButton {
-                background-color: #2563EB; color: white; font-weight: bold;
-                font-size: 11px; border: none; border-radius: 3px; padding: 4px 12px;
-            }
-            QPushButton:hover { background-color: #1D4ED8; }
-        """
-
+        btn_style = "QPushButton { background-color: #2563EB; color: white; font-weight: bold; font-size: 11px; border: none; border-radius: 3px; padding: 4px 12px; } QPushButton:hover { background-color: #1D4ED8; }"
         save_btn = QPushButton("Save")
         save_btn.setStyleSheet(btn_style)
 
@@ -521,7 +471,6 @@ class CardDesignerWidget(QWidget):
 
         self.front_card.clicked.connect(self.select_front_side)
         self.back_card.clicked.connect(self.select_back_side)
-
         self.select_front_side()
 
     def on_layer_selected(self, selected_layer_name):
@@ -559,7 +508,7 @@ class CardDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Main Dashboard
+# Main Dashboard Panel
 # -------------------------------------------------------------
 class MainDashboardWidget(QWidget):
     def __init__(self, username):
@@ -570,7 +519,6 @@ class MainDashboardWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Navigation Bar
         nav_bar = QFrame()
         nav_bar.setFixedHeight(45)
         nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
@@ -594,7 +542,6 @@ class MainDashboardWidget(QWidget):
         nav_layout.addLayout(brand_box)
         nav_layout.addSpacing(20)
 
-        # Nav Buttons
         self.home_btn = QPushButton("Home")
         self.design_btn = QPushButton("Design")
         self.printer_btn = QPushButton("Printer Queues")
@@ -613,7 +560,6 @@ class MainDashboardWidget(QWidget):
 
         main_layout.addWidget(nav_bar)
 
-        # Purple Secondary Header
         purple_bar = QFrame()
         purple_bar.setFixedHeight(38)
         purple_bar.setStyleSheet("background-color: #6B21A8;")
@@ -622,7 +568,6 @@ class MainDashboardWidget(QWidget):
 
         self.purple_tab_stack = QStackedWidget()
 
-        # Home Purple Tabs
         home_tabs_bar = QFrame()
         home_tabs_layout = QHBoxLayout(home_tabs_bar)
         home_tabs_layout.setContentsMargins(0, 0, 0, 0)
@@ -632,7 +577,6 @@ class MainDashboardWidget(QWidget):
         home_tabs_layout.addWidget(self.logs_tab_btn)
         home_tabs_layout.addStretch()
 
-        # Design Purple Tabs
         design_tabs_bar = QFrame()
         design_tabs_layout = QHBoxLayout(design_tabs_bar)
         design_tabs_layout.setContentsMargins(0, 0, 0, 0)
@@ -643,19 +587,8 @@ class MainDashboardWidget(QWidget):
         self.reports_tab_btn = QPushButton("Reports")
         self.field_conn_tab_btn = QPushButton("Field Connections")
 
-        self.design_tab_buttons = [
-            self.cards_tab_btn, self.workflows_tab_btn, 
-            self.reports_tab_btn, self.field_conn_tab_btn
-        ]
-
-        purple_tab_style = """
-            QPushButton { 
-                background-color: #7C3AED; color: #EDE9FE; border: none; 
-                border-top-left-radius: 4px; border-top-right-radius: 4px; 
-                padding: 5px 14px; font-weight: bold; font-size: 11px; 
-            }
-            QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }
-        """
+        self.design_tab_buttons = [self.cards_tab_btn, self.workflows_tab_btn, self.reports_tab_btn, self.field_conn_tab_btn]
+        purple_tab_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 5px 14px; font-weight: bold; font-size: 11px; } QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }"
 
         for btn in [self.cred_tab_btn, self.logs_tab_btn] + self.design_tab_buttons:
             btn.setStyleSheet(purple_tab_style)
@@ -673,21 +606,17 @@ class MainDashboardWidget(QWidget):
         purple_layout.addWidget(self.purple_tab_stack)
         main_layout.addWidget(purple_bar)
 
-        # Central Pages Stack
         self.content_stack = QStackedWidget()
 
-        # Home Page (Credentials)
         cred_page = QWidget()
         cred_layout = QVBoxLayout(cred_page)
         cred_layout.setContentsMargins(20, 20, 20, 20)
         cred_layout.addWidget(QLabel("No credentials available.", alignment=Qt.AlignCenter))
 
-        # Logs Page
         logs_page = QWidget()
         logs_layout = QVBoxLayout(logs_page)
         logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
 
-        # Cards Page
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
@@ -698,13 +627,7 @@ class MainDashboardWidget(QWidget):
         create_card_btn = QPushButton("+ Create Card Design")
         create_card_btn.setFixedSize(160, 36)
         create_card_btn.setCursor(Qt.PointingHandCursor)
-        create_card_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2563EB; color: #FFFFFF; font-size: 12px;
-                font-weight: bold; border: none; border-radius: 4px;
-            }
-            QPushButton:hover { background-color: #1D4ED8; }
-        """)
+        create_card_btn.setStyleSheet("QPushButton { background-color: #2563EB; color: #FFFFFF; font-size: 12px; font-weight: bold; border: none; border-radius: 4px; } QPushButton:hover { background-color: #1D4ED8; }")
         create_card_btn.clicked.connect(self.open_designer_view)
 
         cards_top_action_bar.addWidget(create_card_btn)
@@ -715,20 +638,18 @@ class MainDashboardWidget(QWidget):
         reports_page = QWidget()
         field_conn_page = QWidget()
 
-        # Card Designer Page
         self.designer_view = CardDesignerWidget(card_name="Credential Design 1", on_close_callback=self.close_designer_view)
 
-        self.content_stack.addWidget(cred_page)          # Index 0
-        self.content_stack.addWidget(logs_page)          # Index 1
-        self.content_stack.addWidget(cards_page)         # Index 2
-        self.content_stack.addWidget(workflows_page)     # Index 3
-        self.content_stack.addWidget(reports_page)       # Index 4
-        self.content_stack.addWidget(field_conn_page)    # Index 5
-        self.content_stack.addWidget(self.designer_view) # Index 6
+        self.content_stack.addWidget(cred_page)
+        self.content_stack.addWidget(logs_page)
+        self.content_stack.addWidget(cards_page)
+        self.content_stack.addWidget(workflows_page)
+        self.content_stack.addWidget(reports_page)
+        self.content_stack.addWidget(field_conn_page)
+        self.content_stack.addWidget(self.designer_view)
 
         main_layout.addWidget(self.content_stack)
 
-        # Signal Connections
         self.home_btn.clicked.connect(self.show_home_view)
         self.design_btn.clicked.connect(self.show_design_view)
 
@@ -740,7 +661,6 @@ class MainDashboardWidget(QWidget):
         self.reports_tab_btn.clicked.connect(lambda: self.switch_design_tab(4, self.reports_tab_btn))
         self.field_conn_tab_btn.clicked.connect(lambda: self.switch_design_tab(5, self.field_conn_tab_btn))
 
-        # Default View: Home Page
         self.show_home_view()
 
     def update_purple_tab_active(self, active_btn, btn_group):
@@ -808,14 +728,7 @@ class LoginWidget(QWidget):
         box_layout.addWidget(title_lbl)
 
         form_card = QFrame()
-        form_card.setStyleSheet("""
-            QFrame { background-color: #FFFFFF; border-radius: 8px; }
-            QLabel { color: #4B5563; font-size: 13px; font-weight: 600; }
-            QLineEdit {
-                background-color: #F9FAFB; border: 1px solid #D1D5DB;
-                border-radius: 6px; padding: 8px 10px; font-size: 13px; color: #111827;
-            }
-        """)
+        form_card.setStyleSheet("QFrame { background-color: #FFFFFF; border-radius: 8px; } QLabel { color: #4B5563; font-size: 13px; font-weight: 600; } QLineEdit { background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 8px 10px; font-size: 13px; color: #111827; }")
         
         card_layout = QVBoxLayout(form_card)
         card_layout.setContentsMargins(25, 25, 25, 25)
@@ -850,6 +763,9 @@ class LoginWidget(QWidget):
             QMessageBox.critical(self, "Login Failed", "User ID သို့မဟုတ် Password မှားယွင်းနေပါသည်။")
 
 
+# -------------------------------------------------------------
+# Main Application Window
+# -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
