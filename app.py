@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen, QBrush, QLinearGradient
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QMessageBox,
-    QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView, QToolButton
+    QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView
 )
 
 # -------------------------------------------------------------
@@ -410,7 +410,7 @@ class CardDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 4. Main Dashboard Widget
+# 4. Main Dashboard Widget (Single White Header with Integrated Tabs)
 # -------------------------------------------------------------
 
 class DashboardWidget(QWidget):
@@ -421,23 +421,22 @@ class DashboardWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # --- White Top Bar with Centered Tabs ---
+        # --- White Top Bar containing both Title and Tabs ---
         top_bar = QFrame()
-        top_bar.setFixedHeight(48)
+        top_bar.setFixedHeight(50)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
         
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(20, 0, 20, 0)
+        top_layout.setSpacing(25)
 
-        # Left Title
+        # "Instant Card Studio" Title Text (Left)
         title_lbl = QLabel("Instant Card Studio")
         title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
-        title_lbl.setStyleSheet("color: #444444; border: none;")
+        title_lbl.setStyleSheet("color: #333333; border: none;")
         top_layout.addWidget(title_lbl)
 
-        top_layout.addStretch()
-
-        # Tabs on the White Top Bar
+        # Tabs Widget embedded directly inside the same White Bar
         self.nav_tabs = QTabWidget()
         self.nav_tabs.setStyleSheet("""
             QTabWidget::pane {
@@ -448,7 +447,7 @@ class DashboardWidget(QWidget):
                 color: #555555;
                 font-weight: 600;
                 font-size: 13px;
-                padding: 12px 18px;
+                padding: 13px 20px;
                 border: none;
             }
             QTabBar::tab:selected {
@@ -461,23 +460,20 @@ class DashboardWidget(QWidget):
             }
         """)
 
-        top_layout.addWidget(self.nav_tabs)
-        top_layout.addStretch()
-
-        layout.addWidget(top_bar)
-
-        # Content Pages
+        # Views Container
         self.home_page = self.create_home_view()
         self.design_page = CardDesignerWidget("Credential Design 1")
         self.printer_page = self.create_printer_queues_view()
 
+        # Add Views to Tabs
         self.nav_tabs.addTab(self.home_page, "Home")
         self.nav_tabs.addTab(self.design_page, "Design ▾")
         self.nav_tabs.addTab(self.printer_page, "Printer Queues")
 
-        # Open Design tab by default
-        self.nav_tabs.setCurrentIndex(1)
+        top_layout.addWidget(self.nav_tabs)
+        top_layout.addStretch()
 
+        layout.addWidget(top_bar)
         layout.addWidget(self.nav_tabs, stretch=1)
 
     # ---------------------------------------------------------
@@ -534,7 +530,7 @@ class DashboardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 5. Main Window Container (Login Stack Restored)
+# 5. Main Window Container
 # -------------------------------------------------------------
 
 class MainWindow(QMainWindow):
@@ -552,7 +548,6 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.login_page)     # Index 0
         self.stacked_widget.addWidget(self.dashboard_page)  # Index 1
 
-        # Restored Login Screen First
         self.stacked_widget.setCurrentIndex(0)
 
     def show_dashboard(self):
