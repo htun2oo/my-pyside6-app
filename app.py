@@ -1,7 +1,7 @@
 import sys
 import math
-from PySide6.QtCore import Qt, QPointF, Signal
-from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
+from PySide6.QtCore import Qt, QPointF, Signal, QPoint
+from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF, QCursor
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
@@ -9,12 +9,16 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Top Horizontal Ruler Widget (Scale မျဉ်းကြောင်းများ ပေါ်လာစေရန် အထူးပြုပြင်ထားသည်)
+# Top Horizontal Ruler Widget (With Drag & Drop Guidelines)
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
-    def __init__(self, height=26):
+    add_guide = Signal(int)
+
+    def __init__(self, height=26, offset=25):
         super().__init__()
         self.setFixedHeight(height)
+        self.offset = offset  # Left padding offset (Card 0 point)
+        self.setCursor(Qt.SizeVerCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -31,37 +35,57 @@ class HorizontalRulerWidget(QWidget):
         font = QFont("Arial", 8, QFont.Bold)
         painter.setFont(font)
 
-        step = 8            # Small tick interval
-        major_step = 40     # Major tick interval (for numbers 0, 2, 4...)
-        val = 0
-
-        for x in range(0, self.width(), step):
-            if x % major_step == 0:
-                # Major Tick (Long Line)
+        step = 8            # Small tick interval (px)
+        major_step = 40     # Major tick interval
+        
+        # Draw Left Negative Offset ticks if any
+        for x in range(self.offset, -1, -step):
+            rel_x = x - self.offset
+            if rel_x % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 14, x, self.height())
-                
-                # Number Display (0, 2, 4...)
-                painter.setPen(QPen(QColor("#000000")))
-                painter.drawText(x + 2, 1, 24, 14, Qt.AlignLeft | Qt.AlignTop, str(val))
-                val += 2
-            elif x % (step * 2) == 0:
-                # Medium Tick
+            elif rel_x % (step * 2) == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 9, x, self.height())
             else:
-                # Small Tick
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 5, x, self.height())
 
+        # Draw Positive ticks starting from Card Top-Left Corner (0 point)
+        val = 0
+        for x in range(self.offset, self.width(), step):
+            rel_x = x - self.offset
+            if rel_x % major_step == 0:
+                painter.setPen(line_pen)
+                painter.drawLine(x, self.height() - 14, x, self.height())
+                
+                painter.setPen(QPen(QColor("#000000")))
+                painter.drawText(x + 2, 1, 24, 14, Qt.AlignLeft | Qt.AlignTop, str(val))
+                val += 2
+            elif rel_x % (step * 2) == 0:
+                painter.setPen(line_pen)
+                painter.drawLine(x, self.height() - 9, x, self.height())
+            else:
+                painter.setPen(line_pen)
+                painter.drawLine(x, self.height() - 5, x, self.height())
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            # Emit Y coordinate relative to canvas area
+            self.add_guide.emit(event.globalPosition().toPoint().y())
+
 
 # -------------------------------------------------------------
-# Left Vertical Ruler Widget (Scale မျဉ်းကြောင်းများ ပေါ်လာစေရန် အထူးပြုပြင်ထားသည်)
+# Left Vertical Ruler Widget (With Drag & Drop Guidelines)
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
-    def __init__(self, width=26):
+    add_guide = Signal(int)
+
+    def __init__(self, width=26, offset=30):
         super().__init__()
         self.setFixedWidth(width)
+        self.offset = offset  # Top padding offset (Card 0 point)
+        self.setCursor(Qt.SizeHorCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -80,26 +104,137 @@ class VerticalRulerWidget(QWidget):
 
         step = 8            # Small tick interval
         major_step = 40     # Major tick interval
-        val = 0
 
-        for y in range(0, self.height(), step):
-            if y % major_step == 0:
-                # Major Tick (Long Line)
+        # Draw Top Negative Offset ticks if any
+        for y in range(self.offset, -1, -step):
+            rel_y = y - self.offset
+            if rel_y % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 14, y, self.width(), y)
-                
-                # Number Display (0, 2, 4...)
-                painter.setPen(QPen(QColor("#000000")))
-                painter.drawText(2, y + 2, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
-                val += 2
-            elif y % (step * 2) == 0:
-                # Medium Tick
+            elif rel_y % (step * 2) == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 9, y, self.width(), y)
             else:
-                # Small Tick
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 5, y, self.width(), y)
+
+        # Draw Positive ticks starting from Card Top-Left Corner (0 point)
+        val = 0
+        for y in range(self.offset, self.height(), step):
+            rel_y = y - self.offset
+            if rel_y % major_step == 0:
+                painter.setPen(line_pen)
+                painter.drawLine(self.width() - 14, y, self.width(), y)
+                
+                painter.setPen(QPen(QColor("#000000")))
+                painter.drawText(2, y + 2, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
+                val += 2
+            elif rel_y % (step * 2) == 0:
+                painter.setPen(line_pen)
+                painter.drawLine(self.width() - 9, y, self.width(), y)
+            else:
+                painter.setPen(line_pen)
+                painter.drawLine(self.width() - 5, y, self.width(), y)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            # Emit X coordinate relative to canvas area
+            self.add_guide.emit(event.globalPosition().toPoint().x())
+
+
+# -------------------------------------------------------------
+# Guideline Canvas Container (Interactive Gridline Dragging)
+# -------------------------------------------------------------
+class CanvasOverlayFrame(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet("background-color: #6B7280; border: none;")
+        self.h_guides = []  # List of Y positions
+        self.v_guides = []  # List of X positions
+        self.active_drag = None
+        self.drag_type = None  # 'H' or 'V'
+        self.setMouseTracking(True)
+
+    def add_horizontal_guide(self, global_y):
+        local_y = self.mapFromGlobal(QPoint(0, global_y)).y()
+        if 0 <= local_y <= self.height():
+            self.h_guides.append(local_y)
+            self.active_drag = len(self.h_guides) - 1
+            self.drag_type = 'H'
+            self.update()
+
+    def add_vertical_guide(self, global_x):
+        local_x = self.mapFromGlobal(QPoint(global_x, 0)).x()
+        if 0 <= local_x <= self.width():
+            self.v_guides.append(local_x)
+            self.active_drag = len(self.v_guides) - 1
+            self.drag_type = 'V'
+            self.update()
+
+    def mousePressEvent(self, event):
+        pos = event.position().toPoint()
+        # Check if clicking existing horizontal guide
+        for idx, y in enumerate(self.h_guides):
+            if abs(pos.y() - y) <= 4:
+                self.active_drag = idx
+                self.drag_type = 'H'
+                return
+        # Check if clicking existing vertical guide
+        for idx, x in enumerate(self.v_guides):
+            if abs(pos.x() - x) <= 4:
+                self.active_drag = idx
+                self.drag_type = 'V'
+                return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        pos = event.position().toPoint()
+        if self.active_drag is not None:
+            if self.drag_type == 'H':
+                self.h_guides[self.active_drag] = pos.y()
+            elif self.drag_type == 'V':
+                self.v_guides[self.active_drag] = pos.x()
+            self.update()
+        else:
+            # Change cursor on hover over guides
+            over_h = any(abs(pos.y() - y) <= 4 for y in self.h_guides)
+            over_v = any(abs(pos.x() - x) <= 4 for x in self.v_guides)
+            if over_h:
+                self.setCursor(Qt.SizeVerCursor)
+            elif over_v:
+                self.setCursor(Qt.SizeHorCursor)
+            else:
+                self.setCursor(Qt.ArrowCursor)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.active_drag is not None:
+            pos = event.position().toPoint()
+            # Remove guide if dragged out of canvas boundary
+            if self.drag_type == 'H':
+                if pos.y() < 0 or pos.y() > self.height():
+                    self.h_guides.pop(self.active_drag)
+            elif self.drag_type == 'V':
+                if pos.x() < 0 or pos.x() > self.width():
+                    self.v_guides.pop(self.active_drag)
+            self.active_drag = None
+            self.drag_type = None
+            self.update()
+        super().mouseReleaseEvent(event)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        guide_pen = QPen(QColor("#00FFFF"), 1, Qt.DashLine)  # Photoshop Cyan Guide Color
+        painter.setPen(guide_pen)
+
+        # Draw Horizontal Grid Lines
+        for y in self.h_guides:
+            painter.drawLine(0, y, self.width(), y)
+
+        # Draw Vertical Grid Lines
+        for x in self.v_guides:
+            painter.drawLine(x, 0, x, self.height())
 
 
 # -------------------------------------------------------------
@@ -123,7 +258,6 @@ class LayerItemWidget(QFrame):
         layout.setContentsMargins(6, 2, 6, 2)
         layout.setSpacing(8)
 
-        # Eye Icon Toggle Button
         self.eye_btn = QPushButton("👁" if is_visible else "❌")
         self.eye_btn.setFixedSize(20, 20)
         self.eye_btn.setFont(QFont("Segoe UI", 8))
@@ -132,13 +266,11 @@ class LayerItemWidget(QFrame):
         self.eye_btn.clicked.connect(self.toggle_eye)
         layout.addWidget(self.eye_btn)
 
-        # Layer Name Label
         self.name_lbl = QLabel(layer_name)
         self.name_lbl.setFont(QFont("Segoe UI", 9))
         self.name_lbl.setStyleSheet("background: transparent;")
         layout.addWidget(self.name_lbl, stretch=1)
 
-        # Checkbox
         self.chk = QCheckBox()
         self.chk.setChecked(is_checked)
         self.chk.setCursor(Qt.PointingHandCursor)
@@ -216,7 +348,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Canvas Box (Corner Box & Ruler Container)
+# Card Canvas Box (Corner Box, Rulers & Interactive Canvas)
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
@@ -259,12 +391,15 @@ class SelectableCardWidget(QWidget):
         corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
         grid_layout.addWidget(corner_box, 0, 0)
 
-        # Rulers
-        grid_layout.addWidget(HorizontalRulerWidget(height=26), 0, 1)
-        grid_layout.addWidget(VerticalRulerWidget(width=26), 1, 0)
+        # Padding offsets (25px left, 30px top) to align 0 point perfectly with Card Left/Top edge
+        self.h_ruler = HorizontalRulerWidget(height=26, offset=25)
+        self.v_ruler = VerticalRulerWidget(width=26, offset=30)
 
-        self.gray_box = QFrame()
-        self.gray_box.setStyleSheet("background-color: #6B7280; border: none;")
+        grid_layout.addWidget(self.h_ruler, 0, 1)
+        grid_layout.addWidget(self.v_ruler, 1, 0)
+
+        # Interactive Guideline Frame
+        self.gray_box = CanvasOverlayFrame()
         
         gray_layout = QVBoxLayout(self.gray_box)
         gray_layout.setContentsMargins(25, 30, 25, 30)
@@ -275,6 +410,10 @@ class SelectableCardWidget(QWidget):
 
         gray_layout.addWidget(self.white_card)
         grid_layout.addWidget(self.gray_box, 1, 1)
+
+        # Connect Ruler Drag signals to Guideline Overlay
+        self.h_ruler.add_guide.connect(self.gray_box.add_horizontal_guide)
+        self.v_ruler.add_guide.connect(self.gray_box.add_vertical_guide)
 
         layout.addWidget(self.canvas_frame)
 
