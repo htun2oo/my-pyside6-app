@@ -1,15 +1,94 @@
 import sys
 import math
-from PySide6.QtCore import Qt, QPointF, Signal
+from PySide6.QtCore import Qt, QPointF, Signal, QRectF
 from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
-    QTabWidget, QCheckBox, QScrollArea, QComboBox, QListWidget, QListWidgetItem
+    QTabWidget, QCheckBox, QScrollArea, QComboBox, QGridLayout
 )
 
 # -------------------------------------------------------------
-# Custom Layer Item Widget for "Layers Tab"
+# Top (Horizontal) Ruler Widget
+# -------------------------------------------------------------
+class HorizontalRulerWidget(QWidget):
+    def __init__(self, height=22):
+        super().__init__()
+        self.setFixedHeight(height)
+        self.setStyleSheet("background-color: #D1D5DB;")
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+        
+        # Background & Border
+        painter.fillRect(self.rect(), QColor("#E5E7EB"))
+        painter.setPen(QPen(QColor("#9CA3AF"), 1))
+        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
+
+        font = QFont("Segoe UI", 7)
+        painter.setFont(font)
+        painter.setPen(QPen(QColor("#374151"), 1))
+
+        # Draw Ruler Ticks and Numbers
+        step = 10
+        major_step = 50
+        num_val = 0
+
+        for x in range(0, self.width(), step):
+            if x % major_step == 0:
+                painter.drawLine(x, self.height() - 12, x, self.height())
+                if x > 0:
+                    num_str = str(num_val)
+                    painter.drawText(x - 10, 2, 20, 10, Qt.AlignCenter, num_str)
+                    num_val += 2
+            elif x % (step * 2.5) == 0:
+                painter.drawLine(x, self.height() - 8, x, self.height())
+            else:
+                painter.drawLine(x, self.height() - 5, x, self.height())
+
+
+# -------------------------------------------------------------
+# Left (Vertical) Ruler Widget
+# -------------------------------------------------------------
+class VerticalRulerWidget(QWidget):
+    def __init__(self, width=22):
+        super().__init__()
+        self.setFixedWidth(width)
+        self.setStyleSheet("background-color: #D1D5DB;")
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        # Background & Border
+        painter.fillRect(self.rect(), QColor("#E5E7EB"))
+        painter.setPen(QPen(QColor("#9CA3AF"), 1))
+        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
+
+        font = QFont("Segoe UI", 7)
+        painter.setFont(font)
+        painter.setPen(QPen(QColor("#374151"), 1))
+
+        step = 10
+        major_step = 50
+        num_val = 0
+
+        for y in range(0, self.height(), step):
+            if y % major_step == 0:
+                painter.drawLine(self.width() - 12, y, self.width(), y)
+                if y > 0:
+                    num_str = str(num_val)
+                    painter.drawText(2, y - 8, 10, 14, Qt.AlignCenter, num_str)
+                    num_val += 2
+            elif y % (step * 2.5) == 0:
+                painter.drawLine(self.width() - 8, y, self.width(), y)
+            else:
+                painter.drawLine(self.width() - 5, y, self.width(), y)
+
+
+# -------------------------------------------------------------
+# Layer Item Widget for "Layers Tab"
 # -------------------------------------------------------------
 class LayerItemWidget(QWidget):
     def __init__(self, layer_name, is_selected=False, is_checked=False):
@@ -18,19 +97,16 @@ class LayerItemWidget(QWidget):
         layout.setContentsMargins(8, 4, 8, 4)
         layout.setSpacing(8)
 
-        # Eye Icon Indicator
         self.eye_lbl = QLabel("👁")
         self.eye_lbl.setFont(QFont("Segoe UI", 8))
-        self.eye_lbl.setStyleSheet("color: #6B7280; background: transparent;")
+        self.eye_lbl.setStyleSheet("color: #6B21A8; background: transparent;")
         layout.addWidget(self.eye_lbl)
 
-        # Layer Name Label
         self.name_lbl = QLabel(layer_name)
         self.name_lbl.setFont(QFont("Segoe UI", 9))
         self.name_lbl.setStyleSheet("background: transparent;")
         layout.addWidget(self.name_lbl, stretch=1)
 
-        # Checkbox Indicator
         self.chk = QCheckBox()
         self.chk.setChecked(is_checked)
         self.chk.setStyleSheet("""
@@ -86,20 +162,21 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Selectable Card Canvas Box
+# Card Canvas Box with Integrated Top/Left Rulers
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
 
     def __init__(self, side_text):
         super().__init__()
-        self.setFixedWidth(360)
+        self.setFixedWidth(380)
         self.setCursor(Qt.PointingHandCursor)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
+        # Header Row
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -117,13 +194,37 @@ class SelectableCardWidget(QWidget):
 
         layout.addLayout(header_layout)
 
+        # Outer Canvas Frame
+        self.canvas_frame = QFrame()
+        self.canvas_frame.setFixedHeight(310)
+        self.canvas_frame.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
+
+        grid_layout = QGridLayout(self.canvas_frame)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setSpacing(0)
+
+        # Corner Box
+        corner_box = QWidget()
+        corner_box.setFixedSize(20, 20)
+        corner_box.setStyleSheet("background-color: #D1D5DB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
+        grid_layout.addWidget(corner_box, 0, 0)
+
+        # Top Ruler
+        self.top_ruler = HorizontalRulerWidget(height=20)
+        grid_layout.addWidget(self.top_ruler, 0, 1)
+
+        # Left Ruler
+        self.left_ruler = VerticalRulerWidget(width=20)
+        grid_layout.addWidget(self.left_ruler, 1, 0)
+
+        # Main Gray Canvas Box
         self.gray_box = QFrame()
-        self.gray_box.setFixedHeight(280)
-        self.gray_box.setStyleSheet("background-color: #8C8C8C; border: none;")
+        self.gray_box.setStyleSheet("background-color: #6B7280; border: none;")
         
         gray_layout = QVBoxLayout(self.gray_box)
-        gray_layout.setContentsMargins(20, 25, 20, 25)
+        gray_layout.setContentsMargins(25, 30, 25, 30)
 
+        # White PVC Card Design Area
         self.white_card = QFrame()
         self.white_card.setFixedHeight(210)
         self.white_card.setStyleSheet("""
@@ -133,7 +234,9 @@ class SelectableCardWidget(QWidget):
         """)
 
         gray_layout.addWidget(self.white_card)
-        layout.addWidget(self.gray_box)
+        grid_layout.addWidget(self.gray_box, 1, 1)
+
+        layout.addWidget(self.canvas_frame)
 
     def set_layer_text(self, text):
         self.layer_lbl.setText(text)
@@ -144,7 +247,7 @@ class SelectableCardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Designer View with Properties & Layers Tabs
+# Card Designer View
 # -------------------------------------------------------------
 class CardDesignerWidget(QWidget):
     def __init__(self, card_name="Credential Design 1", on_close_callback=None):
@@ -216,12 +319,12 @@ class CardDesignerWidget(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(toolbar)
 
-        # 3. Canvas & Properties Section
+        # 3. Canvas & Properties Body
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
 
-        # Canvas Area
+        # Scroll Canvas Area
         canvas_scroll = QScrollArea()
         canvas_scroll.setWidgetResizable(True)
         canvas_scroll.setStyleSheet("background-color: #EFEFEF; border: none;")
@@ -231,7 +334,7 @@ class CardDesignerWidget(QWidget):
         canvas_layout.setContentsMargins(20, 20, 20, 20)
 
         cards_outer_layout = QHBoxLayout()
-        cards_outer_layout.setSpacing(40)
+        cards_outer_layout.setSpacing(30)
 
         self.front_card = SelectableCardWidget("Front Side")
         self.back_card = SelectableCardWidget("Back Side")
@@ -247,7 +350,7 @@ class CardDesignerWidget(QWidget):
         canvas_scroll.setWidget(canvas_container)
         body_layout.addWidget(canvas_scroll, stretch=1)
 
-        # Right Side Panel (Properties / Layers Tab)
+        # Right Side Panel (Properties & Layers Tabs)
         right_panel = QFrame()
         right_panel.setFixedWidth(270)
         right_panel.setStyleSheet("background-color: #E5E7EB; border-left: 1px solid #C0C0C0;")
@@ -322,7 +425,6 @@ class CardDesignerWidget(QWidget):
         self.layer_header_lbl.setStyleSheet("color: #1F2937; border: none; background: transparent;")
         layer_box_layout.addWidget(self.layer_header_lbl)
 
-        # Layer Items Data according to Image 2
         layer_data = [
             ("All layers", False, False),
             ("Background", False, False),
