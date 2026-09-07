@@ -1,887 +1,307 @@
 import sys
-import math
-from PySide6.QtCore import Qt, QPointF, Signal, QPoint, QRectF
-from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
+from PySide6.QtCore import Qt, QRectF, QPointF
+from PySide6.QtGui import QFont, QPainter, QColor, QPen, QBrush, QLinearGradient, QPainterPath
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
-    QTabWidget, QCheckBox, QScrollArea, QComboBox
+    QLabel, QPushButton, QFrame, QStackedWidget, QComboBox
 )
 
 # -------------------------------------------------------------
-# Top Ruler Widget (Horizontal)
+# Custom Custom Icons (Vector Drawing for Exact Visual Match)
 # -------------------------------------------------------------
-class HorizontalRulerWidget(QWidget):
-    def __init__(self, height=26):
-        super().__init__()
-        self.setFixedHeight(height)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor("#E5E7EB"))
-        painter.setPen(QPen(QColor("#9CA3AF"), 1))
-        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
-
-        line_pen = QPen(QColor("#000000"), 1)
-        font = QFont("Arial", 8, QFont.Bold)
-        painter.setFont(font)
-
-        step = 8
-        major_step = 40
-        offset = 25  # Offset to match card margin inside canvas
-
-        val = 0
-        for x in range(offset, self.width(), step):
-            rel_x = x - offset
-            if rel_x % major_step == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 14, x, self.height())
-                painter.setPen(QPen(QColor("#000000")))
-                painter.drawText(x + 2, 1, 24, 14, Qt.AlignLeft | Qt.AlignTop, str(val))
-                val += 2
-            elif rel_x % (step * 2) == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 9, x, self.height())
-            else:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 5, x, self.height())
-
-
-# -------------------------------------------------------------
-# Left Ruler Widget (Vertical)
-# -------------------------------------------------------------
-class VerticalRulerWidget(QWidget):
-    def __init__(self, width=26):
-        super().__init__()
-        self.setFixedWidth(width)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor("#E5E7EB"))
-        painter.setPen(QPen(QColor("#9CA3AF"), 1))
-        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
-
-        line_pen = QPen(QColor("#000000"), 1)
-        font = QFont("Arial", 8, QFont.Bold)
-        painter.setFont(font)
-
-        step = 8
-        major_step = 40
-        offset = 30  # Offset to match card margin inside canvas
-
-        val = 0
-        for y in range(offset, self.height(), step):
-            rel_y = y - offset
-            if rel_y % major_step == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 14, y, self.width(), y)
-                painter.setPen(QPen(QColor("#000000")))
-                painter.drawText(2, y + 2, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
-                val += 2
-            elif rel_y % (step * 2) == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 9, y, self.width(), y)
-            else:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 5, y, self.width(), y)
-
-
-# -------------------------------------------------------------
-# Design Inner Canvas (Renders Dark Area, White Card, Grid Lines)
-# -------------------------------------------------------------
-class DesignCanvas(QWidget):
+class CustomPencilButton(QPushButton):
     def __init__(self):
         super().__init__()
-        self.h_guides = [80]  # Default Guideline vertical position
-        self.v_guides = [100] # Default Guideline horizontal position
-        self.active_drag = None
-        self.drag_type = None
-        self.setMouseTracking(True)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiased)
-
-        # 1. Dark Gray Frame Background
-        painter.fillRect(self.rect(), QColor("#4B5563"))
-
-        # 2. White Card Center
-        card_rect = QRectF(25, 30, 304, 224)
-        painter.setBrush(QColor("#FFFFFF"))
-        painter.setPen(QPen(QColor("#1F2937"), 1))
-        painter.drawRoundedRect(card_rect, 12, 12)
-
-        # 3. Cyan Guidelines (Draws over everything inside canvas)
-        cyan_pen = QPen(QColor("#00FFFF"), 1.5, Qt.SolidLine)
-        painter.setPen(cyan_pen)
-
-        for y in self.h_guides:
-            painter.drawLine(0, y, self.width(), y)
-
-        for x in self.v_guides:
-            painter.drawLine(x, 0, x, self.height())
-
-    def mousePressEvent(self, event):
-        pos = event.position().toPoint()
-
-        # Drag existing horizontal guide
-        for idx, y in enumerate(self.h_guides):
-            if abs(pos.y() - y) <= 6:
-                self.active_drag = idx
-                self.drag_type = 'H'
-                return
-
-        # Drag existing vertical guide
-        for idx, x in enumerate(self.v_guides):
-            if abs(pos.x() - x) <= 6:
-                self.active_drag = idx
-                self.drag_type = 'V'
-                return
-
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        pos = event.position().toPoint()
-
-        if self.active_drag is not None:
-            if self.drag_type == 'H':
-                self.h_guides[self.active_drag] = pos.y()
-            elif self.drag_type == 'V':
-                self.v_guides[self.active_drag] = pos.x()
-            self.update()
-        else:
-            over_h = any(abs(pos.y() - y) <= 6 for y in self.h_guides)
-            over_v = any(abs(pos.x() - x) <= 6 for x in self.v_guides)
-
-            if over_h:
-                self.setCursor(Qt.SizeVerCursor)
-            elif over_v:
-                self.setCursor(Qt.SizeHorCursor)
-            else:
-                self.setCursor(Qt.ArrowCursor)
-
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        if self.active_drag is not None:
-            pos = event.position().toPoint()
-            # Remove line if dragged outside canvas
-            if self.drag_type == 'H' and (pos.y() < 0 or pos.y() > self.height()):
-                self.h_guides.pop(self.active_drag)
-            elif self.drag_type == 'V' and (pos.x() < 0 or pos.x() > self.width()):
-                self.v_guides.pop(self.active_drag)
-
-            self.active_drag = None
-            self.drag_type = None
-            self.setCursor(Qt.ArrowCursor)
-            self.update()
-
-        super().mouseReleaseEvent(event)
-
-
-# -------------------------------------------------------------
-# Integrated Interactive Card Box (Assembles Ruler + Canvas)
-# -------------------------------------------------------------
-class InteractiveCardContainer(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.setFixedSize(380, 310)
-        self.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        # Top Header (Top Ruler)
-        top_layout = QHBoxLayout()
-        top_layout.setContentsMargins(0, 0, 0, 0)
-        top_layout.setSpacing(0)
-
-        corner_box = QWidget()
-        corner_box.setFixedSize(26, 26)
-        corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
-
-        self.h_ruler = HorizontalRulerWidget(height=26)
-        top_layout.addWidget(corner_box)
-        top_layout.addWidget(self.h_ruler)
-
-        main_layout.addLayout(top_layout)
-
-        # Bottom Container (Left Ruler + Center Canvas)
-        body_layout = QHBoxLayout()
-        body_layout.setContentsMargins(0, 0, 0, 0)
-        body_layout.setSpacing(0)
-
-        self.v_ruler = VerticalRulerWidget(width=26)
-        self.canvas = DesignCanvas()
-
-        body_layout.addWidget(self.v_ruler)
-        body_layout.addWidget(self.canvas)
-
-        main_layout.addLayout(body_layout)
-
-    def add_horizontal_guide(self):
-        self.canvas.h_guides.append(50)
-        self.canvas.update()
-
-    def add_vertical_guide(self):
-        self.canvas.v_guides.append(50)
-        self.canvas.update()
-
-
-# -------------------------------------------------------------
-# Layer Item Widget
-# -------------------------------------------------------------
-class LayerItemWidget(QFrame):
-    item_selected = Signal(str)
-    visibility_toggled = Signal(str, bool)
-    check_toggled = Signal(str, bool)
-
-    def __init__(self, layer_name, is_selected=False, is_checked=False, is_visible=True):
-        super().__init__()
-        self.layer_name = layer_name
-        self.is_selected = is_selected
-        self.is_visible = is_visible
-
-        self.setFixedHeight(28)
+        self.setFixedSize(32, 32)
         self.setCursor(Qt.PointingHandCursor)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(6, 2, 6, 2)
-        layout.setSpacing(8)
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
 
-        self.eye_btn = QPushButton("👁" if is_visible else "❌")
-        self.eye_btn.setFixedSize(20, 20)
-        self.eye_btn.setFont(QFont("Segoe UI", 8))
-        self.eye_btn.setCursor(Qt.PointingHandCursor)
-        self.eye_btn.setStyleSheet("QPushButton { background: transparent; border: none; color: #4B5563; } QPushButton:hover { color: #2563EB; }")
-        self.eye_btn.clicked.connect(self.toggle_eye)
-        layout.addWidget(self.eye_btn)
+        # Draw Button Background Gradient
+        rect = QRectF(0, 0, self.width(), self.height())
+        grad = QLinearGradient(0, 0, 0, self.height())
+        grad.setColorAt(0.0, QColor("#FFFFFF"))
+        grad.setColorAt(0.5, QColor("#E3EEFF"))
+        grad.setColorAt(1.0, QColor("#CBE0FC"))
 
-        self.name_lbl = QLabel(layer_name)
-        self.name_lbl.setFont(QFont("Segoe UI", 9))
-        self.name_lbl.setStyleSheet("background: transparent;")
-        layout.addWidget(self.name_lbl, stretch=1)
+        painter.setBrush(QBrush(grad))
+        painter.setPen(QPen(QColor("#B0C8E8"), 1))
+        painter.drawRoundedRect(rect, 6, 6)
 
-        self.chk = QCheckBox()
-        self.chk.setChecked(is_checked)
-        self.chk.setCursor(Qt.PointingHandCursor)
-        self.chk.setStyleSheet("QCheckBox::indicator { width: 13px; height: 13px; border: 1px solid #9CA3AF; background-color: #FFFFFF; } QCheckBox::indicator:checked { background-color: #2563EB; border-color: #2563EB; }")
-        self.chk.toggled.connect(self.on_checkbox_toggled)
-        layout.addWidget(self.chk)
+        # Draw 45-degree Pencil Icon inside
+        painter.save()
+        painter.translate(16, 16)
+        painter.rotate(-45)
 
-        self.update_style()
+        dark_blue = QColor("#1C3B6F")
+        light_blue = QColor("#6DA5E3")
 
-    def update_style(self):
-        if self.is_selected:
-            self.setStyleSheet("QFrame { background-color: #B2C8E6; border-radius: 2px; }")
-            self.name_lbl.setStyleSheet("color: #1E3A8A; font-weight: bold; background: transparent;")
-        else:
-            self.setStyleSheet("QFrame { background-color: transparent; } QFrame:hover { background-color: #D1D5DB; }")
-            self.name_lbl.setStyleSheet("color: #374151; background: transparent;")
+        # Body
+        painter.setBrush(QBrush(dark_blue))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(-3, -7, 6, 11)
 
-    def set_selected(self, selected):
-        self.is_selected = selected
-        self.update_style()
+        # Stripe line
+        painter.setBrush(QBrush(light_blue))
+        painter.drawRect(-1, -7, 2, 11)
 
-    def toggle_eye(self):
-        self.is_visible = not self.is_visible
-        self.eye_btn.setText("👁" if self.is_visible else "❌")
-        self.visibility_toggled.emit(self.layer_name, self.is_visible)
+        # Tip Triangle
+        path = QPainterPath()
+        path.moveTo(-3, 4)
+        path.lineTo(3, 4)
+        path.lineTo(0, 9)
+        path.closeSubpath()
+        painter.setBrush(QBrush(dark_blue))
+        painter.drawPath(path)
 
-    def set_visible_state(self, visible):
-        self.is_visible = visible
-        self.eye_btn.setText("👁" if self.is_visible else "❌")
+        # Eraser Top
+        painter.setBrush(QBrush(QColor("#1C3B6F")))
+        painter.drawRoundedRect(-3, -10, 6, 3, 1, 1)
 
-    def on_checkbox_toggled(self, checked):
-        self.check_toggled.emit(self.layer_name, checked)
-
-    def set_checked_state(self, checked):
-        self.chk.blockSignals(True)
-        self.chk.setChecked(checked)
-        self.chk.blockSignals(False)
-
-    def mousePressEvent(self, event):
-        self.item_selected.emit(self.layer_name)
-        super().mousePressEvent(event)
+        painter.restore()
 
 
-# -------------------------------------------------------------
-# Instant PVC Logo Widget
-# -------------------------------------------------------------
-class InstantPVCLogo(QWidget):
-    def __init__(self, size=40, is_white=True):
+class CustomUndoButton(QPushButton):
+    def __init__(self):
         super().__init__()
-        self.setFixedSize(size, size)
-        self.size_val = size
-        self.is_white = is_white
+        self.setFixedSize(38, 34)
+        self.setCursor(Qt.PointingHandCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiased)
 
-        center = self.size_val / 2
-        radius = center - 3
-        points = [
-            QPointF(center + radius * math.cos(math.radians(60 * i - 30)),
-                    center + radius * math.sin(math.radians(60 * i - 30)))
-            for i in range(6)
-        ]
+        # Draw Arrow Shape
+        painter.save()
+        painter.setPen(QPen(QColor("#082046"), 3, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
-        color = QColor("#FFFFFF") if self.is_white else QColor("#6B21A8")
-        painter.setPen(QPen(color, 2))
-        painter.setBrush(Qt.NoBrush)
-        painter.drawPolygon(QPolygonF(points))
+        path = QPainterPath()
+        path.moveTo(27, 24)
+        path.cubicTo(27, 12, 12, 12, 12, 19)
+        painter.drawPath(path)
 
+        # Arrowhead
+        head = QPainterPath()
+        head.moveTo(17, 14)
+        head.lineTo(10, 19)
+        head.lineTo(16, 25)
+        painter.setBrush(QBrush(QColor("#082046")))
         painter.setPen(Qt.NoPen)
-        painter.setBrush(color)
-        s = self.size_val / 70
-        painter.drawRoundedRect(22 * s, 22 * s, 26 * s, 18 * s, 2, 2)
+        painter.drawPath(head)
+
+        painter.restore()
 
 
-# -------------------------------------------------------------
-# Card View Outer Box
-# -------------------------------------------------------------
-class SelectableCardWidget(QWidget):
-    clicked = Signal()
-
-    def __init__(self, side_text):
+class CustomRedoButton(QPushButton):
+    def __init__(self):
         super().__init__()
-        self.setFixedWidth(380)
-        
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        self.setFixedSize(38, 34)
+        self.setCursor(Qt.PointingHandCursor)
 
-        header_layout = QHBoxLayout()
-        self.side_lbl = QLabel(side_text)
-        self.side_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        self.side_lbl.setStyleSheet("color: #374151; background: transparent;")
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
 
-        self.layer_lbl = QLabel("")
-        self.layer_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        self.layer_lbl.setStyleSheet("color: #374151; background: transparent;")
+        painter.save()
+        painter.setPen(QPen(QColor("#082046"), 3, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
-        header_layout.addWidget(self.side_lbl)
-        header_layout.addStretch()
-        header_layout.addWidget(self.layer_lbl)
+        path = QPainterPath()
+        path.moveTo(11, 24)
+        path.cubicTo(11, 12, 26, 12, 26, 19)
+        painter.drawPath(path)
 
-        layout.addLayout(header_layout)
+        # Arrowhead
+        head = QPainterPath()
+        head.moveTo(21, 14)
+        head.lineTo(28, 19)
+        head.lineTo(22, 25)
+        painter.setBrush(QBrush(QColor("#082046")))
+        painter.setPen(Qt.NoPen)
+        painter.drawPath(head)
 
-        self.container = InteractiveCardContainer()
-        layout.addWidget(self.container)
+        painter.restore()
 
-    def set_layer_text(self, text):
-        self.layer_lbl.setText(text)
 
-    def mousePressEvent(self, event):
-        self.clicked.emit()
-        super().mousePressEvent(event)
+class CustomCopyButton(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(38, 34)
+        self.setCursor(Qt.PointingHandCursor)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        pen = QPen(QColor("#082046"), 2)
+        painter.setPen(pen)
+        painter.setBrush(QBrush(QColor("#FFFFFF")))
+
+        # Back paper
+        painter.drawRoundedRect(11, 9, 13, 15, 1, 1)
+        # Front paper
+        painter.drawRoundedRect(15, 13, 13, 15, 1, 1)
+
+
+class CustomCutButton(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(38, 34)
+        self.setCursor(Qt.PointingHandCursor)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        painter.setPen(QPen(QColor("#082046"), 2))
+        painter.setBrush(Qt.NoBrush)
+
+        # Scissors Loops
+        painter.drawEllipse(10, 20, 7, 7)
+        painter.drawEllipse(10, 8, 7, 7)
+
+        # Blades
+        painter.drawLine(16, 22, 27, 10)
+        painter.drawLine(16, 12, 27, 24)
+
+
+class CustomPasteButton(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(38, 34)
+        self.setCursor(Qt.PointingHandCursor)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiased)
+
+        pen = QPen(QColor("#082046"), 2)
+        painter.setPen(pen)
+
+        # Clipboard Back
+        painter.setBrush(QBrush(QColor("#082046")))
+        painter.drawRoundedRect(10, 9, 15, 18, 2, 2)
+
+        # Paper Front
+        painter.setBrush(QBrush(QColor("#FFFFFF")))
+        painter.drawRoundedRect(14, 12, 14, 17, 1, 1)
 
 
 # -------------------------------------------------------------
-# Card Designer Main View
+# Main Application Header & Toolbar Container
 # -------------------------------------------------------------
+
 class CardDesignerWidget(QWidget):
-    def __init__(self, card_name="Credential Design 1", on_close_callback=None):
+    def __init__(self, card_name="Credential Design 1"):
         super().__init__()
-        self.on_close_callback = on_close_callback
-        self.layer_widgets = {}
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
+        # -------------------------------------------------------------
+        # 1. Purple Title Ribbon
+        # -------------------------------------------------------------
         purple_ribbon = QFrame()
-        purple_ribbon.setFixedHeight(36)
-        purple_ribbon.setStyleSheet("background-color: #5B21B6;")
+        purple_ribbon.setFixedHeight(54)
+        purple_ribbon.setStyleSheet("background-color: #830093;") # Matching purple shade
+        
         purple_layout = QHBoxLayout(purple_ribbon)
-        purple_layout.setContentsMargins(15, 0, 15, 0)
+        purple_layout.setContentsMargins(18, 0, 18, 0)
+        purple_layout.setSpacing(12)
 
-        title_lbl = QLabel(f"{card_name} ✏")
-        title_lbl.setFont(QFont("Segoe UI", 11, QFont.Bold))
-        title_lbl.setStyleSheet("color: #FFFFFF;")
+        # Exact Font & Size for Credential Design 1
+        title_lbl = QLabel(card_name)
+        title_lbl.setFont(QFont("Segoe UI", 18, QFont.Medium))
+        title_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
         purple_layout.addWidget(title_lbl)
-        purple_layout.addStretch()
 
+        # Custom Vector Pencil Button
+        self.pencil_btn = CustomPencilButton()
+        purple_layout.addWidget(self.pencil_btn)
+
+        purple_layout.addStretch()
         main_layout.addWidget(purple_ribbon)
 
+        # -------------------------------------------------------------
+        # 2. Toolbar Section (Gray Background with Rounded Tool Frames)
+        # -------------------------------------------------------------
         toolbar = QFrame()
-        toolbar.setFixedHeight(40)
-        toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
+        toolbar.setFixedHeight(48)
+        toolbar.setStyleSheet("background-color: #7F7F7F;")
+        
         tb_layout = QHBoxLayout(toolbar)
-        tb_layout.setContentsMargins(10, 2, 10, 2)
-        tb_layout.setSpacing(3)
+        tb_layout.setContentsMargins(12, 6, 12, 6)
+        tb_layout.setSpacing(12)
 
-        tools = ["↩", "↪", "📄+", "✂", "📋", "T", "T_i", "👤", "🖼", "📊", "〰", "||||", "💳", "💻", "╱", "⬜", "⭕", "📱", "▦", "🔍+", "🔍-"]
-        for tool in tools:
-            btn = QPushButton(tool)
-            btn.setFixedSize(26, 26)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet("QPushButton { background-color: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 2px; font-size: 11px; font-weight: bold; color: #374151; } QPushButton:hover { background-color: #F3F4F6; border-color: #6B21A8; }")
-            
-            # Grid Tool Click Action
-            if tool == "▦":
-                btn.setToolTip("Add Grid Guideline Lines")
-                btn.clicked.connect(self.add_guidelines_to_active)
+        # --- Group 1: Undo & Redo Frame ---
+        ur_frame = QFrame()
+        ur_frame.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #EAEAEA, stop:1 #D3D3D3);
+                border: 1px solid #A0A0A0;
+                border-radius: 1px;
+            }
+        """)
+        ur_layout = QHBoxLayout(ur_frame)
+        ur_layout.setContentsMargins(0, 0, 0, 0)
+        ur_layout.setSpacing(0)
 
-            tb_layout.addWidget(btn)
+        self.undo_btn = CustomUndoButton()
+        self.redo_btn = CustomRedoButton()
 
-        tb_layout.addSpacing(8)
-        zoom_combo = QComboBox()
-        zoom_combo.addItems(["100%", "75%", "50%", "150%"])
-        zoom_combo.setFixedWidth(65)
-        zoom_combo.setStyleSheet("background-color: white; border: 1px solid #C0C0C0; font-size: 11px;")
-        tb_layout.addWidget(zoom_combo)
+        self.undo_btn.setStyleSheet("border-right: 1px solid #C0C0C0;")
+        self.redo_btn.setStyleSheet("border: none;")
+
+        ur_layout.addWidget(self.undo_btn)
+        ur_layout.addWidget(self.redo_btn)
+        tb_layout.addWidget(ur_frame)
+
+        # --- Group 2: Copy, Cut, Paste Frame ---
+        clip_frame = QFrame()
+        clip_frame.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #EAEAEA);
+                border: 1px solid #A0A0A0;
+                border-radius: 1px;
+            }
+        """)
+        clip_layout = QHBoxLayout(clip_frame)
+        clip_layout.setContentsMargins(0, 0, 0, 0)
+        clip_layout.setSpacing(0)
+
+        self.copy_btn = CustomCopyButton()
+        self.cut_btn = CustomCutButton()
+        self.paste_btn = CustomPasteButton()
+
+        self.copy_btn.setStyleSheet("border-right: 1px solid #D0D0D0;")
+        self.cut_btn.setStyleSheet("border-right: 1px solid #D0D0D0;")
+        self.paste_btn.setStyleSheet("border: none;")
+
+        clip_layout.addWidget(self.copy_btn)
+        clip_layout.addWidget(self.cut_btn)
+        clip_layout.addWidget(self.paste_btn)
+        tb_layout.addWidget(clip_frame)
 
         tb_layout.addStretch()
         main_layout.addWidget(toolbar)
 
-        body_layout = QHBoxLayout()
-        body_layout.setContentsMargins(0, 0, 0, 0)
-        body_layout.setSpacing(0)
+        # Canvas placeholder
+        canvas_bg = QFrame()
+        canvas_bg.setStyleSheet("background-color: #FFFFFF;")
+        main_layout.addWidget(canvas_bg, stretch=1)
 
-        canvas_scroll = QScrollArea()
-        canvas_scroll.setWidgetResizable(True)
-        canvas_scroll.setStyleSheet("background-color: #EFEFEF; border: none;")
 
-        canvas_container = QWidget()
-        canvas_layout = QVBoxLayout(canvas_container)
-        canvas_layout.setContentsMargins(20, 20, 20, 20)
-
-        cards_outer_layout = QHBoxLayout()
-        cards_outer_layout.setSpacing(30)
-
-        self.front_card = SelectableCardWidget("Front Side")
-        self.back_card = SelectableCardWidget("Back Side")
-
-        cards_outer_layout.addStretch()
-        cards_outer_layout.addWidget(self.front_card)
-        cards_outer_layout.addWidget(self.back_card)
-        cards_outer_layout.addStretch()
-
-        canvas_layout.addLayout(cards_outer_layout)
-        canvas_layout.addStretch()
-
-        canvas_scroll.setWidget(canvas_container)
-        body_layout.addWidget(canvas_scroll, stretch=1)
-
-        right_panel = QFrame()
-        right_panel.setFixedWidth(270)
-        right_panel.setStyleSheet("background-color: #E5E7EB; border-left: 1px solid #C0C0C0;")
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(6, 6, 6, 6)
-
-        self.prop_tabs = QTabWidget()
-        self.prop_tabs.setStyleSheet("QTabWidget::pane { border: 1px solid #C0C0C0; background-color: #E5E7EB; top: -1px; } QTabBar::tab { background: #D1D5DB; color: #374151; padding: 6px 20px; font-size: 11px; font-weight: bold; border: 1px solid #C0C0C0; margin-right: 2px; } QTabBar::tab:selected { background: #FFFFFF; border-bottom: 1px solid #FFFFFF; color: #111827; }")
-
-        properties_page = QWidget()
-        properties_page.setStyleSheet("background-color: #E5E7EB;")
-        prop_page_layout = QVBoxLayout(properties_page)
-        prop_page_layout.setContentsMargins(8, 12, 8, 12)
-
-        prop_box = QFrame()
-        prop_box.setStyleSheet("background-color: #DCDCDC; border: 1px solid #C0C0C0;")
-        box_layout = QVBoxLayout(prop_box)
-        box_layout.setContentsMargins(10, 10, 10, 10)
-        box_layout.setSpacing(10)
-
-        self.prop_title = QLabel("- Front Side Properties")
-        self.prop_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        self.prop_title.setStyleSheet("color: #1F2937; border: none; background: transparent;")
-        box_layout.addWidget(self.prop_title)
-
-        box_layout.addWidget(QCheckBox("Rotate print orientation 180 degrees"))
-        box_layout.addWidget(QCheckBox("Tactile Impression Module"))
-
-        prop_page_layout.addWidget(prop_box)
-        prop_page_layout.addStretch()
-
-        layers_page = QWidget()
-        layers_page.setStyleSheet("background-color: #E5E7EB;")
-        layers_page_layout = QVBoxLayout(layers_page)
-        layers_page_layout.setContentsMargins(8, 12, 8, 12)
-
-        layer_container = QFrame()
-        layer_container.setStyleSheet("background-color: #E5E7EB; border: 1px solid #C0C0C0;")
-        layer_box_layout = QVBoxLayout(layer_container)
-        layer_box_layout.setContentsMargins(6, 8, 6, 8)
-        layer_box_layout.setSpacing(2)
-
-        self.layer_header_lbl = QLabel("Front Side")
-        self.layer_header_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        self.layer_header_lbl.setStyleSheet("color: #1F2937; border: none; background: transparent;")
-        layer_box_layout.addWidget(self.layer_header_lbl)
-
-        layer_data = [
-            ("All layers", False, False), ("Background", False, False), ("Color", True, True),
-            ("Black", False, False), ("Topcoat", False, True), ("Retransfer Material", False, False),
-            ("Luster/Fluorescent", False, False), ("Non-printable area", False, False),
-            ("Lamination", False, False), ("Emboss or indent", False, False), ("Magnetic stripe", False, False)
-        ]
-
-        for name, is_sel, is_chk in layer_data:
-            item_w = LayerItemWidget(name, is_selected=is_sel, is_checked=is_chk)
-            item_w.item_selected.connect(self.on_layer_selected)
-            item_w.visibility_toggled.connect(self.on_layer_visibility_toggled)
-            item_w.check_toggled.connect(self.on_layer_check_toggled)
-            self.layer_widgets[name] = item_w
-            layer_box_layout.addWidget(item_w)
-
-        layer_box_layout.addStretch()
-        layers_page_layout.addWidget(layer_container)
-
-        self.prop_tabs.addTab(properties_page, "Properties")
-        self.prop_tabs.addTab(layers_page, "Layers")
-
-        right_layout.addWidget(self.prop_tabs)
-        body_layout.addWidget(right_panel)
-
-        main_layout.addLayout(body_layout, stretch=1)
-
-        footer = QFrame()
-        footer.setFixedHeight(36)
-        footer.setStyleSheet("background-color: #E5E7EB; border-top: 1px solid #D1D5DB;")
-        footer_layout = QHBoxLayout(footer)
-        footer_layout.setContentsMargins(15, 0, 15, 0)
-        footer_layout.setSpacing(6)
-
-        btn_style = "QPushButton { background-color: #2563EB; color: white; font-weight: bold; font-size: 11px; border: none; border-radius: 3px; padding: 4px 12px; } QPushButton:hover { background-color: #1D4ED8; }"
-        save_btn = QPushButton("Save")
-        save_btn.setStyleSheet(btn_style)
-
-        close_btn = QPushButton("Close")
-        close_btn.setStyleSheet(btn_style)
-        if self.on_close_callback:
-            close_btn.clicked.connect(self.on_close_callback)
-
-        footer_layout.addWidget(save_btn)
-        footer_layout.addWidget(close_btn)
-        footer_layout.addStretch()
-
-        main_layout.addWidget(footer)
-
-        self.front_card.clicked.connect(self.select_front_side)
-        self.back_card.clicked.connect(self.select_back_side)
-        self.select_front_side()
-
-    def add_guidelines_to_active(self):
-        if self.front_card.layer_lbl.text() != "":
-            self.front_card.container.add_horizontal_guide()
-            self.front_card.container.add_vertical_guide()
-        else:
-            self.back_card.container.add_horizontal_guide()
-            self.back_card.container.add_vertical_guide()
-
-    def on_layer_selected(self, selected_layer_name):
-        for name, widget in self.layer_widgets.items():
-            widget.set_selected(name == selected_layer_name)
-
-        if self.front_card.layer_lbl.text() != "":
-            self.front_card.set_layer_text(f"Active Design Layer: {selected_layer_name}")
-        elif self.back_card.layer_lbl.text() != "":
-            self.back_card.set_layer_text(f"Active Design Layer: {selected_layer_name}")
-
-    def on_layer_visibility_toggled(self, layer_name, visible):
-        if layer_name == "All layers":
-            for name, widget in self.layer_widgets.items():
-                if name != "All layers":
-                    widget.set_visible_state(visible)
-
-    def on_layer_check_toggled(self, layer_name, checked):
-        if layer_name == "All layers":
-            for name, widget in self.layer_widgets.items():
-                if name != "All layers":
-                    widget.set_checked_state(checked)
-
-    def select_front_side(self):
-        self.front_card.set_layer_text("Active Design Layer: Color")
-        self.back_card.set_layer_text("")
-        self.prop_title.setText("- Front Side Properties")
-        self.layer_header_lbl.setText("Front Side")
-
-    def select_back_side(self):
-        self.front_card.set_layer_text("")
-        self.back_card.set_layer_text("Active Design Layer: Black")
-        self.prop_title.setText("- Back Side Properties")
-        self.layer_header_lbl.setText("Back Side")
-
-
-# -------------------------------------------------------------
-# Main Dashboard Panel
-# -------------------------------------------------------------
-class MainDashboardWidget(QWidget):
-    def __init__(self, username):
-        super().__init__()
-        self.username = username
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        nav_bar = QFrame()
-        nav_bar.setFixedHeight(45)
-        nav_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E5E7EB;")
-        nav_layout = QHBoxLayout(nav_bar)
-        nav_layout.setContentsMargins(15, 0, 15, 0)
-
-        brand_box = QHBoxLayout()
-        brand_box.setSpacing(8)
-        brand_box.addWidget(InstantPVCLogo(size=28, is_white=False))
-        
-        brand_title = QLabel("ENTRUST")
-        brand_title.setFont(QFont("Segoe UI", 12, QFont.Bold))
-        brand_title.setStyleSheet("color: #4C1D95;")
-        brand_box.addWidget(brand_title)
-
-        sub_brand = QLabel("Adaptive Issuance Instant ID")
-        sub_brand.setFont(QFont("Segoe UI", 9))
-        sub_brand.setStyleSheet("color: #6B21A8; padding-left: 5px; border-left: 1px solid #D1D5DB;")
-        brand_box.addWidget(sub_brand)
-
-        nav_layout.addLayout(brand_box)
-        nav_layout.addSpacing(20)
-
-        self.home_btn = QPushButton("Home")
-        self.design_btn = QPushButton("Design")
-        self.printer_btn = QPushButton("Printer Queues")
-
-        for btn in [self.home_btn, self.design_btn, self.printer_btn]:
-            btn.setCursor(Qt.PointingHandCursor)
-
-        nav_layout.addWidget(self.home_btn)
-        nav_layout.addWidget(self.design_btn)
-        nav_layout.addWidget(self.printer_btn)
-        nav_layout.addStretch()
-
-        user_lbl = QLabel(f"{self.username} ▾  ⚙  🔔  ❓  ℹ")
-        user_lbl.setStyleSheet("color: #374151; font-weight: 600;")
-        nav_layout.addWidget(user_lbl)
-
-        main_layout.addWidget(nav_bar)
-
-        purple_bar = QFrame()
-        purple_bar.setFixedHeight(38)
-        purple_bar.setStyleSheet("background-color: #6B21A8;")
-        purple_layout = QHBoxLayout(purple_bar)
-        purple_layout.setContentsMargins(15, 0, 15, 0)
-
-        self.purple_tab_stack = QStackedWidget()
-
-        home_tabs_bar = QFrame()
-        home_tabs_layout = QHBoxLayout(home_tabs_bar)
-        home_tabs_layout.setContentsMargins(0, 0, 0, 0)
-        self.cred_tab_btn = QPushButton("Credentials")
-        self.logs_tab_btn = QPushButton("System Logs")
-        home_tabs_layout.addWidget(self.cred_tab_btn)
-        home_tabs_layout.addWidget(self.logs_tab_btn)
-        home_tabs_layout.addStretch()
-
-        design_tabs_bar = QFrame()
-        design_tabs_layout = QHBoxLayout(design_tabs_bar)
-        design_tabs_layout.setContentsMargins(0, 0, 0, 0)
-        design_tabs_layout.setSpacing(4)
-        
-        self.cards_tab_btn = QPushButton("Cards")
-        self.workflows_tab_btn = QPushButton("Workflows")
-        self.reports_tab_btn = QPushButton("Reports")
-        self.field_conn_tab_btn = QPushButton("Field Connections")
-
-        self.design_tab_buttons = [self.cards_tab_btn, self.workflows_tab_btn, self.reports_tab_btn, self.field_conn_tab_btn]
-        purple_tab_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 5px 14px; font-weight: bold; font-size: 11px; } QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }"
-
-        for btn in [self.cred_tab_btn, self.logs_tab_btn] + self.design_tab_buttons:
-            btn.setStyleSheet(purple_tab_style)
-            btn.setCursor(Qt.PointingHandCursor)
-
-        design_tabs_layout.addWidget(self.cards_tab_btn)
-        design_tabs_layout.addWidget(self.workflows_tab_btn)
-        design_tabs_layout.addWidget(self.reports_tab_btn)
-        design_tabs_layout.addWidget(self.field_conn_tab_btn)
-        design_tabs_layout.addStretch()
-
-        self.purple_tab_stack.addWidget(home_tabs_bar)
-        self.purple_tab_stack.addWidget(design_tabs_bar)
-
-        purple_layout.addWidget(self.purple_tab_stack)
-        main_layout.addWidget(purple_bar)
-
-        self.content_stack = QStackedWidget()
-
-        cred_page = QWidget()
-        cred_layout = QVBoxLayout(cred_page)
-        cred_layout.setContentsMargins(20, 20, 20, 20)
-        cred_layout.addWidget(QLabel("No credentials available.", alignment=Qt.AlignCenter))
-
-        logs_page = QWidget()
-        logs_layout = QVBoxLayout(logs_page)
-        logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
-
-        cards_page = QWidget()
-        cards_layout = QVBoxLayout(cards_page)
-        cards_layout.setContentsMargins(20, 20, 20, 20)
-
-        cards_top_action_bar = QHBoxLayout()
-        cards_top_action_bar.addStretch()
-
-        create_card_btn = QPushButton("+ Create Card Design")
-        create_card_btn.setFixedSize(160, 36)
-        create_card_btn.setCursor(Qt.PointingHandCursor)
-        create_card_btn.setStyleSheet("QPushButton { background-color: #2563EB; color: #FFFFFF; font-size: 12px; font-weight: bold; border: none; border-radius: 4px; } QPushButton:hover { background-color: #1D4ED8; }")
-        create_card_btn.clicked.connect(self.open_designer_view)
-
-        cards_top_action_bar.addWidget(create_card_btn)
-        cards_layout.addLayout(cards_top_action_bar)
-        cards_layout.addStretch()
-
-        workflows_page = QWidget()
-        reports_page = QWidget()
-        field_conn_page = QWidget()
-
-        self.designer_view = CardDesignerWidget(card_name="Credential Design 1", on_close_callback=self.close_designer_view)
-
-        self.content_stack.addWidget(cred_page)
-        self.content_stack.addWidget(logs_page)
-        self.content_stack.addWidget(cards_page)
-        self.content_stack.addWidget(workflows_page)
-        self.content_stack.addWidget(reports_page)
-        self.content_stack.addWidget(field_conn_page)
-        self.content_stack.addWidget(self.designer_view)
-
-        main_layout.addWidget(self.content_stack)
-
-        self.home_btn.clicked.connect(self.show_home_view)
-        self.design_btn.clicked.connect(self.show_design_view)
-
-        self.cred_tab_btn.clicked.connect(lambda: self.switch_home_tab(0, self.cred_tab_btn))
-        self.logs_tab_btn.clicked.connect(lambda: self.switch_home_tab(1, self.logs_tab_btn))
-
-        self.cards_tab_btn.clicked.connect(lambda: self.switch_design_tab(2, self.cards_tab_btn))
-        self.workflows_tab_btn.clicked.connect(lambda: self.switch_design_tab(3, self.workflows_tab_btn))
-        self.reports_tab_btn.clicked.connect(lambda: self.switch_design_tab(4, self.reports_tab_btn))
-        self.field_conn_tab_btn.clicked.connect(lambda: self.switch_design_tab(5, self.field_conn_tab_btn))
-
-        self.show_home_view()
-
-    def update_purple_tab_active(self, active_btn, btn_group):
-        active_style = "QPushButton { background-color: #FFFFFF; color: #6B21A8; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 5px 14px; font-weight: bold; font-size: 11px; }"
-        normal_style = "QPushButton { background-color: #7C3AED; color: #EDE9FE; border: none; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 5px 14px; font-weight: bold; font-size: 11px; } QPushButton:hover { background-color: #8B5CF6; color: #FFFFFF; }"
-        for btn in btn_group:
-            btn.setStyleSheet(active_style if btn == active_btn else normal_style)
-
-    def switch_home_tab(self, index, btn):
-        self.content_stack.setCurrentIndex(index)
-        self.update_purple_tab_active(btn, [self.cred_tab_btn, self.logs_tab_btn])
-
-    def switch_design_tab(self, index, btn):
-        self.content_stack.setCurrentIndex(index)
-        self.update_purple_tab_active(btn, self.design_tab_buttons)
-
-    def set_nav_active(self, active_btn):
-        active_style = "QPushButton { color: #6B21A8; border-bottom: 2px solid #6B21A8; font-weight: bold; padding: 10px 14px; background: transparent; }"
-        normal_style = "QPushButton { color: #374151; border-bottom: 2px solid transparent; font-weight: 600; padding: 10px 14px; background: transparent; } QPushButton:hover { color: #6B21A8; }"
-
-        self.home_btn.setStyleSheet(active_style if active_btn == "home" else normal_style)
-        self.design_btn.setStyleSheet(active_style if active_btn == "design" else normal_style)
-        self.printer_btn.setStyleSheet(normal_style)
-
-    def show_home_view(self):
-        self.set_nav_active("home")
-        self.purple_tab_stack.setCurrentIndex(0)
-        self.switch_home_tab(0, self.cred_tab_btn)
-
-    def show_design_view(self):
-        self.set_nav_active("design")
-        self.purple_tab_stack.setCurrentIndex(1)
-        self.switch_design_tab(2, self.cards_tab_btn)
-
-    def open_designer_view(self):
-        self.content_stack.setCurrentIndex(6)
-
-    def close_designer_view(self):
-        self.show_design_view()
-
-
-# -------------------------------------------------------------
-# Login Window
-# -------------------------------------------------------------
-class LoginWidget(QWidget):
-    def __init__(self, on_login_success):
-        super().__init__()
-        self.on_login_success = on_login_success
-        self.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4C1D95, stop:1 #2E1065);")
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setAlignment(Qt.AlignCenter)
-
-        center_box = QWidget()
-        center_box.setFixedWidth(420)
-        box_layout = QVBoxLayout(center_box)
-        box_layout.setSpacing(15)
-
-        box_layout.addWidget(InstantPVCLogo(size=70, is_white=True), 0, Qt.AlignCenter)
-
-        title_lbl = QLabel("INSTANT PVC")
-        title_lbl.setFont(QFont("Segoe UI", 22, QFont.Bold))
-        title_lbl.setStyleSheet("color: #FFFFFF; letter-spacing: 2px;")
-        title_lbl.setAlignment(Qt.AlignCenter)
-        box_layout.addWidget(title_lbl)
-
-        form_card = QFrame()
-        form_card.setStyleSheet("QFrame { background-color: #FFFFFF; border-radius: 8px; } QLabel { color: #4B5563; font-size: 13px; font-weight: 600; } QLineEdit { background-color: #F9FAFB; border: 1px solid #D1D5DB; border-radius: 6px; padding: 8px 10px; font-size: 13px; color: #111827; }")
-        
-        card_layout = QVBoxLayout(form_card)
-        card_layout.setContentsMargins(25, 25, 25, 25)
-        card_layout.setSpacing(10)
-
-        card_layout.addWidget(QLabel("User ID"))
-        self.user_entry = QLineEdit("admin")
-        self.user_entry.setFixedHeight(38)
-        card_layout.addWidget(self.user_entry)
-
-        card_layout.addWidget(QLabel("Password"))
-        self.pass_entry = QLineEdit("admin123")
-        self.pass_entry.setEchoMode(QLineEdit.Password)
-        self.pass_entry.setFixedHeight(38)
-        card_layout.addWidget(self.pass_entry)
-
-        box_layout.addWidget(form_card)
-
-        login_btn = QPushButton("Sign In")
-        login_btn.setFixedSize(120, 38)
-        login_btn.setCursor(Qt.PointingHandCursor)
-        login_btn.setStyleSheet("QPushButton { background-color: #2563EB; color: white; font-weight: bold; font-size: 14px; border: none; border-radius: 4px; }")
-        login_btn.clicked.connect(self.check_login)
-        box_layout.addWidget(login_btn, 0, Qt.AlignCenter)
-
-        main_layout.addWidget(center_box)
-
-    def check_login(self):
-        if self.user_entry.text().strip() == "admin" and self.pass_entry.text().strip() == "admin123":
-            self.on_login_success("admin")
-        else:
-            QMessageBox.critical(self, "Login Failed", "User ID သို့မဟုတ် Password မှားယွင်းနေပါသည်။")
-
-
-# -------------------------------------------------------------
-# Main Application Window
-# -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("ENTRUST Adaptive Issuance - Instant PVC")
-        self.resize(1150, 720)
+        self.setWindowTitle("Credential Design Editor")
+        self.resize(1000, 500)
 
-        self.stack = QStackedWidget()
-        self.setCentralWidget(self.stack)
-
-        self.login_widget = LoginWidget(self.show_dashboard)
-        self.stack.addWidget(self.login_widget)
-
-    def show_dashboard(self, username):
-        self.dashboard_widget = MainDashboardWidget(username)
-        self.stack.addWidget(self.dashboard_widget)
-        self.stack.setCurrentWidget(self.dashboard_widget)
+        self.editor = CardDesignerWidget("Credential Design 1")
+        self.setCentralWidget(self.editor)
 
 
 if __name__ == "__main__":
