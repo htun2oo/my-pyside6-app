@@ -202,7 +202,6 @@ class LoginWidget(QWidget):
         card_layout.setContentsMargins(35, 35, 35, 35)
         card_layout.setSpacing(12)
 
-        # Updated Title to Instant Card Studio with original font, color, and size
         title = QLabel("Instant Card Studio")
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
         title.setStyleSheet("color: #7B2CBF; border: none; background: transparent;")
@@ -211,7 +210,6 @@ class LoginWidget(QWidget):
 
         card_layout.addSpacing(10)
 
-        # Username Input with visible dark text
         user_lbl = QLabel("Username:")
         user_lbl.setStyleSheet("color: #4A5568; font-weight: bold; border: none; background: transparent;")
         card_layout.addWidget(user_lbl)
@@ -234,7 +232,6 @@ class LoginWidget(QWidget):
         """)
         card_layout.addWidget(self.user_input)
 
-        # Password Input with visible dark text
         pass_lbl = QLabel("Password:")
         pass_lbl.setStyleSheet("color: #4A5568; font-weight: bold; border: none; background: transparent;")
         card_layout.addWidget(pass_lbl)
@@ -261,7 +258,6 @@ class LoginWidget(QWidget):
 
         card_layout.addSpacing(10)
 
-        # Sign In Button
         login_btn = QPushButton("Sign In")
         login_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
         login_btn.setCursor(Qt.PointingHandCursor)
@@ -280,7 +276,6 @@ class LoginWidget(QWidget):
         login_btn.clicked.connect(self.handle_login)
         card_layout.addWidget(login_btn)
 
-        # Forgot Password Link inside the white frame
         forgot_btn = QPushButton("Forgot Password?")
         forgot_btn.setCursor(Qt.PointingHandCursor)
         forgot_btn.setStyleSheet("""
@@ -302,7 +297,6 @@ class LoginWidget(QWidget):
         layout.addWidget(card)
 
     def handle_login(self):
-        # Verification check
         username = self.user_input.text().strip()
         password = self.pass_input.text().strip()
 
@@ -329,7 +323,7 @@ class CardDesignerWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Purple Ribbon Title
+        # Purple Ribbon Header
         purple_ribbon = QFrame()
         purple_ribbon.setFixedHeight(50)
         purple_ribbon.setStyleSheet("background-color: #830093;")
@@ -349,7 +343,7 @@ class CardDesignerWidget(QWidget):
         purple_layout.addStretch()
         main_layout.addWidget(purple_ribbon)
 
-        # Toolbar
+        # Toolbar Frame
         toolbar = QFrame()
         toolbar.setFixedHeight(46)
         toolbar.setStyleSheet("background-color: #7F7F7F;")
@@ -358,7 +352,7 @@ class CardDesignerWidget(QWidget):
         tb_layout.setContentsMargins(12, 6, 12, 6)
         tb_layout.setSpacing(12)
 
-        # Undo/Redo Frame
+        # Undo/Redo Group
         ur_frame = QFrame()
         ur_frame.setStyleSheet("""
             QFrame {
@@ -381,7 +375,7 @@ class CardDesignerWidget(QWidget):
         ur_layout.addWidget(self.redo_btn)
         tb_layout.addWidget(ur_frame)
 
-        # Copy/Cut/Paste Frame
+        # Copy/Cut/Paste Group
         clip_frame = QFrame()
         clip_frame.setStyleSheet("""
             QFrame {
@@ -416,7 +410,7 @@ class CardDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 4. Main Dashboard with Home, Design, & Printer Queues Tabs
+# 4. Main Dashboard Page
 # -------------------------------------------------------------
 
 class DashboardWidget(QWidget):
@@ -427,74 +421,193 @@ class DashboardWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Navigation Bar
-        nav_bar = QFrame()
-        nav_bar.setFixedHeight(45)
-        nav_bar.setStyleSheet("background-color: #1E2530; border-bottom: 1px solid #2D3748;")
-        nav_layout = QHBoxLayout(nav_bar)
-        nav_layout.setContentsMargins(15, 0, 15, 0)
+        # Header Bar with Centered Tabs
+        header_bar = QFrame()
+        header_bar.setFixedHeight(50)
+        header_bar.setStyleSheet("background-color: #1E2530;")
+        
+        header_layout = QHBoxLayout(header_bar)
+        header_layout.setContentsMargins(20, 0, 20, 0)
 
+        # Brand Title Left
         brand_lbl = QLabel("Instant Card Studio")
         brand_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
         brand_lbl.setStyleSheet("color: #FFFFFF;")
-        nav_layout.addWidget(brand_lbl)
+        header_layout.addWidget(brand_lbl)
 
-        nav_layout.addStretch()
+        header_layout.addStretch()
 
-        user_lbl = QLabel("Admin ▾")
-        user_lbl.setStyleSheet("color: #E2E8F0; font-weight: 600;")
-        nav_layout.addWidget(user_lbl)
-
-        layout.addWidget(nav_bar)
-
-        # Main Tabs Component
-        self.tabs = QTabWidget()
-        self.tabs.setStyleSheet("""
+        # Centered Tabs Navigation
+        self.main_tabs = QTabWidget()
+        self.main_tabs.setStyleSheet("""
             QTabWidget::pane {
                 border: none;
-                background-color: #F8FAFC;
             }
             QTabBar::tab {
-                background-color: #E2E8F0;
-                color: #4A5568;
+                background: transparent;
+                color: #A0AEC0;
                 font-weight: bold;
-                font-size: 13px;
-                padding: 10px 24px;
-                border: 1px solid #CBD5E0;
-                border-bottom: none;
+                font-size: 14px;
+                padding: 12px 28px;
+                border: none;
+                border-bottom: 3px solid transparent;
             }
             QTabBar::tab:selected {
-                background-color: #830093;
                 color: #FFFFFF;
-                border-color: #830093;
+                border-bottom: 3px solid #830093;
+            }
+            QTabBar::tab:hover {
+                color: #E2E8F0;
             }
         """)
 
-        # Tab Pages
-        self.tabs.addTab(self.create_home_tab(), "Home")
-        self.tabs.addTab(CardDesignerWidget("Credential Design 1"), "Design")
-        self.tabs.addTab(self.create_printer_queues_tab(), "Printer Queues")
+        header_layout.addWidget(self.main_tabs)
+        header_layout.addStretch()
 
-        layout.addWidget(self.tabs)
+        # User Info Right
+        user_lbl = QLabel("Admin ▾")
+        user_lbl.setStyleSheet("color: #E2E8F0; font-weight: 600;")
+        header_layout.addWidget(user_lbl)
 
+        layout.addWidget(header_bar)
+
+        # Add Screens to Centered Main Tabs
+        self.main_tabs.addTab(self.create_home_tab(), "Home")
+        self.main_tabs.addTab(self.create_design_tab(), "Design")
+        self.main_tabs.addTab(self.create_printer_queues_tab(), "Printer Queues")
+
+    # ---------------------------------------------------------
+    # Home Tab (Contains Credentials Tab & Reports Tab)
+    # ---------------------------------------------------------
     def create_home_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setContentsMargins(15, 15, 15, 15)
 
-        welcome_lbl = QLabel("Welcome to Instant Card Studio")
-        welcome_lbl.setFont(QFont("Segoe UI", 18, QFont.Bold))
-        welcome_lbl.setStyleSheet("color: #2D3748;")
-        layout.addWidget(welcome_lbl)
+        home_sub_tabs = QTabWidget()
+        home_sub_tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #CBD5E0;
+                background-color: #FFFFFF;
+                border-radius: 4px;
+            }
+            QTabBar::tab {
+                background-color: #EDF2F7;
+                color: #4A5568;
+                font-weight: bold;
+                padding: 8px 20px;
+                border: 1px solid #CBD5E0;
+                border-bottom: none;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+            QTabBar::tab:selected {
+                background-color: #FFFFFF;
+                color: #830093;
+                border-top: 2px solid #830093;
+            }
+        """)
 
-        desc_lbl = QLabel("Select a tab above to manage card designs or monitor printing queues.")
-        desc_lbl.setFont(QFont("Segoe UI", 11))
-        desc_lbl.setStyleSheet("color: #718096;")
-        layout.addWidget(desc_lbl)
+        # Credentials Sub-Tab
+        cred_widget = QWidget()
+        cred_layout = QVBoxLayout(cred_widget)
+        cred_layout.setContentsMargins(20, 20, 20, 20)
+        cred_title = QLabel("Credentials Management")
+        cred_title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        cred_title.setStyleSheet("color: #2D3748;")
+        cred_layout.addWidget(cred_title)
+        
+        cred_table = QTableWidget(2, 3)
+        cred_table.setHorizontalHeaderLabels(["Cardholder Name", "ID Number", "Status"])
+        cred_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        cred_table.setItem(0, 0, QTableWidgetItem("John Doe"))
+        cred_table.setItem(0, 1, QTableWidgetItem("EMP-8821"))
+        cred_table.setItem(0, 2, QTableWidgetItem("Active"))
+        cred_table.setItem(1, 0, QTableWidgetItem("Jane Smith"))
+        cred_table.setItem(1, 1, QTableWidgetItem("EMP-8822"))
+        cred_table.setItem(1, 2, QTableWidgetItem("Pending"))
+        cred_layout.addWidget(cred_table)
 
-        layout.addStretch()
+        # Reports Sub-Tab
+        reports_widget = QWidget()
+        rep_layout = QVBoxLayout(reports_widget)
+        rep_layout.setContentsMargins(20, 20, 20, 20)
+        rep_title = QLabel("System Reports & Analytics")
+        rep_title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        rep_title.setStyleSheet("color: #2D3748;")
+        rep_layout.addWidget(rep_title)
+        
+        rep_info = QLabel("Total Cards Printed Today: 12\nFailed Jobs: 0\nActive Printers: 2")
+        rep_info.setFont(QFont("Segoe UI", 11))
+        rep_info.setStyleSheet("color: #4A5568; line-height: 1.5;")
+        rep_layout.addWidget(rep_info)
+        rep_layout.addStretch()
+
+        home_sub_tabs.addTab(cred_widget, "Credentials")
+        home_sub_tabs.addTab(reports_widget, "Reports")
+
+        layout.addWidget(home_sub_tabs)
         return widget
 
+    # ---------------------------------------------------------
+    # Design Tab (Contains "+ Create Card" Button)
+    # ---------------------------------------------------------
+    def create_design_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Stacked Widget to toggle between "Create Button View" and "Editor View"
+        self.design_stack = QStackedWidget()
+
+        # View 1: Top Bar with "+ Create Card" Button
+        create_view = QWidget()
+        cv_layout = QVBoxLayout(create_view)
+        cv_layout.setContentsMargins(20, 20, 20, 20)
+
+        top_bar = QHBoxLayout()
+        create_card_btn = QPushButton("+ Create Card")
+        create_card_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        create_card_btn.setCursor(Qt.PointingHandCursor)
+        create_card_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #830093;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 20px;
+            }
+            QPushButton:hover {
+                background-color: #6B007B;
+            }
+        """)
+        create_card_btn.clicked.connect(self.open_card_editor)
+        top_bar.addWidget(create_card_btn)
+        top_bar.addStretch()
+
+        cv_layout.addLayout(top_bar)
+
+        placeholder = QLabel("Click '+ Create Card' above to start designing a new credential.")
+        placeholder.setFont(QFont("Segoe UI", 12))
+        placeholder.setStyleSheet("color: #718096;")
+        placeholder.setAlignment(Qt.AlignCenter)
+        cv_layout.addWidget(placeholder, stretch=1)
+
+        # View 2: Actual Card Designer Widget
+        self.card_editor_view = CardDesignerWidget("Credential Design 1")
+
+        self.design_stack.addWidget(create_view)       # Index 0
+        self.design_stack.addWidget(self.card_editor_view) # Index 1
+
+        layout.addWidget(self.design_stack)
+        return widget
+
+    def open_card_editor(self):
+        self.design_stack.setCurrentIndex(1)
+
+    # ---------------------------------------------------------
+    # Printer Queues Tab
+    # ---------------------------------------------------------
     def create_printer_queues_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
@@ -505,7 +618,6 @@ class DashboardWidget(QWidget):
         header_lbl.setStyleSheet("color: #2D3748;")
         layout.addWidget(header_lbl)
 
-        # Queue Status Table
         table = QTableWidget(3, 4)
         table.setHorizontalHeaderLabels(["Job ID", "Card Template", "Status", "Progress"])
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -523,7 +635,6 @@ class DashboardWidget(QWidget):
             }
         """)
 
-        # Sample Table Data
         sample_data = [
             ("JOB-1001", "Credential Design 1", "Printing...", "75%"),
             ("JOB-1002", "Credential Design 1", "Queued", "0%"),
@@ -546,7 +657,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Instant Card Studio")
-        self.resize(1050, 650)
+        self.resize(1100, 700)
 
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
