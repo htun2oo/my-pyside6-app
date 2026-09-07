@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Top Horizontal Ruler Widget
+# Top Horizontal Ruler Widget (တတိယပုံအတိုင်း ပိုမိုပြတ်သားအောင် ပြင်ဆင်ထားသည်)
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
     def __init__(self, height=22):
@@ -20,32 +20,44 @@ class HorizontalRulerWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiased)
         
+        # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
+        
+        # Border
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        font = QFont("Segoe UI", 7)
+        # Scale Line Pen & Text Font
+        line_pen = QPen(QColor("#1F2937"), 1)
+        font = QFont("Segoe UI", 8, QFont.Bold)
         painter.setFont(font)
-        painter.setPen(QPen(QColor("#374151"), 1))
 
-        step = 10
-        major_step = 50
-        num_val = 0
+        step = 6            # Small ticks interval
+        major_step = 30     # Major tick interval (for numbers 0, 2, 4...)
+        val = 0
 
         for x in range(0, self.width(), step):
             if x % major_step == 0:
+                # Major Tick (Long Line)
+                painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 12, x, self.height())
-                if x > 0:
-                    painter.drawText(x - 10, 2, 20, 10, Qt.AlignCenter, str(num_val))
-                    num_val += 2
-            elif x % (step * 2.5) == 0:
+                
+                # Number (0, 2, 4...)
+                painter.setPen(QPen(QColor("#111827")))
+                painter.drawText(x + 2, 1, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
+                val += 2
+            elif x % (step * 2) == 0:
+                # Medium Tick
+                painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 8, x, self.height())
             else:
+                # Small Tick
+                painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 5, x, self.height())
 
 
 # -------------------------------------------------------------
-# Left Vertical Ruler Widget
+# Left Vertical Ruler Widget (တတိယပုံအတိုင်း ပိုမိုပြတ်သားအောင် ပြင်ဆင်ထားသည်)
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
     def __init__(self, width=22):
@@ -56,27 +68,39 @@ class VerticalRulerWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiased)
 
+        # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
+        
+        # Border
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        font = QFont("Segoe UI", 7)
+        # Scale Line Pen & Text Font
+        line_pen = QPen(QColor("#1F2937"), 1)
+        font = QFont("Segoe UI", 8, QFont.Bold)
         painter.setFont(font)
-        painter.setPen(QPen(QColor("#374151"), 1))
 
-        step = 10
-        major_step = 50
-        num_val = 0
+        step = 6            # Small ticks interval
+        major_step = 30     # Major tick interval
+        val = 0
 
         for y in range(0, self.height(), step):
             if y % major_step == 0:
+                # Major Tick (Long Line)
+                painter.setPen(line_pen)
                 painter.drawLine(self.width() - 12, y, self.width(), y)
-                if y > 0:
-                    painter.drawText(2, y - 8, 10, 14, Qt.AlignCenter, str(num_val))
-                    num_val += 2
-            elif y % (step * 2.5) == 0:
+                
+                # Number (0, 2, 4...)
+                painter.setPen(QPen(QColor("#111827")))
+                painter.drawText(2, y + 2, 16, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
+                val += 2
+            elif y % (step * 2) == 0:
+                # Medium Tick
+                painter.setPen(line_pen)
                 painter.drawLine(self.width() - 8, y, self.width(), y)
             else:
+                # Small Tick
+                painter.setPen(line_pen)
                 painter.drawLine(self.width() - 5, y, self.width(), y)
 
 
@@ -246,12 +270,12 @@ class SelectableCardWidget(QWidget):
         grid_layout.setSpacing(0)
 
         corner_box = QWidget()
-        corner_box.setFixedSize(20, 20)
-        corner_box.setStyleSheet("background-color: #D1D5DB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
+        corner_box.setFixedSize(22, 22)
+        corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
         grid_layout.addWidget(corner_box, 0, 0)
 
-        grid_layout.addWidget(HorizontalRulerWidget(height=20), 0, 1)
-        grid_layout.addWidget(VerticalRulerWidget(width=20), 1, 0)
+        grid_layout.addWidget(HorizontalRulerWidget(height=22), 0, 1)
+        grid_layout.addWidget(VerticalRulerWidget(width=22), 1, 0)
 
         self.gray_box = QFrame()
         self.gray_box.setStyleSheet("background-color: #6B7280; border: none;")
@@ -663,7 +687,7 @@ class MainDashboardWidget(QWidget):
         logs_layout = QVBoxLayout(logs_page)
         logs_layout.addWidget(QLabel("System Logs Information", alignment=Qt.AlignCenter))
 
-        # Cards Page (Contains + Create Card Design Button)
+        # Cards Page
         cards_page = QWidget()
         cards_layout = QVBoxLayout(cards_page)
         cards_layout.setContentsMargins(20, 20, 20, 20)
