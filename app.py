@@ -9,36 +9,30 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Top Horizontal Ruler Widget (With Drag & Drop Guidelines)
+# Horizontal Ruler Widget (Photoshop Drag-to-Create Guide)
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
-    add_guide = Signal(int)
+    start_h_guide = Signal(int)
 
     def __init__(self, height=26, offset=25):
         super().__init__()
         self.setFixedHeight(height)
-        self.offset = offset  # Left padding offset (Card 0 point)
+        self.offset = offset
         self.setCursor(Qt.SizeVerCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        
-        # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
-        
-        # Border Line
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        # Scale Pens and Font
         line_pen = QPen(QColor("#000000"), 1)
         font = QFont("Arial", 8, QFont.Bold)
         painter.setFont(font)
 
-        step = 8            # Small tick interval (px)
-        major_step = 40     # Major tick interval
+        step = 8
+        major_step = 40
         
-        # Draw Left Negative Offset ticks if any
         for x in range(self.offset, -1, -step):
             rel_x = x - self.offset
             if rel_x % major_step == 0:
@@ -51,14 +45,12 @@ class HorizontalRulerWidget(QWidget):
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 5, x, self.height())
 
-        # Draw Positive ticks starting from Card Top-Left Corner (0 point)
         val = 0
         for x in range(self.offset, self.width(), step):
             rel_x = x - self.offset
             if rel_x % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 14, x, self.height())
-                
                 painter.setPen(QPen(QColor("#000000")))
                 painter.drawText(x + 2, 1, 24, 14, Qt.AlignLeft | Qt.AlignTop, str(val))
                 val += 2
@@ -71,41 +63,36 @@ class HorizontalRulerWidget(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            # Emit Y coordinate relative to canvas area
-            self.add_guide.emit(event.globalPosition().toPoint().y())
+            # Trigger new guideline creation
+            global_y = event.globalPosition().toPoint().y()
+            self.start_h_guide.emit(global_y)
 
 
 # -------------------------------------------------------------
-# Left Vertical Ruler Widget (With Drag & Drop Guidelines)
+# Vertical Ruler Widget (Photoshop Drag-to-Create Guide)
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
-    add_guide = Signal(int)
+    start_v_guide = Signal(int)
 
     def __init__(self, width=26, offset=30):
         super().__init__()
         self.setFixedWidth(width)
-        self.offset = offset  # Top padding offset (Card 0 point)
+        self.offset = offset
         self.setCursor(Qt.SizeHorCursor)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-
-        # Ruler Background
         painter.fillRect(self.rect(), QColor("#E5E7EB"))
-        
-        # Border Line
         painter.setPen(QPen(QColor("#9CA3AF"), 1))
         painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
 
-        # Scale Pens and Font
         line_pen = QPen(QColor("#000000"), 1)
         font = QFont("Arial", 8, QFont.Bold)
         painter.setFont(font)
 
-        step = 8            # Small tick interval
-        major_step = 40     # Major tick interval
+        step = 8
+        major_step = 40
 
-        # Draw Top Negative Offset ticks if any
         for y in range(self.offset, -1, -step):
             rel_y = y - self.offset
             if rel_y % major_step == 0:
@@ -118,14 +105,12 @@ class VerticalRulerWidget(QWidget):
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 5, y, self.width(), y)
 
-        # Draw Positive ticks starting from Card Top-Left Corner (0 point)
         val = 0
         for y in range(self.offset, self.height(), step):
             rel_y = y - self.offset
             if rel_y % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 14, y, self.width(), y)
-                
                 painter.setPen(QPen(QColor("#000000")))
                 painter.drawText(2, y + 2, 20, 12, Qt.AlignLeft | Qt.AlignTop, str(val))
                 val += 2
@@ -138,52 +123,55 @@ class VerticalRulerWidget(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            # Emit X coordinate relative to canvas area
-            self.add_guide.emit(event.globalPosition().toPoint().x())
+            # Trigger new guideline creation
+            global_x = event.globalPosition().toPoint().x()
+            self.start_v_guide.emit(global_x)
 
 
 # -------------------------------------------------------------
-# Guideline Canvas Container (Interactive Gridline Dragging)
+# Canvas Overlay Frame (Full Drag, Move & Delete System)
 # -------------------------------------------------------------
 class CanvasOverlayFrame(QFrame):
     def __init__(self):
         super().__init__()
         self.setStyleSheet("background-color: #6B7280; border: none;")
-        self.h_guides = []  # List of Y positions
-        self.v_guides = []  # List of X positions
+        self.h_guides = []  # Y coordinates
+        self.v_guides = []  # X coordinates
         self.active_drag = None
         self.drag_type = None  # 'H' or 'V'
         self.setMouseTracking(True)
 
-    def add_horizontal_guide(self, global_y):
+    def start_new_h_guide(self, global_y):
         local_y = self.mapFromGlobal(QPoint(0, global_y)).y()
-        if 0 <= local_y <= self.height():
-            self.h_guides.append(local_y)
-            self.active_drag = len(self.h_guides) - 1
-            self.drag_type = 'H'
-            self.update()
+        self.h_guides.append(local_y)
+        self.active_drag = len(self.h_guides) - 1
+        self.drag_type = 'H'
+        self.grabMouse()  # Capture mouse events immediately
+        self.update()
 
-    def add_vertical_guide(self, global_x):
+    def start_new_v_guide(self, global_x):
         local_x = self.mapFromGlobal(QPoint(global_x, 0)).x()
-        if 0 <= local_x <= self.width():
-            self.v_guides.append(local_x)
-            self.active_drag = len(self.v_guides) - 1
-            self.drag_type = 'V'
-            self.update()
+        self.v_guides.append(local_x)
+        self.active_drag = len(self.v_guides) - 1
+        self.drag_type = 'V'
+        self.grabMouse()  # Capture mouse events immediately
+        self.update()
 
     def mousePressEvent(self, event):
         pos = event.position().toPoint()
         # Check if clicking existing horizontal guide
         for idx, y in enumerate(self.h_guides):
-            if abs(pos.y() - y) <= 4:
+            if abs(pos.y() - y) <= 5:
                 self.active_drag = idx
                 self.drag_type = 'H'
+                self.grabMouse()
                 return
         # Check if clicking existing vertical guide
         for idx, x in enumerate(self.v_guides):
-            if abs(pos.x() - x) <= 4:
+            if abs(pos.x() - x) <= 5:
                 self.active_drag = idx
                 self.drag_type = 'V'
+                self.grabMouse()
                 return
         super().mousePressEvent(event)
 
@@ -196,9 +184,9 @@ class CanvasOverlayFrame(QFrame):
                 self.v_guides[self.active_drag] = pos.x()
             self.update()
         else:
-            # Change cursor on hover over guides
-            over_h = any(abs(pos.y() - y) <= 4 for y in self.h_guides)
-            over_v = any(abs(pos.x() - x) <= 4 for x in self.v_guides)
+            # Hover detection cursor change
+            over_h = any(abs(pos.y() - y) <= 5 for y in self.h_guides)
+            over_v = any(abs(pos.x() - x) <= 5 for x in self.v_guides)
             if over_h:
                 self.setCursor(Qt.SizeVerCursor)
             elif over_v:
@@ -210,31 +198,38 @@ class CanvasOverlayFrame(QFrame):
     def mouseReleaseEvent(self, event):
         if self.active_drag is not None:
             pos = event.position().toPoint()
-            # Remove guide if dragged out of canvas boundary
+            # Delete line if dragged out of canvas bounds (Photoshop behaviour)
             if self.drag_type == 'H':
                 if pos.y() < 0 or pos.y() > self.height():
                     self.h_guides.pop(self.active_drag)
             elif self.drag_type == 'V':
                 if pos.x() < 0 or pos.x() > self.width():
                     self.v_guides.pop(self.active_drag)
+
             self.active_drag = None
             self.drag_type = None
+            self.releaseMouse()
+            self.setCursor(Qt.ArrowCursor)
             self.update()
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
-        guide_pen = QPen(QColor("#00FFFF"), 1, Qt.DashLine)  # Photoshop Cyan Guide Color
-        painter.setPen(guide_pen)
+        
+        # Photoshop Cyan Guideline Color (#00FFFF)
+        photoshop_cyan = QPen(QColor("#00FFFF"), 1, Qt.SolidLine)
+        painter.setPen(photoshop_cyan)
 
-        # Draw Horizontal Grid Lines
+        # Draw Horizontal Guides
         for y in self.h_guides:
-            painter.drawLine(0, y, self.width(), y)
+            if 0 <= y <= self.height():
+                painter.drawLine(0, y, self.width(), y)
 
-        # Draw Vertical Grid Lines
+        # Draw Vertical Guides
         for x in self.v_guides:
-            painter.drawLine(x, 0, x, self.height())
+            if 0 <= x <= self.width():
+                painter.drawLine(x, 0, x, self.height())
 
 
 # -------------------------------------------------------------
@@ -348,7 +343,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Canvas Box (Corner Box, Rulers & Interactive Canvas)
+# Card Canvas Box Container
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
@@ -356,7 +351,6 @@ class SelectableCardWidget(QWidget):
     def __init__(self, side_text):
         super().__init__()
         self.setFixedWidth(380)
-        self.setCursor(Qt.PointingHandCursor)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -391,14 +385,14 @@ class SelectableCardWidget(QWidget):
         corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
         grid_layout.addWidget(corner_box, 0, 0)
 
-        # Padding offsets (25px left, 30px top) to align 0 point perfectly with Card Left/Top edge
+        # Rulers Alignment (Left Offset 25, Top Offset 30)
         self.h_ruler = HorizontalRulerWidget(height=26, offset=25)
         self.v_ruler = VerticalRulerWidget(width=26, offset=30)
 
         grid_layout.addWidget(self.h_ruler, 0, 1)
         grid_layout.addWidget(self.v_ruler, 1, 0)
 
-        # Interactive Guideline Frame
+        # Interactive Overlay Frame
         self.gray_box = CanvasOverlayFrame()
         
         gray_layout = QVBoxLayout(self.gray_box)
@@ -411,9 +405,9 @@ class SelectableCardWidget(QWidget):
         gray_layout.addWidget(self.white_card)
         grid_layout.addWidget(self.gray_box, 1, 1)
 
-        # Connect Ruler Drag signals to Guideline Overlay
-        self.h_ruler.add_guide.connect(self.gray_box.add_horizontal_guide)
-        self.v_ruler.add_guide.connect(self.gray_box.add_vertical_guide)
+        # Connect Drag-Create signals
+        self.h_ruler.start_h_guide.connect(self.gray_box.start_new_h_guide)
+        self.v_ruler.start_v_guide.connect(self.gray_box.start_new_v_guide)
 
         layout.addWidget(self.canvas_frame)
 
@@ -438,7 +432,6 @@ class CardDesignerWidget(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Top Purple Ribbon
         purple_ribbon = QFrame()
         purple_ribbon.setFixedHeight(36)
         purple_ribbon.setStyleSheet("background-color: #5B21B6;")
@@ -453,7 +446,6 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addWidget(purple_ribbon)
 
-        # Toolbar
         toolbar = QFrame()
         toolbar.setFixedHeight(40)
         toolbar.setStyleSheet("background-color: #E5E7EB; border-bottom: 1px solid #D1D5DB;")
@@ -479,7 +471,6 @@ class CardDesignerWidget(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(toolbar)
 
-        # Main Body Area
         body_layout = QHBoxLayout()
         body_layout.setContentsMargins(0, 0, 0, 0)
         body_layout.setSpacing(0)
@@ -509,7 +500,6 @@ class CardDesignerWidget(QWidget):
         canvas_scroll.setWidget(canvas_container)
         body_layout.addWidget(canvas_scroll, stretch=1)
 
-        # Right Panel (Properties & Layers)
         right_panel = QFrame()
         right_panel.setFixedWidth(270)
         right_panel.setStyleSheet("background-color: #E5E7EB; border-left: 1px solid #C0C0C0;")
@@ -519,7 +509,6 @@ class CardDesignerWidget(QWidget):
         self.prop_tabs = QTabWidget()
         self.prop_tabs.setStyleSheet("QTabWidget::pane { border: 1px solid #C0C0C0; background-color: #E5E7EB; top: -1px; } QTabBar::tab { background: #D1D5DB; color: #374151; padding: 6px 20px; font-size: 11px; font-weight: bold; border: 1px solid #C0C0C0; margin-right: 2px; } QTabBar::tab:selected { background: #FFFFFF; border-bottom: 1px solid #FFFFFF; color: #111827; }")
 
-        # Properties Page
         properties_page = QWidget()
         properties_page.setStyleSheet("background-color: #E5E7EB;")
         prop_page_layout = QVBoxLayout(properties_page)
@@ -542,7 +531,6 @@ class CardDesignerWidget(QWidget):
         prop_page_layout.addWidget(prop_box)
         prop_page_layout.addStretch()
 
-        # Layers Page
         layers_page = QWidget()
         layers_page.setStyleSheet("background-color: #E5E7EB;")
         layers_page_layout = QVBoxLayout(layers_page)
@@ -585,7 +573,6 @@ class CardDesignerWidget(QWidget):
 
         main_layout.addLayout(body_layout, stretch=1)
 
-        # Footer Actions
         footer = QFrame()
         footer.setFixedHeight(36)
         footer.setStyleSheet("background-color: #E5E7EB; border-top: 1px solid #D1D5DB;")
