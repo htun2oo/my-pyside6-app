@@ -5,17 +5,16 @@ from PySide6.QtGui import QFont, QPainter, QColor, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QMessageBox, QStackedWidget,
-    QTabWidget, QCheckBox, QScrollArea, QComboBox, QGridLayout
+    QTabWidget, QCheckBox, QScrollArea, QComboBox
 )
 
 # -------------------------------------------------------------
-# Horizontal Ruler Widget
+# Top Ruler Widget (Horizontal)
 # -------------------------------------------------------------
 class HorizontalRulerWidget(QWidget):
-    def __init__(self, height=26, offset=25):
+    def __init__(self, height=26):
         super().__init__()
         self.setFixedHeight(height)
-        self.offset = offset
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -29,22 +28,11 @@ class HorizontalRulerWidget(QWidget):
 
         step = 8
         major_step = 40
-        
-        for x in range(self.offset, -1, -step):
-            rel_x = x - self.offset
-            if rel_x % major_step == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 14, x, self.height())
-            elif rel_x % (step * 2) == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 9, x, self.height())
-            else:
-                painter.setPen(line_pen)
-                painter.drawLine(x, self.height() - 5, x, self.height())
+        offset = 25  # Offset to match card margin inside canvas
 
         val = 0
-        for x in range(self.offset, self.width(), step):
-            rel_x = x - self.offset
+        for x in range(offset, self.width(), step):
+            rel_x = x - offset
             if rel_x % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(x, self.height() - 14, x, self.height())
@@ -60,13 +48,12 @@ class HorizontalRulerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Vertical Ruler Widget
+# Left Ruler Widget (Vertical)
 # -------------------------------------------------------------
 class VerticalRulerWidget(QWidget):
-    def __init__(self, width=26, offset=30):
+    def __init__(self, width=26):
         super().__init__()
         self.setFixedWidth(width)
-        self.offset = offset
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -80,22 +67,11 @@ class VerticalRulerWidget(QWidget):
 
         step = 8
         major_step = 40
-
-        for y in range(self.offset, -1, -step):
-            rel_y = y - self.offset
-            if rel_y % major_step == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 14, y, self.width(), y)
-            elif rel_y % (step * 2) == 0:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 9, y, self.width(), y)
-            else:
-                painter.setPen(line_pen)
-                painter.drawLine(self.width() - 5, y, self.width(), y)
+        offset = 30  # Offset to match card margin inside canvas
 
         val = 0
-        for y in range(self.offset, self.height(), step):
-            rel_y = y - self.offset
+        for y in range(offset, self.height(), step):
+            rel_y = y - offset
             if rel_y % major_step == 0:
                 painter.setPen(line_pen)
                 painter.drawLine(self.width() - 14, y, self.width(), y)
@@ -111,97 +87,56 @@ class VerticalRulerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Single Integrated Interactive Card View (Fixed Guideline Drawing)
+# Design Inner Canvas (Renders Dark Area, White Card, Grid Lines)
 # -------------------------------------------------------------
-class InteractiveCardCanvas(QFrame):
+class DesignCanvas(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(380, 310)
-        self.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
-
-        # Guidelines Data
-        self.h_guides = []
-        self.v_guides = []
+        self.h_guides = [80]  # Default Guideline vertical position
+        self.v_guides = [100] # Default Guideline horizontal position
         self.active_drag = None
         self.drag_type = None
-
         self.setMouseTracking(True)
 
-        # Rulers
-        self.h_ruler = HorizontalRulerWidget(height=26, offset=25)
-        self.h_ruler.setParent(self)
-        self.h_ruler.setGeometry(26, 0, 354, 26)
-
-        self.v_ruler = VerticalRulerWidget(width=26, offset=30)
-        self.v_ruler.setParent(self)
-        self.v_ruler.setGeometry(0, 26, 26, 284)
-
-        # Corner box
-        self.corner_box = QWidget(self)
-        self.corner_box.setGeometry(0, 0, 26, 26)
-        self.corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
-
     def paintEvent(self, event):
-        super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiased)
 
-        # 1. Dark Gray Background
-        gray_rect = QRectF(26, 26, 354, 284)
-        painter.fillRect(gray_rect, QColor("#6B7280"))
+        # 1. Dark Gray Frame Background
+        painter.fillRect(self.rect(), QColor("#4B5563"))
 
-        # 2. Inner White Card
-        card_rect = QRectF(51, 56, 304, 224)
+        # 2. White Card Center
+        card_rect = QRectF(25, 30, 304, 224)
         painter.setBrush(QColor("#FFFFFF"))
         painter.setPen(QPen(QColor("#1F2937"), 1))
         painter.drawRoundedRect(card_rect, 12, 12)
 
-        # 3. Cyan Guidelines (Draw Over Everything)
+        # 3. Cyan Guidelines (Draws over everything inside canvas)
         cyan_pen = QPen(QColor("#00FFFF"), 1.5, Qt.SolidLine)
         painter.setPen(cyan_pen)
 
         for y in self.h_guides:
-            if 0 <= y <= self.height():
-                painter.drawLine(26, y, self.width(), y)
+            painter.drawLine(0, y, self.width(), y)
 
         for x in self.v_guides:
-            if 0 <= x <= self.width():
-                painter.drawLine(x, 26, x, self.height())
+            painter.drawLine(x, 0, x, self.height())
 
     def mousePressEvent(self, event):
         pos = event.position().toPoint()
 
-        # Check existing guidelines click
+        # Drag existing horizontal guide
         for idx, y in enumerate(self.h_guides):
-            if abs(pos.y() - y) <= 5:
+            if abs(pos.y() - y) <= 6:
                 self.active_drag = idx
                 self.drag_type = 'H'
-                self.grabMouse()
                 return
 
+        # Drag existing vertical guide
         for idx, x in enumerate(self.v_guides):
-            if abs(pos.x() - x) <= 5:
+            if abs(pos.x() - x) <= 6:
                 self.active_drag = idx
                 self.drag_type = 'V'
-                self.grabMouse()
                 return
-
-        # Check Ruler clicks for NEW guidelines
-        if pos.y() <= 26 and pos.x() > 26:
-            self.h_guides.append(pos.y())
-            self.active_drag = len(self.h_guides) - 1
-            self.drag_type = 'H'
-            self.grabMouse()
-            self.update()
-            return
-
-        if pos.x() <= 26 and pos.y() > 26:
-            self.v_guides.append(pos.x())
-            self.active_drag = len(self.v_guides) - 1
-            self.drag_type = 'V'
-            self.grabMouse()
-            self.update()
-            return
 
         super().mousePressEvent(event)
 
@@ -215,12 +150,12 @@ class InteractiveCardCanvas(QFrame):
                 self.v_guides[self.active_drag] = pos.x()
             self.update()
         else:
-            over_h = any(abs(pos.y() - y) <= 5 for y in self.h_guides)
-            over_v = any(abs(pos.x() - x) <= 5 for x in self.v_guides)
+            over_h = any(abs(pos.y() - y) <= 6 for y in self.h_guides)
+            over_v = any(abs(pos.x() - x) <= 6 for x in self.v_guides)
 
-            if over_h or (pos.y() <= 26 and pos.x() > 26):
+            if over_h:
                 self.setCursor(Qt.SizeVerCursor)
-            elif over_v or (pos.x() <= 26 and pos.y() > 26):
+            elif over_v:
                 self.setCursor(Qt.SizeHorCursor)
             else:
                 self.setCursor(Qt.ArrowCursor)
@@ -230,20 +165,68 @@ class InteractiveCardCanvas(QFrame):
     def mouseReleaseEvent(self, event):
         if self.active_drag is not None:
             pos = event.position().toPoint()
-            if self.drag_type == 'H':
-                if pos.y() < 26 or pos.y() > self.height():
-                    self.h_guides.pop(self.active_drag)
-            elif self.drag_type == 'V':
-                if pos.x() < 26 or pos.x() > self.width():
-                    self.v_guides.pop(self.active_drag)
+            # Remove line if dragged outside canvas
+            if self.drag_type == 'H' and (pos.y() < 0 or pos.y() > self.height()):
+                self.h_guides.pop(self.active_drag)
+            elif self.drag_type == 'V' and (pos.x() < 0 or pos.x() > self.width()):
+                self.v_guides.pop(self.active_drag)
 
             self.active_drag = None
             self.drag_type = None
-            self.releaseMouse()
             self.setCursor(Qt.ArrowCursor)
             self.update()
 
         super().mouseReleaseEvent(event)
+
+
+# -------------------------------------------------------------
+# Integrated Interactive Card Box (Assembles Ruler + Canvas)
+# -------------------------------------------------------------
+class InteractiveCardContainer(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(380, 310)
+        self.setStyleSheet("background-color: #E5E7EB; border: 1px solid #9CA3AF;")
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # Top Header (Top Ruler)
+        top_layout = QHBoxLayout()
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(0)
+
+        corner_box = QWidget()
+        corner_box.setFixedSize(26, 26)
+        corner_box.setStyleSheet("background-color: #E5E7EB; border-right: 1px solid #9CA3AF; border-bottom: 1px solid #9CA3AF;")
+
+        self.h_ruler = HorizontalRulerWidget(height=26)
+        top_layout.addWidget(corner_box)
+        top_layout.addWidget(self.h_ruler)
+
+        main_layout.addLayout(top_layout)
+
+        # Bottom Container (Left Ruler + Center Canvas)
+        body_layout = QHBoxLayout()
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(0)
+
+        self.v_ruler = VerticalRulerWidget(width=26)
+        self.canvas = DesignCanvas()
+
+        body_layout.addWidget(self.v_ruler)
+        body_layout.addWidget(self.canvas)
+
+        main_layout.addLayout(body_layout)
+
+    def add_horizontal_guide(self):
+        self.canvas.h_guides.append(50)
+        self.canvas.update()
+
+    def add_vertical_guide(self):
+        self.canvas.v_guides.append(50)
+        self.canvas.update()
 
 
 # -------------------------------------------------------------
@@ -357,7 +340,7 @@ class InstantPVCLogo(QWidget):
 
 
 # -------------------------------------------------------------
-# Card Canvas Box Container
+# Card View Outer Box
 # -------------------------------------------------------------
 class SelectableCardWidget(QWidget):
     clicked = Signal()
@@ -385,8 +368,8 @@ class SelectableCardWidget(QWidget):
 
         layout.addLayout(header_layout)
 
-        self.canvas_frame = InteractiveCardCanvas()
-        layout.addWidget(self.canvas_frame)
+        self.container = InteractiveCardContainer()
+        layout.addWidget(self.container)
 
     def set_layer_text(self, text):
         self.layer_lbl.setText(text)
@@ -436,6 +419,12 @@ class CardDesignerWidget(QWidget):
             btn.setFixedSize(26, 26)
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet("QPushButton { background-color: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 2px; font-size: 11px; font-weight: bold; color: #374151; } QPushButton:hover { background-color: #F3F4F6; border-color: #6B21A8; }")
+            
+            # Grid Tool Click Action
+            if tool == "▦":
+                btn.setToolTip("Add Grid Guideline Lines")
+                btn.clicked.connect(self.add_guidelines_to_active)
+
             tb_layout.addWidget(btn)
 
         tb_layout.addSpacing(8)
@@ -575,6 +564,14 @@ class CardDesignerWidget(QWidget):
         self.front_card.clicked.connect(self.select_front_side)
         self.back_card.clicked.connect(self.select_back_side)
         self.select_front_side()
+
+    def add_guidelines_to_active(self):
+        if self.front_card.layer_lbl.text() != "":
+            self.front_card.container.add_horizontal_guide()
+            self.front_card.container.add_vertical_guide()
+        else:
+            self.back_card.container.add_horizontal_guide()
+            self.back_card.container.add_vertical_guide()
 
     def on_layer_selected(self, selected_layer_name):
         for name, widget in self.layer_widgets.items():
