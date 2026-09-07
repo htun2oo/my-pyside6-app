@@ -410,7 +410,7 @@ class CardDesignerWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 4. Main Dashboard Widget (Header Tabs Updated)
+# 4. Main Dashboard Widget
 # -------------------------------------------------------------
 
 class DashboardWidget(QWidget):
@@ -421,7 +421,7 @@ class DashboardWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # --- White Top Header Bar with Navigation Tabs ---
+        # --- White Top Bar with Centered Tabs ---
         top_bar = QFrame()
         top_bar.setFixedHeight(48)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
@@ -429,13 +429,15 @@ class DashboardWidget(QWidget):
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(20, 0, 20, 0)
 
-        # Title Label (Left)
+        # Left Title
         title_lbl = QLabel("Instant Card Studio")
         title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
         title_lbl.setStyleSheet("color: #444444; border: none;")
         top_layout.addWidget(title_lbl)
 
-        # Navigation Tabs placed on the White Top Bar
+        top_layout.addStretch()
+
+        # Tabs on the White Top Bar
         self.nav_tabs = QTabWidget()
         self.nav_tabs.setStyleSheet("""
             QTabWidget::pane {
@@ -464,24 +466,16 @@ class DashboardWidget(QWidget):
 
         layout.addWidget(top_bar)
 
-        # --- Content Container ---
-        self.stacked_pages = QStackedWidget()
-
-        # Page 1: Home View
+        # Content Pages
         self.home_page = self.create_home_view()
-
-        # Page 2: Design View (Card Designer)
         self.design_page = CardDesignerWidget("Credential Design 1")
-
-        # Page 3: Printer Queues View
         self.printer_page = self.create_printer_queues_view()
 
-        # Adding Views to Navigation Tabs directly on White Bar
         self.nav_tabs.addTab(self.home_page, "Home")
         self.nav_tabs.addTab(self.design_page, "Design ▾")
         self.nav_tabs.addTab(self.printer_page, "Printer Queues")
 
-        # Default open Design tab to match current screenshot state
+        # Open Design tab by default
         self.nav_tabs.setCurrentIndex(1)
 
         layout.addWidget(self.nav_tabs, stretch=1)
@@ -540,7 +534,7 @@ class DashboardWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 5. Main Window Container
+# 5. Main Window Container (Login Stack Restored)
 # -------------------------------------------------------------
 
 class MainWindow(QMainWindow):
@@ -558,8 +552,8 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.login_page)     # Index 0
         self.stacked_widget.addWidget(self.dashboard_page)  # Index 1
 
-        # Direct view to Dashboard for layout validation
-        self.stacked_widget.setCurrentIndex(1)
+        # Restored Login Screen First
+        self.stacked_widget.setCurrentIndex(0)
 
     def show_dashboard(self):
         self.stacked_widget.setCurrentIndex(1)
