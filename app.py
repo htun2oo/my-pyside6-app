@@ -1,12 +1,10 @@
 import sys
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QIcon, QPixmap
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QMessageBox,
-    QToolButton
+    QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QToolButton
 )
-
 
 # -------------------------------------------------------------
 # 1. Login Screen Widget
@@ -30,7 +28,7 @@ class LoginWidget(QWidget):
 
         title = QLabel("ENTRUST Instant ID")
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
-        title.setStyleSheet("color: #6B21A8; border: none; background: transparent;")
+        title.setStyleSheet("color: #7A0A8A; border: none; background: transparent;")
         title.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(title)
 
@@ -50,7 +48,7 @@ class LoginWidget(QWidget):
                 background-color: #FAFAFA;
                 color: #1A202C;
             }
-            QLineEdit:focus { border: 1.5px solid #6B21A8; }
+            QLineEdit:focus { border: 1.5px solid #7A0A8A; }
         """)
         card_layout.addWidget(self.user_input)
 
@@ -69,7 +67,7 @@ class LoginWidget(QWidget):
                 background-color: #FAFAFA;
                 color: #1A202C;
             }
-            QLineEdit:focus { border: 1.5px solid #6B21A8; }
+            QLineEdit:focus { border: 1.5px solid #7A0A8A; }
         """)
         self.pass_input.returnPressed.connect(self.handle_login)
         card_layout.addWidget(self.pass_input)
@@ -81,13 +79,13 @@ class LoginWidget(QWidget):
         login_btn.setCursor(Qt.PointingHandCursor)
         login_btn.setStyleSheet("""
             QPushButton {
-                background-color: #6B21A8;
+                background-color: #7A0A8A;
                 color: white;
                 border: none;
                 border-radius: 4px;
                 padding: 9px;
             }
-            QPushButton:hover { background-color: #581C87; }
+            QPushButton:hover { background-color: #630571; }
         """)
         login_btn.clicked.connect(self.handle_login)
         card_layout.addWidget(login_btn)
@@ -110,114 +108,114 @@ class EntrustDashboard(QWidget):
         main_layout.setSpacing(0)
 
         # ---------------------------------------------------------
-        # BAR 1: Top White Bar
-        # Logo | Title | Nav Tabs (Home, Design v, Printer Queues)
+        # BAR 1: Top White Header Bar
+        # Logo | Subtitle | Home | Design v | Printer Queues
         # ---------------------------------------------------------
         top_bar = QFrame()
-        top_bar.setFixedHeight(48)
-        top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #E2E8F0;")
+        top_bar.setFixedHeight(54)
+        top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
 
         top_layout = QHBoxLayout(top_bar)
-        top_layout.setContentsMargins(15, 0, 15, 0)
-        top_layout.setSpacing(20)
+        top_layout.setContentsMargins(18, 0, 20, 0)
+        top_layout.setSpacing(18)
 
-        # Entrust Logo Icon Placeholder + Text
+        # ENTRUST Cube Icon Logo + Text
         logo_box = QHBoxLayout()
-        logo_box.setSpacing(6)
+        logo_box.setSpacing(8)
 
         logo_icon = QLabel("⬡")
-        logo_icon.setStyleSheet("color: #6B21A8; font-size: 20px; font-weight: bold;")
+        logo_icon.setStyleSheet("color: #7A0A8A; font-size: 24px; font-weight: bold;")
 
         logo_text = QLabel("ENTRUST")
-        logo_text.setFont(QFont("Segoe UI", 13, QFont.Bold))
-        logo_text.setStyleSheet("color: #6B21A8; letter-spacing: 1px;")
+        logo_text.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        logo_text.setStyleSheet("color: #4A4A4A; letter-spacing: 1.5px;")
 
         logo_box.addWidget(logo_icon)
         logo_box.addWidget(logo_text)
         top_layout.addLayout(logo_box)
 
-        # Vertical Separator Line
-        sep1 = QFrame()
-        sep1.setFrameShape(QFrame.VLine)
-        sep1.setStyleSheet("color: #CBD5E0; max-height: 24px;")
-        top_layout.addWidget(sep1)
+        # Vertical Divider Line
+        sep = QFrame()
+        sep.setFrameShape(QFrame.VLine)
+        sep.setStyleSheet("color: #CCCCCC; max-height: 28px;")
+        top_layout.addWidget(sep)
 
-        # Subtitle Text
-        sub_title = QLabel("Adaptive Issuance\nInstant ID")
+        # Subtitle Text (Adaptive Issuance™ Instant ID)
+        sub_title = QLabel("Adaptive Issuance™\nInstant ID")
         sub_title.setFont(QFont("Segoe UI", 8, QFont.Bold))
-        sub_title.setStyleSheet("color: #4A5568; line-height: 100%;")
+        sub_title.setStyleSheet("color: #333333; line-height: 110%;")
         top_layout.addWidget(sub_title)
 
-        top_layout.addSpacing(30)
+        top_layout.addSpacing(60)
 
-        # Main Navigation Tabs
+        # Navigation Bar Buttons
         nav_box = QHBoxLayout()
-        nav_box.setSpacing(25)
+        nav_box.setSpacing(35)
 
         home_btn = QPushButton("Home")
-        home_btn.setFont(QFont("Segoe UI", 9.5, QFont.Medium))
-        home_btn.setStyleSheet("border: none; color: #4A5568; background: transparent;")
+        home_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        home_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
         home_btn.setCursor(Qt.PointingHandCursor)
 
         design_btn = QPushButton("Design ▾")
-        design_btn.setFont(QFont("Segoe UI", 9.5, QFont.Medium))
-        design_btn.setStyleSheet("border: none; color: #4A5568; background: transparent;")
+        design_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        design_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
         design_btn.setCursor(Qt.PointingHandCursor)
 
         printer_btn = QPushButton("Printer Queues")
-        printer_btn.setFont(QFont("Segoe UI", 9.5, QFont.Medium))
-        printer_btn.setStyleSheet("border: none; color: #4A5568; background: transparent;")
+        printer_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        printer_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
         printer_btn.setCursor(Qt.PointingHandCursor)
 
         nav_box.addWidget(home_btn)
         nav_box.addWidget(design_btn)
-        nav_box.addWidget(printer_box := printer_btn)
+        nav_box.addWidget(printer_btn)
         top_layout.addLayout(nav_box)
 
         top_layout.addStretch()
         main_layout.addWidget(top_bar)
 
         # ---------------------------------------------------------
-        # BAR 2: Dark Purple Ribbon Bar
-        # Sub-tabs (Credentials, Reports) | Info Text | User Icons
+        # BAR 2: Deep Magenta / Purple Ribbon Bar
+        # Credentials, Reports | Info & Profile Icons
         # ---------------------------------------------------------
         purple_bar = QFrame()
-        purple_bar.setFixedHeight(38)
-        purple_bar.setStyleSheet("background-color: #6B1182;")  # Entrust Deep Purple
+        purple_bar.setFixedHeight(36)
+        purple_bar.setStyleSheet("background-color: #7A0A8A;")  # Exact Entrust Purple
 
         purple_layout = QHBoxLayout(purple_bar)
         purple_layout.setContentsMargins(15, 0, 15, 0)
         purple_layout.setSpacing(0)
 
-        # Left Tabs (Credentials, Reports)
+        # Sub-tabs (Credentials, Reports)
         sub_tabs_layout = QHBoxLayout()
-        sub_tabs_layout.setSpacing(2)
+        sub_tabs_layout.setSpacing(0)
 
         cred_btn = QPushButton("Credentials")
         cred_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        cred_btn.setFixedHeight(38)
+        cred_btn.setFixedHeight(36)
         cred_btn.setStyleSheet("""
             QPushButton {
                 background-color: #FFFFFF;
-                color: #6B1182;
+                color: #7A0A8A;
                 border: none;
-                padding: 0px 18px;
-                border-top-left-radius: 2px;
-                border-top-right-radius: 2px;
+                padding: 0px 20px;
+                border-top-left-radius: 3px;
+                border-top-right-radius: 3px;
             }
         """)
 
         reports_btn = QPushButton("Reports")
         reports_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        reports_btn.setFixedHeight(38)
+        reports_btn.setFixedHeight(36)
         reports_btn.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
-                color: #E9D5FF;
+                color: #FFFFFF;
                 border: none;
-                padding: 0px 18px;
+                padding: 0px 20px;
             }
-            QPushButton:hover { color: #FFFFFF; }
+            QPushButton:hover { color: #E0B0FF; }
         """)
 
         sub_tabs_layout.addWidget(cred_btn)
@@ -226,114 +224,122 @@ class EntrustDashboard(QWidget):
 
         purple_layout.addStretch()
 
-        # Right Side Information & Action Icons
-        right_info_box = QHBoxLayout()
-        right_info_box.setSpacing(12)
+        # Right Side Info & Status Area
+        right_info = QHBoxLayout()
+        right_info.setSpacing(14)
 
-        login_info = QLabel("Last Login: 08-MAY-2026 01:42 | IP: 192.168.56.1")
+        login_info = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109")
         login_info.setFont(QFont("Segoe UI", 8))
-        login_info.setStyleSheet("color: #D8B4FE;")
+        login_info.setStyleSheet("color: #DDA0DD;")
 
-        user_dropdown = QPushButton("admin ▾")
-        user_dropdown.setFont(QFont("Segoe UI", 8.5))
-        user_dropdown.setStyleSheet("color: #FFFFFF; background: transparent; border: none;")
-
-        search_icon = QLabel("🔍")
-        search_icon.setStyleSheet("color: #FFFFFF; font-size: 11px;")
+        user_btn = QPushButton("admin ▾")
+        user_btn.setFont(QFont("Segoe UI", 8.5))
+        user_btn.setStyleSheet("color: #FFFFFF; background: transparent; border: none;")
 
         settings_icon = QLabel("⚙")
         settings_icon.setStyleSheet("color: #FFFFFF; font-size: 13px;")
 
-        bell_icon = QLabel("🔔²")
-        bell_icon.setStyleSheet("color: #FF5555; font-size: 12px; font-weight: bold;")
+        # Red Notification Badge Overlay Container
+        badge_container = QWidget()
+        badge_container.setFixedSize(22, 20)
+        
+        bell_lbl = QLabel("🔔", badge_container)
+        bell_lbl.setStyleSheet("color: #FFFFFF; font-size: 11px;")
+        bell_lbl.move(0, 3)
 
-        question_icon = QLabel("❓")
-        question_icon.setStyleSheet("color: #FFFFFF; font-size: 11px;")
+        num_badge = QLabel("2", badge_container)
+        num_badge.setFont(QFont("Segoe UI", 6.5, QFont.Bold))
+        num_badge.setStyleSheet("background-color: #E53E3E; color: white; border-radius: 5px; padding: 1px 3px;")
+        num_badge.move(9, 0)
 
-        power_icon = QLabel("⏻")
-        power_icon.setStyleSheet("color: #FFFFFF; font-size: 12px;")
+        help_icon = QLabel("❓")
+        help_icon.setStyleSheet("color: #FFFFFF; font-size: 11px;")
 
-        right_info_box.addWidget(login_info)
-        right_info_box.addWidget(user_dropdown)
-        right_info_box.addWidget(search_icon)
-        right_info_box.addWidget(settings_icon)
-        right_info_box.addWidget(bell_icon)
-        right_info_box.addWidget(question_icon)
-        right_info_box.addWidget(power_icon)
+        info_icon = QLabel("ℹ")
+        info_icon.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: bold;")
 
-        purple_layout.addLayout(right_info_box)
+        right_info.addWidget(login_info)
+        right_info.addWidget(user_btn)
+        right_info.addWidget(settings_icon)
+        right_info.addWidget(badge_container)
+        right_info.addWidget(help_icon)
+        right_info.addWidget(info_icon)
+
+        purple_layout.addLayout(right_info)
         main_layout.addWidget(purple_bar)
 
         # ---------------------------------------------------------
-        # BAR 3: Light Grey Action Bar (Grid / List View Icons)
+        # BAR 3: Light Grey Grid/List Toggle Toolbar
         # ---------------------------------------------------------
-        action_bar = QFrame()
-        action_bar.setFixedHeight(34)
-        action_bar.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E0;")
+        tool_bar = QFrame()
+        tool_bar.setFixedHeight(34)
+        tool_bar.setStyleSheet("background-color: #F3F4F6; border-bottom: 1px solid #E5E7EB;")
 
-        action_layout = QHBoxLayout(action_bar)
-        action_layout.setContentsMargins(12, 0, 12, 0)
-        action_layout.setSpacing(4)
+        tool_layout = QHBoxLayout(tool_bar)
+        tool_layout.setContentsMargins(8, 0, 8, 0)
+        tool_layout.setSpacing(4)
 
         grid_btn = QToolButton()
         grid_btn.setText("田")
-        grid_btn.setFixedSize(26, 24)
+        grid_btn.setFixedSize(28, 25)
         grid_btn.setStyleSheet("""
             QToolButton {
-                background-color: #CBD5E0;
-                border: 1px solid #A0AEC0;
+                background-color: #94A3B8;
+                border: 1px solid #64748B;
                 border-radius: 2px;
-                color: #2D3748;
+                color: #FFFFFF;
+                font-weight: bold;
             }
         """)
 
         list_btn = QToolButton()
         list_btn.setText("≡")
-        list_btn.setFixedSize(26, 24)
+        list_btn.setFixedSize(28, 25)
         list_btn.setStyleSheet("""
             QToolButton {
-                background-color: #EDF2F7;
+                background-color: #FFFFFF;
                 border: 1px solid #CBD5E0;
                 border-radius: 2px;
-                color: #4A5568;
+                color: #334155;
+                font-weight: bold;
             }
         """)
 
-        action_layout.addWidget(grid_btn)
-        action_layout.addWidget(list_btn)
-        action_layout.addStretch()
+        tool_layout.addWidget(grid_btn)
+        tool_layout.addWidget(list_btn)
+        tool_layout.addStretch()
 
-        main_layout.addWidget(action_bar)
+        main_layout.addWidget(tool_bar)
 
         # ---------------------------------------------------------
-        # MAIN WORKSPACE AREA (Grey Grid Background)
+        # MAIN WORKSPACE CANVAS
         # ---------------------------------------------------------
         workspace = QFrame()
-        workspace.setStyleSheet("background-color: #E5E7EB;")
+        workspace.setStyleSheet("background-color: #FFFFFF;")
         main_layout.addWidget(workspace, stretch=1)
 
         # ---------------------------------------------------------
         # BOTTOM STATUS BAR
         # ---------------------------------------------------------
         status_bar = QFrame()
-        status_bar.setFixedHeight(28)
-        status_bar.setStyleSheet("background-color: #E2E8F0; border-top: 1px solid #CBD5E0;")
+        status_bar.setFixedHeight(32)
+        status_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
 
         status_layout = QHBoxLayout(status_bar)
         status_layout.setContentsMargins(10, 0, 15, 0)
         status_layout.addStretch()
 
-        queue_status_btn = QPushButton("🖨  Printer Queue Status")
-        queue_status_btn.setFont(QFont("Segoe UI", 8.5))
+        queue_status_btn = QPushButton("🖨   Printer Queue Status")
+        queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
         queue_status_btn.setStyleSheet("""
             QPushButton {
-                background-color: #EDF2F7;
-                color: #2D3748;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E2E8F0);
+                color: #1E3A8A;
                 border: 1px solid #CBD5E0;
                 border-radius: 3px;
-                padding: 2px 10px;
+                padding: 4px 14px;
             }
-            QPushButton:hover { background-color: #E2E8F0; }
+            QPushButton:hover { background-color: #EDF2F7; }
         """)
         status_layout.addWidget(queue_status_btn)
 
@@ -346,8 +352,8 @@ class EntrustDashboard(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Entrust Adaptive Issuance Instant ID")
-        self.resize(1200, 750)
+        self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
+        self.resize(1280, 720)
 
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
