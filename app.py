@@ -311,7 +311,7 @@ class EntrustDashboard(QWidget):
         reports_layout.addWidget(self.create_report_card("Credentials Printed", self.run_printed_report))
 
         # --- DESIGN PAGES ---
-        self.design_cred_page = QLabel("Design > Credentials Workspace")
+        self.design_cred_page = QLabel("Design > Credential Designs Workspace")
         self.design_cred_page.setAlignment(Qt.AlignCenter)
 
         self.design_workflows_page = QLabel("Design > Workflows Workspace")
@@ -334,7 +334,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(self.content_stack, stretch=1)
 
         # ---------------------------------------------------------
-        # BOTTOM STATUS BAR (Printer Queue Status Button Reference)
+        # BOTTOM STATUS BAR
         # ---------------------------------------------------------
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
@@ -399,8 +399,9 @@ class EntrustDashboard(QWidget):
 
         self.clear_sub_tabs()
 
+        # Design sub-tab တွင် "Credentials" မှ "Credential Designs" သို့ ပြောင်းလဲထားပါသည်
         tabs_info = [
-            ("Credentials", 2),
+            ("Credential Designs", 2),
             ("Workflows", 3),
             ("Reports", 4),
             ("Field Connections", 5)
@@ -419,7 +420,6 @@ class EntrustDashboard(QWidget):
     def activate_sub_tab(self, target_index, active_btn):
         self.content_stack.setCurrentIndex(target_index)
         
-        # Design Menu အောက်ရှိ Sub-tabs များဖြစ်လျှင် + Create button ပြပြီး Printer Queue Status button ကို ဖျောက်ထားမည်
         if self.current_main_nav == "Design":
             self.queue_status_btn.setVisible(False)
             if target_index in [2, 3, 4]:
