@@ -4,268 +4,327 @@ from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QToolButton,
-    QMessageBox
+    QComboBox, QCheckBox, QScrollArea
 )
 
 def get_sprite_icon(sprite_pixmap, x, y, width=24, height=24):
-    """ sprite_button.png ထဲမှ သက်ဆိုင်ရာ Coordinate အတိုင်း Icon ဖြတ်ယူသည့် Function """
     if sprite_pixmap.isNull():
         return QPixmap()
     return sprite_pixmap.copy(QRect(x, y, width, height))
 
 
 # -------------------------------------------------------------
-# 1. Login Screen Widget
+# 1. Credential Design Editor View (ဒုတိယပုံ UI)
 # -------------------------------------------------------------
-class LoginWidget(QWidget):
-    def __init__(self, on_login_success):
+class CredentialDesignEditor(QWidget):
+    def __init__(self, on_close_callback, sprite_pixmap):
         super().__init__()
-        self.on_login_success = on_login_success
-        self.setStyleSheet("background-color: #1E2530;")
-
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
-
-        card = QFrame()
-        card.setFixedSize(360, 380)
-        card.setStyleSheet("background-color: #FFFFFF; border-radius: 8px;")
-
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(35, 35, 35, 35)
-        card_layout.setSpacing(12)
-
-        title = QLabel("ENTRUST Instant ID")
-        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
-        title.setStyleSheet("color: #7A0A8A; border: none; background: transparent;")
-        title.setAlignment(Qt.AlignCenter)
-        card_layout.addWidget(title)
-
-        card_layout.addSpacing(10)
-
-        user_lbl = QLabel("Username:")
-        user_lbl.setStyleSheet("color: #4A5568; font-weight: bold; border: none;")
-        card_layout.addWidget(user_lbl)
-
-        self.user_input = QLineEdit()
-        self.user_input.setPlaceholderText("Enter username")
-        self.user_input.setStyleSheet("""
-            QLineEdit {
-                border: 1.5px solid #CBD5E0;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #FAFAFA;
-                color: #1A202C;
-            }
-            QLineEdit:focus { border: 1.5px solid #7A0A8A; }
-        """)
-        card_layout.addWidget(self.user_input)
-
-        pass_lbl = QLabel("Password:")
-        pass_lbl.setStyleSheet("color: #4A5568; font-weight: bold; border: none;")
-        card_layout.addWidget(pass_lbl)
-
-        self.pass_input = QLineEdit()
-        self.pass_input.setEchoMode(QLineEdit.Password)
-        self.pass_input.setPlaceholderText("Enter password")
-        self.pass_input.setStyleSheet("""
-            QLineEdit {
-                border: 1.5px solid #CBD5E0;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #FAFAFA;
-                color: #1A202C;
-            }
-            QLineEdit:focus { border: 1.5px solid #7A0A8A; }
-        """)
-        self.pass_input.returnPressed.connect(self.handle_login)
-        card_layout.addWidget(self.pass_input)
-
-        card_layout.addSpacing(15)
-
-        login_btn = QPushButton("Sign In")
-        login_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
-        login_btn.setCursor(Qt.PointingHandCursor)
-        login_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #7A0A8A;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 9px;
-            }
-            QPushButton:hover { background-color: #630571; }
-        """)
-        login_btn.clicked.connect(self.handle_login)
-        card_layout.addWidget(login_btn)
-
-        layout.addWidget(card)
-
-    def handle_login(self):
-        self.on_login_success()
-
-
-# -------------------------------------------------------------
-# 2. Main Entrust Dashboard UI
-# -------------------------------------------------------------
-class EntrustDashboard(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.sprite = QPixmap("sprite_button.png")
+        self.on_close_callback = on_close_callback
+        self.sprite = sprite_pixmap
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        self.current_main_nav = "Home"
+        # 1. Purple Ribbon Title Bar
+        purple_bar = QFrame()
+        purple_bar.setFixedHeight(42)
+        purple_bar.setStyleSheet("background-color: #7A0A8A;")
+        purple_layout = QHBoxLayout(purple_bar)
+        purple_layout.setContentsMargins(15, 0, 15, 0)
 
-        # ---------------------------------------------------------
-        # BAR 1: Top White Header Bar
-        # ---------------------------------------------------------
+        title_lbl = QLabel("Credential Design 1")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet("color: white;")
+
+        edit_icon = QLabel(" ✏️")
+        edit_icon.setStyleSheet("color: white; font-size: 14px;")
+
+        purple_layout.addWidget(title_lbl)
+        purple_layout.addWidget(edit_icon)
+        purple_layout.addStretch()
+        main_layout.addWidget(purple_bar)
+
+        # 2. Design Tools Ribbon Bar
+        tools_bar = QFrame()
+        tools_bar.setFixedHeight(40)
+        tools_bar.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E0;")
+        tools_layout = QHBoxLayout(tools_bar)
+        tools_layout.setContentsMargins(10, 0, 10, 0)
+        tools_layout.setSpacing(4)
+
+        # Tool Buttons Mockup
+        tool_icons = ["↩", "↪", "|", "📋", "✂", "📄", "|", "T", "T₂", "👤", "🖼", "📈", "🏁", "║║", "💳", "▦", "▤", "/", "▢", "◯", "📐", "▦", "|", "🔍-", "🔍+", "100%", "⊞"]
+        for item in tool_icons:
+            if item == "|":
+                sep = QFrame()
+                sep.setFrameShape(QFrame.VLine)
+                sep.setStyleSheet("color: #A0AEC0; max-height: 20px;")
+                tools_layout.addWidget(sep)
+            elif item == "100%":
+                combo = QComboBox()
+                combo.addItems(["100%", "75%", "50%", "150%"])
+                combo.setStyleSheet("background: white; border: 1px solid #CBD5E0; border-radius: 2px; padding: 2px;")
+                tools_layout.addWidget(combo)
+            else:
+                btn = QToolButton()
+                btn.setText(item)
+                btn.setFixedSize(26, 26)
+                btn.setStyleSheet("QToolButton { background: white; border: 1px solid #CBD5E0; border-radius: 2px; font-weight: bold; } QToolButton:hover { background: #EDF2F7; }")
+                tools_layout.addWidget(btn)
+
+        tools_layout.addStretch()
+        main_layout.addWidget(tools_bar)
+
+        # 3. Canvas & Properties Sidebar Area
+        center_body = QWidget()
+        center_layout = QHBoxLayout(center_body)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(0)
+
+        # Canvas Workspace Area (Front Side & Back Side)
+        canvas_scroll = QScrollArea()
+        canvas_scroll.setWidgetResizable(True)
+        canvas_scroll.setStyleSheet("background-color: #FFFFFF; border: none;")
+
+        canvas_content = QWidget()
+        canvas_layout = QHBoxLayout(canvas_content)
+        canvas_layout.setContentsMargins(20, 20, 20, 20)
+        canvas_layout.setSpacing(25)
+        canvas_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+        # Front Side Container
+        front_box = QVBoxLayout()
+        front_lbl = QLabel("Front Side")
+        front_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        front_lbl.setStyleSheet("color: #2D3748;")
+        
+        front_card_bg = QFrame()
+        front_card_bg.setFixedSize(320, 420)
+        front_card_bg.setStyleSheet("background-color: #A0AEC0; border-radius: 4px;")
+        f_card_layout = QVBoxLayout(front_card_bg)
+        f_card_layout.setAlignment(Qt.AlignCenter)
+
+        front_card = QFrame()
+        front_card.setFixedSize(260, 160)
+        front_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        f_card_layout.addWidget(front_card)
+
+        front_box.addWidget(front_lbl)
+        front_box.addWidget(front_card_bg)
+
+        # Active Layer Info Bar
+        active_layer_lbl = QLabel("Active Design Layer: Color")
+        active_layer_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        active_layer_lbl.setStyleSheet("color: #2D3748;")
+
+        # Back Side Container
+        back_box = QVBoxLayout()
+        back_lbl = QLabel("Back Side")
+        back_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        back_lbl.setStyleSheet("color: #2D3748;")
+
+        back_card_bg = QFrame()
+        back_card_bg.setFixedSize(320, 420)
+        back_card_bg.setStyleSheet("background-color: #A0AEC0; border-radius: 4px;")
+        b_card_layout = QVBoxLayout(back_card_bg)
+        b_card_layout.setAlignment(Qt.AlignCenter)
+
+        back_card = QFrame()
+        back_card.setFixedSize(260, 160)
+        back_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        b_card_layout.addWidget(back_card)
+
+        back_box.addWidget(back_lbl)
+        back_box.addWidget(back_card_bg)
+
+        canvas_layout.addLayout(front_box)
+        canvas_layout.addWidget(active_layer_lbl, alignment=Qt.AlignTop)
+        canvas_layout.addLayout(back_box)
+
+        canvas_scroll.setWidget(canvas_content)
+        center_layout.addWidget(canvas_scroll, stretch=1)
+
+        # Right Side Properties Panel
+        sidebar = QFrame()
+        sidebar.setFixedWidth(220)
+        sidebar.setStyleSheet("background-color: #F8FAFC; border-left: 1px solid #CBD5E0;")
+
+        side_layout = QVBoxLayout(sidebar)
+        side_layout.setContentsMargins(0, 0, 0, 0)
+        side_layout.setSpacing(0)
+
+        # Properties / Layers Tab Header
+        tab_header = QFrame()
+        tab_header.setFixedHeight(32)
+        tab_header.setStyleSheet("background-color: #EDF2F7; border-bottom: 1px solid #CBD5E0;")
+        tab_header_layout = QHBoxLayout(tab_header)
+        tab_header_layout.setContentsMargins(0, 0, 0, 0)
+
+        prop_tab = QPushButton("Properties")
+        prop_tab.setStyleSheet("background: white; border: none; font-weight: bold; color: #2B6CB0;")
+        layers_tab = QPushButton("Layers")
+        layers_tab.setStyleSheet("background: transparent; border: none; color: #4A5568;")
+
+        tab_header_layout.addWidget(prop_tab)
+        tab_header_layout.addWidget(layers_tab)
+        side_layout.addWidget(tab_header)
+
+        # Panel Content
+        prop_content = QWidget()
+        prop_layout = QVBoxLayout(prop_content)
+        prop_layout.setContentsMargins(10, 10, 10, 10)
+        prop_layout.setSpacing(10)
+
+        group_title = QLabel("- Front Side Properties")
+        group_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        group_title.setStyleSheet("color: #2D3748;")
+        prop_layout.addWidget(group_title)
+
+        chk1 = QCheckBox("Rotate print orientation 180\ndegrees")
+        chk1.setStyleSheet("color: #4A5568; font-size: 8.5pt;")
+        chk2 = QCheckBox("Tactile Impression Module")
+        chk2.setStyleSheet("color: #4A5568; font-size: 8.5pt;")
+
+        prop_layout.addWidget(chk1)
+        prop_layout.addWidget(chk2)
+        prop_layout.addStretch()
+
+        side_layout.addWidget(prop_content)
+        center_layout.addWidget(sidebar)
+
+        main_layout.addWidget(center_body, stretch=1)
+
+        # 4. Bottom Action Footer Bar
+        bottom_bar = QFrame()
+        bottom_bar.setFixedHeight(40)
+        bottom_bar.setStyleSheet("background-color: #F1F5F9; border-top: 1px solid #CBD5E0;")
+        bottom_layout = QHBoxLayout(bottom_bar)
+        bottom_layout.setContentsMargins(10, 0, 10, 0)
+        bottom_layout.setSpacing(8)
+
+        save_btn = QPushButton("Save")
+        save_btn.setStyleSheet("background-color: #3182CE; color: white; font-weight: bold; padding: 5px 18px; border-radius: 2px;")
+        
+        save_as_btn = QPushButton("Save As...")
+        save_as_btn.setStyleSheet("background-color: #E2E8F0; color: #2D3748; padding: 5px 14px; border-radius: 2px;")
+
+        close_btn = QPushButton("Close")
+        close_btn.setStyleSheet("background-color: #E2E8F0; color: #2D3748; padding: 5px 14px; border-radius: 2px;")
+        close_btn.clicked.connect(self.on_close_callback)
+
+        print_btn = QPushButton("Print Sample")
+        print_btn.setStyleSheet("background-color: #E2E8F0; color: #2D3748; padding: 5px 14px; border-radius: 2px;")
+
+        quick_btn = QPushButton("Quick Start")
+        quick_btn.setEnabled(False)
+        quick_btn.setStyleSheet("background-color: #EDF2F7; color: #A0AEC0; padding: 5px 14px; border-radius: 2px;")
+
+        bottom_layout.addWidget(save_btn)
+        bottom_layout.addWidget(save_as_btn)
+        bottom_layout.addWidget(close_btn)
+        bottom_layout.addWidget(print_btn)
+        bottom_layout.addWidget(quick_btn)
+        bottom_layout.addStretch()
+
+        main_layout.addWidget(bottom_bar)
+
+
+# -------------------------------------------------------------
+# 2. Main Entrust Dashboard UI (ပထမပုံ UI)
+# -------------------------------------------------------------
+class EntrustDashboard(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.sprite = QPixmap("sprite_button.png")
+
+        self.root_stack = QStackedWidget(self)
+        main_box = QVBoxLayout(self)
+        main_box.setContentsMargins(0, 0, 0, 0)
+        main_box.addWidget(self.root_stack)
+
+        # Base Dashboard View Container
+        self.dashboard_view = QWidget()
+        dash_layout = QVBoxLayout(self.dashboard_view)
+        dash_layout.setContentsMargins(0, 0, 0, 0)
+        dash_layout.setSpacing(0)
+
+        # ---------------- Top Bar ----------------
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
-
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(18, 0, 20, 0)
-        top_layout.setSpacing(18)
 
         logo_box = QHBoxLayout()
-        logo_box.setSpacing(8)
-
         logo_icon = QLabel("⬡")
         logo_icon.setStyleSheet("color: #7A0A8A; font-size: 24px; font-weight: bold;")
-
         logo_text = QLabel("ENTRUST")
         logo_text.setFont(QFont("Segoe UI", 14, QFont.Bold))
         logo_text.setStyleSheet("color: #4A4A4A; letter-spacing: 1.5px;")
-
         logo_box.addWidget(logo_icon)
         logo_box.addWidget(logo_text)
         top_layout.addLayout(logo_box)
 
-        sep = QFrame()
-        sep.setFrameShape(QFrame.VLine)
-        sep.setStyleSheet("color: #CCCCCC; max-height: 28px;")
-        top_layout.addWidget(sep)
-
-        sub_title = QLabel("Adaptive Issuance™\nInstant ID")
+        sub_title = QLabel("  |  Adaptive Issuance™\n     Instant ID")
         sub_title.setFont(QFont("Segoe UI", 8, QFont.Bold))
-        sub_title.setStyleSheet("color: #333333; line-height: 110%;")
+        sub_title.setStyleSheet("color: #333333;")
         top_layout.addWidget(sub_title)
-
-        top_layout.addSpacing(60)
+        top_layout.addSpacing(40)
 
         nav_box = QHBoxLayout()
-        nav_box.setSpacing(35)
-
+        nav_box.setSpacing(25)
         self.home_btn = QPushButton("Home")
-        self.home_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        self.home_btn.setCursor(Qt.PointingHandCursor)
-        self.home_btn.setStyleSheet("border: none; color: #7A0A8A; background: transparent;")
-        self.home_btn.clicked.connect(self.select_home_nav)
-
+        self.home_btn.setStyleSheet("border: none; color: #222222; font-weight: bold;")
         self.design_btn = QPushButton("Design ▾")
-        self.design_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        self.design_btn.setCursor(Qt.PointingHandCursor)
-        self.design_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-        self.design_btn.clicked.connect(self.select_design_nav)
-
+        self.design_btn.setStyleSheet("border: none; color: #7A0A8A; font-weight: bold;")
         self.printer_btn = QPushButton("Printer Queues")
-        self.printer_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        self.printer_btn.setCursor(Qt.PointingHandCursor)
-        self.printer_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
+        self.printer_btn.setStyleSheet("border: none; color: #222222; font-weight: bold;")
 
         nav_box.addWidget(self.home_btn)
         nav_box.addWidget(self.design_btn)
         nav_box.addWidget(self.printer_btn)
         top_layout.addLayout(nav_box)
-
         top_layout.addStretch()
-        main_layout.addWidget(top_bar)
 
-        # ---------------------------------------------------------
-        # BAR 2: Deep Purple Ribbon Bar (Sub-Tabs)
-        # ---------------------------------------------------------
+        dash_layout.addWidget(top_bar)
+
+        # ---------------- Purple Ribbon Bar ----------------
         purple_bar = QFrame()
         purple_bar.setFixedHeight(36)
         purple_bar.setStyleSheet("background-color: #7A0A8A;")
-
         purple_layout = QHBoxLayout(purple_bar)
         purple_layout.setContentsMargins(15, 0, 15, 0)
-        purple_layout.setSpacing(0)
 
-        self.sub_tabs_container = QWidget()
-        self.sub_tabs_layout = QHBoxLayout(self.sub_tabs_container)
-        self.sub_tabs_layout.setContentsMargins(0, 0, 0, 0)
-        self.sub_tabs_layout.setSpacing(0)
+        tab1 = QPushButton("Credential Designs")
+        tab1.setStyleSheet("background-color: white; color: #7A0A8A; border: none; font-weight: bold; padding: 8px 16px;")
+        tab2 = QPushButton("Workflows")
+        tab2.setStyleSheet("background-color: transparent; color: white; border: none; font-weight: bold; padding: 8px 16px;")
+        tab3 = QPushButton("Reports")
+        tab3.setStyleSheet("background-color: transparent; color: white; border: none; font-weight: bold; padding: 8px 16px;")
+        tab4 = QPushButton("Field Connections")
+        tab4.setStyleSheet("background-color: transparent; color: white; border: none; font-weight: bold; padding: 8px 16px;")
 
-        purple_layout.addWidget(self.sub_tabs_container)
+        purple_layout.addWidget(tab1)
+        purple_layout.addWidget(tab2)
+        purple_layout.addWidget(tab3)
+        purple_layout.addWidget(tab4)
         purple_layout.addStretch()
 
-        right_info = QHBoxLayout()
-        right_info.setSpacing(12)
+        login_info = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109  admin ▾")
+        login_info.setStyleSheet("color: #DDA0DD; font-size: 8pt;")
+        purple_layout.addWidget(login_info)
 
-        login_info = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109")
-        login_info.setFont(QFont("Segoe UI", 8))
-        login_info.setStyleSheet("color: #DDA0DD;")
+        dash_layout.addWidget(purple_bar)
 
-        user_btn = QPushButton("admin ▾")
-        user_btn.setFont(QFont("Segoe UI", 8.5))
-        user_btn.setStyleSheet("color: #FFFFFF; background: transparent; border: none;")
-
-        settings_icon = QLabel()
-        settings_icon.setPixmap(get_sprite_icon(self.sprite, 810, 12, 18, 18))
-
-        badge_container = QWidget()
-        badge_container.setFixedSize(22, 20)
-        
-        bell_lbl = QLabel(badge_container)
-        bell_lbl.setPixmap(get_sprite_icon(self.sprite, 850, 12, 16, 16))
-        bell_lbl.move(0, 3)
-
-        num_badge = QLabel("2", badge_container)
-        num_badge.setFont(QFont("Segoe UI", 6.5, QFont.Bold))
-        num_badge.setStyleSheet("background-color: #E53E3E; color: white; border-radius: 5px; padding: 1px 3px;")
-        num_badge.move(9, 0)
-
-        help_icon = QLabel()
-        help_icon.setPixmap(get_sprite_icon(self.sprite, 885, 12, 16, 16))
-
-        info_icon = QLabel()
-        info_icon.setPixmap(get_sprite_icon(self.sprite, 915, 12, 16, 16))
-
-        right_info.addWidget(login_info)
-        right_info.addWidget(user_btn)
-        right_info.addWidget(settings_icon)
-        right_info.addWidget(badge_container)
-        right_info.addWidget(help_icon)
-        right_info.addWidget(info_icon)
-
-        purple_layout.addLayout(right_info)
-        main_layout.addWidget(purple_bar)
-
-        # ---------------------------------------------------------
-        # BAR 3: Light Grey Toolbar
-        # ---------------------------------------------------------
+        # ---------------- Light Grey Toolbar ----------------
         tool_bar = QFrame()
         tool_bar.setFixedHeight(34)
         tool_bar.setStyleSheet("background-color: #F3F4F6; border-bottom: 1px solid #E5E7EB;")
-
         tool_layout = QHBoxLayout(tool_bar)
         tool_layout.setContentsMargins(8, 0, 8, 0)
-        tool_layout.setSpacing(6)
 
-        grid_btn = QToolButton()
-        grid_btn.setIcon(get_sprite_icon(self.sprite, 0, 122, 18, 18))
-        grid_btn.setFixedSize(28, 25)
-        grid_btn.setStyleSheet("QToolButton { background-color: #94A3B8; border: 1px solid #64748B; border-radius: 2px; }")
-
-        list_btn = QToolButton()
-        list_btn.setIcon(get_sprite_icon(self.sprite, 245, 122, 18, 18))
-        list_btn.setFixedSize(28, 25)
-        list_btn.setStyleSheet("QToolButton { background-color: #FFFFFF; border: 1px solid #CBD5E0; border-radius: 2px; }")
-
+        # + Create Button
         self.create_btn = QPushButton("+ Create")
         self.create_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
         self.create_btn.setFixedHeight(25)
@@ -278,254 +337,38 @@ class EntrustDashboard(QWidget):
                 border-radius: 2px;
                 padding: 0px 12px;
             }
-            QPushButton:hover {
-                background-color: #F1F5F9;
-                border: 1px solid #94A3B8;
-            }
+            QPushButton:hover { background-color: #F1F5F9; }
         """)
-        self.create_btn.clicked.connect(self.handle_create_action)
+        # Click လုပ်ပါက Editor View သို့ ပြောင်းလဲရန် ချိတ်ဆက်ခြင်း
+        self.create_btn.clicked.connect(self.open_editor_view)
 
-        tool_layout.addWidget(grid_btn)
-        tool_layout.addWidget(list_btn)
         tool_layout.addWidget(self.create_btn)
         tool_layout.addStretch()
+        dash_layout.addWidget(tool_bar)
 
-        main_layout.addWidget(tool_bar)
+        # Empty Canvas Workspace Area
+        workspace = QWidget()
+        workspace.setStyleSheet("background-color: #FFFFFF;")
+        dash_layout.addWidget(workspace, stretch=1)
 
-        # ---------------------------------------------------------
-        # MAIN WORKSPACE CANVAS
-        # ---------------------------------------------------------
-        self.content_stack = QStackedWidget()
-        self.content_stack.setStyleSheet("background-color: #FFFFFF;")
+        # Editor View instance
+        self.editor_view = CredentialDesignEditor(on_close_callback=self.close_editor_view, sprite_pixmap=self.sprite)
 
-        # --- HOME PAGES ---
-        self.home_cred_page = QLabel("Home > Credentials Content Workspace")
-        self.home_cred_page.setAlignment(Qt.AlignCenter)
-        self.home_reports_page = QWidget()
-        
-        reports_layout = QHBoxLayout(self.home_reports_page)
-        reports_layout.setContentsMargins(15, 15, 15, 15)
-        reports_layout.setSpacing(15)
-        reports_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        reports_layout.addWidget(self.create_report_card("Credentials Issued", self.run_issued_report))
-        reports_layout.addWidget(self.create_report_card("Credentials Printed", self.run_printed_report))
+        # Root Stacked Widget ထဲသို့ ထည့်သွင်းခြင်း
+        self.root_stack.addWidget(self.dashboard_view) # Index 0 (ပထမပုံ)
+        self.root_stack.addWidget(self.editor_view)    # Index 1 (ဒုတိယပုံ)
 
-        # --- DESIGN PAGES ---
-        self.design_cred_page = QLabel("Design > Credential Designs Workspace")
-        self.design_cred_page.setAlignment(Qt.AlignCenter)
+    def open_editor_view(self):
+        """ + Create button ကို နှိပ်ပါက Editor View သို့ ပြောင်းမည် """
+        self.root_stack.setCurrentIndex(1)
 
-        self.design_workflows_page = QLabel("Design > Workflows Workspace")
-        self.design_workflows_page.setAlignment(Qt.AlignCenter)
-
-        self.design_reports_page = QLabel("Design > Reports Workspace")
-        self.design_reports_page.setAlignment(Qt.AlignCenter)
-
-        self.design_field_conn_page = QLabel("Design > Field Connections Workspace")
-        self.design_field_conn_page.setAlignment(Qt.AlignCenter)
-
-        # Add All Pages to Stacked Widget
-        self.content_stack.addWidget(self.home_cred_page)        # Index 0
-        self.content_stack.addWidget(self.home_reports_page)     # Index 1
-        self.content_stack.addWidget(self.design_cred_page)      # Index 2
-        self.content_stack.addWidget(self.design_workflows_page) # Index 3
-        self.content_stack.addWidget(self.design_reports_page)   # Index 4
-        self.content_stack.addWidget(self.design_field_conn_page)# Index 5
-
-        main_layout.addWidget(self.content_stack, stretch=1)
-
-        # ---------------------------------------------------------
-        # BOTTOM STATUS BAR
-        # ---------------------------------------------------------
-        status_bar = QFrame()
-        status_bar.setFixedHeight(32)
-        status_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
-
-        status_layout = QHBoxLayout(status_bar)
-        status_layout.setContentsMargins(10, 0, 15, 0)
-        status_layout.addStretch()
-
-        self.queue_status_btn = QPushButton(" Printer Queue Status")
-        self.queue_status_btn.setIcon(get_sprite_icon(self.sprite, 915, 0, 20, 20))
-        self.queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
-        self.queue_status_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E2E8F0);
-                color: #1E3A8A;
-                border: 1px solid #CBD5E0;
-                border-radius: 3px;
-                padding: 4px 12px;
-            }
-            QPushButton:hover { background-color: #EDF2F7; }
-        """)
-        status_layout.addWidget(self.queue_status_btn)
-
-        main_layout.addWidget(status_bar)
-
-        self.sub_tab_buttons = []
-        self.select_design_nav()
-
-    # ---------------------------------------------------------
-    # Navigation & Sub-Tab Switch Logic
-    # ---------------------------------------------------------
-    def clear_sub_tabs(self):
-        for btn in self.sub_tab_buttons:
-            self.sub_tabs_layout.removeWidget(btn)
-            btn.deleteLater()
-        self.sub_tab_buttons = []
-
-    def select_home_nav(self):
-        self.current_main_nav = "Home"
-        self.home_btn.setStyleSheet("border: none; color: #7A0A8A; background: transparent;")
-        self.design_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-
-        self.clear_sub_tabs()
-        
-        tabs_info = [("Credentials", 0), ("Reports", 1)]
-        for text, page_idx in tabs_info:
-            btn = QPushButton(text)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-            btn.setFixedHeight(36)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.clicked.connect(lambda _, idx=page_idx, b=btn: self.activate_sub_tab(idx, b))
-            self.sub_tabs_layout.addWidget(btn)
-            self.sub_tab_buttons.append(btn)
-
-        self.activate_sub_tab(1, self.sub_tab_buttons[1])
-
-    def select_design_nav(self):
-        self.current_main_nav = "Design"
-        self.design_btn.setStyleSheet("border: none; color: #7A0A8A; background: transparent;")
-        self.home_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-
-        self.clear_sub_tabs()
-
-        # Design sub-tab တွင် "Credentials" မှ "Credential Designs" သို့ ပြောင်းလဲထားပါသည်
-        tabs_info = [
-            ("Credential Designs", 2),
-            ("Workflows", 3),
-            ("Reports", 4),
-            ("Field Connections", 5)
-        ]
-        for text, page_idx in tabs_info:
-            btn = QPushButton(text)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-            btn.setFixedHeight(36)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.clicked.connect(lambda _, idx=page_idx, b=btn: self.activate_sub_tab(idx, b))
-            self.sub_tabs_layout.addWidget(btn)
-            self.sub_tab_buttons.append(btn)
-
-        self.activate_sub_tab(2, self.sub_tab_buttons[0])
-
-    def activate_sub_tab(self, target_index, active_btn):
-        self.content_stack.setCurrentIndex(target_index)
-        
-        if self.current_main_nav == "Design":
-            self.queue_status_btn.setVisible(False)
-            if target_index in [2, 3, 4]:
-                self.create_btn.setVisible(True)
-            else:
-                self.create_btn.setVisible(False)
-        else:
-            self.create_btn.setVisible(False)
-            self.queue_status_btn.setVisible(True)
-
-        active_style = """
-            QPushButton {
-                background-color: #FFFFFF;
-                color: #7A0A8A;
-                border: none;
-                padding: 0px 18px;
-                border-top-left-radius: 3px;
-                border-top-right-radius: 3px;
-            }
-        """
-        inactive_style = """
-            QPushButton {
-                background-color: transparent;
-                color: #FFFFFF;
-                border: none;
-                padding: 0px 18px;
-            }
-            QPushButton:hover { color: #E0B0FF; }
-        """
-
-        for btn in self.sub_tab_buttons:
-            if btn == active_btn:
-                btn.setStyleSheet(active_style)
-            else:
-                btn.setStyleSheet(inactive_style)
-
-    def handle_create_action(self):
-        current_idx = self.content_stack.currentIndex()
-        if current_idx == 2:
-            QMessageBox.information(self, "Create Action", "Create New Credential Design Initiated.")
-        elif current_idx == 3:
-            QMessageBox.information(self, "Create Action", "Create New Workflow Initiated.")
-        elif current_idx == 4:
-            QMessageBox.information(self, "Create Action", "Create New Report Template Initiated.")
-
-    def create_report_card(self, title_text, run_callback):
-        card = QFrame()
-        card.setFixedSize(175, 185)
-        card.setStyleSheet("background-color: #8C8C8C; border-radius: 4px;")
-
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
-
-        chart_box = QFrame()
-        chart_box.setFixedHeight(85)
-        chart_box.setStyleSheet("background-color: #FFFFFF; border-radius: 2px;")
-        
-        chart_layout = QVBoxLayout(chart_box)
-        chart_layout.setAlignment(Qt.AlignCenter)
-
-        chart_icon = QLabel()
-        chart_icon.setPixmap(get_sprite_icon(self.sprite, 440, 0, 40, 30))
-        chart_layout.addWidget(chart_icon, alignment=Qt.AlignCenter)
-
-        sub_chart_lbl = QLabel("Week 30, 2013")
-        sub_chart_lbl.setFont(QFont("Segoe UI", 6.5))
-        sub_chart_lbl.setStyleSheet("color: #888888;")
-        sub_chart_lbl.setAlignment(Qt.AlignCenter)
-        chart_layout.addWidget(sub_chart_lbl)
-
-        layout.addWidget(chart_box)
-
-        title_lbl = QLabel(title_text)
-        title_lbl.setFont(QFont("Segoe UI", 9.5, QFont.Bold))
-        title_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
-        title_lbl.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_lbl)
-
-        run_btn = QPushButton(" Run")
-        run_btn.setIcon(get_sprite_icon(self.sprite, 0, 0, 14, 14))
-        run_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        run_btn.setCursor(Qt.PointingHandCursor)
-        run_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #FFFFFF;
-                border: none;
-                padding: 4px;
-            }
-            QPushButton:hover { color: #E2E8F0; }
-        """)
-        run_btn.clicked.connect(run_callback)
-        layout.addWidget(run_btn, alignment=Qt.AlignCenter)
-
-        return card
-
-    def run_issued_report(self):
-        QMessageBox.information(self, "Report Executed", "Generating Credentials Issued Report...")
-
-    def run_printed_report(self):
-        QMessageBox.information(self, "Report Executed", "Generating Credentials Printed Report...")
+    def close_editor_view(self):
+        """ Editor View မှ Close button ကို နှိပ်ပါက မူလ ပထမ UI သို့ ပြန်သွားမည် """
+        self.root_stack.setCurrentIndex(0)
 
 
 # -------------------------------------------------------------
-# 3. Main Window
+# 3. Main Application Window
 # -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -533,19 +376,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
         self.resize(1280, 720)
 
-        self.stacked_widget = QStackedWidget()
-        self.setCentralWidget(self.stacked_widget)
-
-        self.login_page = LoginWidget(on_login_success=self.show_dashboard)
-        self.dashboard_page = EntrustDashboard()
-
-        self.stacked_widget.addWidget(self.login_page)
-        self.stacked_widget.addWidget(self.dashboard_page)
-
-        self.stacked_widget.setCurrentIndex(0)
-
-    def show_dashboard(self):
-        self.stacked_widget.setCurrentIndex(1)
+        self.dashboard = EntrustDashboard()
+        self.setCentralWidget(self.dashboard)
 
 
 if __name__ == "__main__":
