@@ -1,11 +1,21 @@
 import sys
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QToolButton,
-    QMessageBox, QGraphicsDropShadowEffect
+    QMessageBox
 )
+
+# -------------------------------------------------------------
+# Sprite Image Helper Function
+# -------------------------------------------------------------
+def get_sprite_icon(sprite_pixmap, x, y, width=24, height=24):
+    """ sprite_button.png ထဲမှ သက်ဆိုင်ရာ Coordinate အတိုင်း Icon ဖြတ်ယူသည့် Function """
+    if sprite_pixmap.isNull():
+        return QPixmap()
+    return sprite_pixmap.copy(QRect(x, y, width, height))
+
 
 # -------------------------------------------------------------
 # 1. Login Screen Widget
@@ -98,11 +108,14 @@ class LoginWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 2. Main Dashboard UI with Working Sub-Tabs & Report Cards
+# 2. Main Entrust Dashboard UI (Sprite Icons Integration)
 # -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
+
+        # Sprite Sheet Image Load မည် (file path: sprite_button.png)
+        self.sprite = QPixmap("sprite_button.png")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -151,17 +164,14 @@ class EntrustDashboard(QWidget):
         home_btn = QPushButton("Home")
         home_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
         home_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-        home_btn.setCursor(Qt.PointingHandCursor)
 
         design_btn = QPushButton("Design ▾")
         design_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
         design_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-        design_btn.setCursor(Qt.PointingHandCursor)
 
         printer_btn = QPushButton("Printer Queues")
         printer_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
         printer_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
-        printer_btn.setCursor(Qt.PointingHandCursor)
 
         nav_box.addWidget(home_btn)
         nav_box.addWidget(design_btn)
@@ -172,7 +182,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(top_bar)
 
         # ---------------------------------------------------------
-        # BAR 2: Deep Magenta / Purple Ribbon Bar
+        # BAR 2: Deep Purple Ribbon Bar (With Sprite Icons)
         # ---------------------------------------------------------
         purple_bar = QFrame()
         purple_bar.setFixedHeight(36)
@@ -182,19 +192,16 @@ class EntrustDashboard(QWidget):
         purple_layout.setContentsMargins(15, 0, 15, 0)
         purple_layout.setSpacing(0)
 
-        # Tab Switching Buttons
         sub_tabs_layout = QHBoxLayout()
         sub_tabs_layout.setSpacing(0)
 
         self.cred_tab_btn = QPushButton("Credentials")
         self.cred_tab_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
         self.cred_tab_btn.setFixedHeight(36)
-        self.cred_tab_btn.setCursor(Qt.PointingHandCursor)
 
         self.reports_tab_btn = QPushButton("Reports")
         self.reports_tab_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
         self.reports_tab_btn.setFixedHeight(36)
-        self.reports_tab_btn.setCursor(Qt.PointingHandCursor)
 
         sub_tabs_layout.addWidget(self.cred_tab_btn)
         sub_tabs_layout.addWidget(self.reports_tab_btn)
@@ -203,7 +210,7 @@ class EntrustDashboard(QWidget):
         purple_layout.addStretch()
 
         right_info = QHBoxLayout()
-        right_info.setSpacing(14)
+        right_info.setSpacing(12)
 
         login_info = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109")
         login_info.setFont(QFont("Segoe UI", 8))
@@ -213,14 +220,15 @@ class EntrustDashboard(QWidget):
         user_btn.setFont(QFont("Segoe UI", 8.5))
         user_btn.setStyleSheet("color: #FFFFFF; background: transparent; border: none;")
 
-        settings_icon = QLabel("⚙")
-        settings_icon.setStyleSheet("color: #FFFFFF; font-size: 13px;")
+        # Sprite Icons Extraction for Header Right Icons
+        settings_icon = QLabel()
+        settings_icon.setPixmap(get_sprite_icon(self.sprite, 810, 12, 18, 18))  # Gear Icon
 
         badge_container = QWidget()
         badge_container.setFixedSize(22, 20)
         
-        bell_lbl = QLabel("🔔", badge_container)
-        bell_lbl.setStyleSheet("color: #FFFFFF; font-size: 11px;")
+        bell_lbl = QLabel(badge_container)
+        bell_lbl.setPixmap(get_sprite_icon(self.sprite, 850, 12, 16, 16))       # Bell Icon
         bell_lbl.move(0, 3)
 
         num_badge = QLabel("2", badge_container)
@@ -228,11 +236,11 @@ class EntrustDashboard(QWidget):
         num_badge.setStyleSheet("background-color: #E53E3E; color: white; border-radius: 5px; padding: 1px 3px;")
         num_badge.move(9, 0)
 
-        help_icon = QLabel("❓")
-        help_icon.setStyleSheet("color: #FFFFFF; font-size: 11px;")
+        help_icon = QLabel()
+        help_icon.setPixmap(get_sprite_icon(self.sprite, 885, 12, 16, 16))      # Question Icon
 
-        info_icon = QLabel("ℹ")
-        info_icon.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: bold;")
+        info_icon = QLabel()
+        info_icon.setPixmap(get_sprite_icon(self.sprite, 915, 12, 16, 16))      # Info Icon
 
         right_info.addWidget(login_info)
         right_info.addWidget(user_btn)
@@ -245,7 +253,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(purple_bar)
 
         # ---------------------------------------------------------
-        # BAR 3: Light Grey Grid/List Toggle Toolbar
+        # BAR 3: Light Grey Grid/List View Toolbar (Sprite Icons)
         # ---------------------------------------------------------
         tool_bar = QFrame()
         tool_bar.setFixedHeight(34)
@@ -256,28 +264,24 @@ class EntrustDashboard(QWidget):
         tool_layout.setSpacing(4)
 
         grid_btn = QToolButton()
-        grid_btn.setText("田")
+        grid_btn.setIcon(get_sprite_icon(self.sprite, 0, 122, 18, 18))  # Grid Icon Row 3
         grid_btn.setFixedSize(28, 25)
         grid_btn.setStyleSheet("""
             QToolButton {
                 background-color: #94A3B8;
                 border: 1px solid #64748B;
                 border-radius: 2px;
-                color: #FFFFFF;
-                font-weight: bold;
             }
         """)
 
         list_btn = QToolButton()
-        list_btn.setText("≡")
+        list_btn.setIcon(get_sprite_icon(self.sprite, 245, 122, 18, 18)) # List Icon Row 3
         list_btn.setFixedSize(28, 25)
         list_btn.setStyleSheet("""
             QToolButton {
                 background-color: #FFFFFF;
                 border: 1px solid #CBD5E0;
                 border-radius: 2px;
-                color: #334155;
-                font-weight: bold;
             }
         """)
 
@@ -288,36 +292,32 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(tool_bar)
 
         # ---------------------------------------------------------
-        # MAIN WORKSPACE CANVAS (Stacked Area for Sub-Tabs)
+        # MAIN WORKSPACE CANVAS
         # ---------------------------------------------------------
         self.content_stack = QStackedWidget()
         self.content_stack.setStyleSheet("background-color: #FFFFFF;")
 
-        # Page 1: Credentials Workspace
         self.credentials_page = QWidget()
-
-        # Page 2: Reports Workspace (Matching the 3rd Image Exact Visual)
         self.reports_page = QWidget()
+
         reports_layout = QHBoxLayout(self.reports_page)
         reports_layout.setContentsMargins(15, 15, 15, 15)
         reports_layout.setSpacing(15)
         reports_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-        # Card 1: Credentials Issued
         card1 = self.create_report_card("Credentials Issued", self.run_issued_report)
-        # Card 2: Credentials Printed
         card2 = self.create_report_card("Credentials Printed", self.run_printed_report)
 
         reports_layout.addWidget(card1)
         reports_layout.addWidget(card2)
 
-        self.content_stack.addWidget(self.credentials_page) # Index 0
-        self.content_stack.addWidget(self.reports_page)     # Index 1
+        self.content_stack.addWidget(self.credentials_page)
+        self.content_stack.addWidget(self.reports_page)
 
         main_layout.addWidget(self.content_stack, stretch=1)
 
         # ---------------------------------------------------------
-        # BOTTOM STATUS BAR
+        # BOTTOM STATUS BAR (With Printer Queue Sprite Icon)
         # ---------------------------------------------------------
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
@@ -327,7 +327,8 @@ class EntrustDashboard(QWidget):
         status_layout.setContentsMargins(10, 0, 15, 0)
         status_layout.addStretch()
 
-        queue_status_btn = QPushButton("🖨   Printer Queue Status")
+        queue_status_btn = QPushButton(" Printer Queue Status")
+        queue_status_btn.setIcon(get_sprite_icon(self.sprite, 915, 0, 20, 20)) # Printer Icon Row 1
         queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
         queue_status_btn.setStyleSheet("""
             QPushButton {
@@ -335,7 +336,7 @@ class EntrustDashboard(QWidget):
                 color: #1E3A8A;
                 border: 1px solid #CBD5E0;
                 border-radius: 3px;
-                padding: 4px 14px;
+                padding: 4px 12px;
             }
             QPushButton:hover { background-color: #EDF2F7; }
         """)
@@ -343,40 +344,32 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(status_bar)
 
-        # Connect Sub-Tab Signals
+        # Tab Switching Signals
         self.cred_tab_btn.clicked.connect(lambda: self.switch_sub_tab(0))
         self.reports_tab_btn.clicked.connect(lambda: self.switch_sub_tab(1))
 
-        # Default Active Tab
-        self.switch_sub_tab(1)  # Default to Reports tab as shown in the 3rd image
+        self.switch_sub_tab(1)
 
     def create_report_card(self, title_text, run_callback):
-        """ Creates a Grey Report Card matching the Image """
         card = QFrame()
         card.setFixedSize(175, 185)
-        card.setStyleSheet("""
-            QFrame {
-                background-color: #8C8C8C;
-                border-radius: 4px;
-            }
-        """)
+        card.setStyleSheet("background-color: #8C8C8C; border-radius: 4px;")
 
         layout = QVBoxLayout(card)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
 
-        # Inner Chart Preview Box
         chart_box = QFrame()
         chart_box.setFixedHeight(85)
         chart_box.setStyleSheet("background-color: #FFFFFF; border-radius: 2px;")
         
         chart_layout = QVBoxLayout(chart_box)
         chart_layout.setAlignment(Qt.AlignCenter)
-        
-        # Simple Bar Chart Simulation Graphic
-        bars_lbl = QLabel("📊")
-        bars_lbl.setStyleSheet("font-size: 32px; color: #10B981;")
-        chart_layout.addWidget(bars_lbl)
+
+        # Chart Icon from Sprite Sheet
+        chart_icon = QLabel()
+        chart_icon.setPixmap(get_sprite_icon(self.sprite, 440, 0, 40, 30))
+        chart_layout.addWidget(chart_icon, alignment=Qt.AlignCenter)
 
         sub_chart_lbl = QLabel("Week 30, 2013")
         sub_chart_lbl.setFont(QFont("Segoe UI", 6.5))
@@ -386,15 +379,15 @@ class EntrustDashboard(QWidget):
 
         layout.addWidget(chart_box)
 
-        # Title Text
         title_lbl = QLabel(title_text)
         title_lbl.setFont(QFont("Segoe UI", 9.5, QFont.Bold))
         title_lbl.setStyleSheet("color: #FFFFFF; background: transparent;")
         title_lbl.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_lbl)
 
-        # Run Button
-        run_btn = QPushButton(" ▶  Run")
+        # Run Button with Sprite Play Arrow
+        run_btn = QPushButton(" Run")
+        run_btn.setIcon(get_sprite_icon(self.sprite, 0, 0, 14, 14))
         run_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
         run_btn.setCursor(Qt.PointingHandCursor)
         run_btn.setStyleSheet("""
@@ -404,9 +397,7 @@ class EntrustDashboard(QWidget):
                 border: none;
                 padding: 4px;
             }
-            QPushButton:hover {
-                color: #E2E8F0;
-            }
+            QPushButton:hover { color: #E2E8F0; }
         """)
         run_btn.clicked.connect(run_callback)
         layout.addWidget(run_btn, alignment=Qt.AlignCenter)
@@ -416,7 +407,6 @@ class EntrustDashboard(QWidget):
     def switch_sub_tab(self, index):
         self.content_stack.setCurrentIndex(index)
         if index == 0:
-            # Active Credentials Tab
             self.cred_tab_btn.setStyleSheet("""
                 background-color: #FFFFFF; color: #7A0A8A; border: none;
                 padding: 0px 20px; border-top-left-radius: 3px; border-top-right-radius: 3px;
@@ -425,7 +415,6 @@ class EntrustDashboard(QWidget):
                 background-color: transparent; color: #FFFFFF; border: none; padding: 0px 20px;
             """)
         else:
-            # Active Reports Tab
             self.reports_tab_btn.setStyleSheet("""
                 background-color: #FFFFFF; color: #7A0A8A; border: none;
                 padding: 0px 20px; border-top-left-radius: 3px; border-top-right-radius: 3px;
@@ -442,7 +431,7 @@ class EntrustDashboard(QWidget):
 
 
 # -------------------------------------------------------------
-# 3. Main Container
+# 3. Main Window
 # -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -456,8 +445,8 @@ class MainWindow(QMainWindow):
         self.login_page = LoginWidget(on_login_success=self.show_dashboard)
         self.dashboard_page = EntrustDashboard()
 
-        self.stacked_widget.addWidget(self.login_page)     # Index 0
-        self.stacked_widget.addWidget(self.dashboard_page)  # Index 1
+        self.stacked_widget.addWidget(self.login_page)
+        self.stacked_widget.addWidget(self.dashboard_page)
 
         self.stacked_widget.setCurrentIndex(0)
 
