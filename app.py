@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame, QStackedWidget, QToolButton,
-    QMessageBox, QMenu
+    QMessageBox
 )
 
 def get_sprite_icon(sprite_pixmap, x, y, width=24, height=24):
@@ -117,7 +117,6 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Current Main Navigation State: 'Home' or 'Design'
         self.current_main_nav = "Home"
 
         # ---------------------------------------------------------
@@ -186,7 +185,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(top_bar)
 
         # ---------------------------------------------------------
-        # BAR 2: Deep Purple Ribbon Bar (Dynamic Sub-Tabs)
+        # BAR 2: Deep Purple Ribbon Bar (Sub-Tabs)
         # ---------------------------------------------------------
         purple_bar = QFrame()
         purple_bar.setFixedHeight(36)
@@ -196,7 +195,6 @@ class EntrustDashboard(QWidget):
         purple_layout.setContentsMargins(15, 0, 15, 0)
         purple_layout.setSpacing(0)
 
-        # Container for Dynamic Sub-Tabs
         self.sub_tabs_container = QWidget()
         self.sub_tabs_layout = QHBoxLayout(self.sub_tabs_container)
         self.sub_tabs_layout.setContentsMargins(0, 0, 0, 0)
@@ -248,7 +246,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(purple_bar)
 
         # ---------------------------------------------------------
-        # BAR 3: Light Grey Grid/List View Toolbar
+        # BAR 3: Light Grey Toolbar (+ Create Button Added)
         # ---------------------------------------------------------
         tool_bar = QFrame()
         tool_bar.setFixedHeight(34)
@@ -256,7 +254,7 @@ class EntrustDashboard(QWidget):
 
         tool_layout = QHBoxLayout(tool_bar)
         tool_layout.setContentsMargins(8, 0, 8, 0)
-        tool_layout.setSpacing(4)
+        tool_layout.setSpacing(6)
 
         grid_btn = QToolButton()
         grid_btn.setIcon(get_sprite_icon(self.sprite, 0, 122, 18, 18))
@@ -268,8 +266,29 @@ class EntrustDashboard(QWidget):
         list_btn.setFixedSize(28, 25)
         list_btn.setStyleSheet("QToolButton { background-color: #FFFFFF; border: 1px solid #CBD5E0; border-radius: 2px; }")
 
+        # + Create Button
+        self.create_btn = QPushButton("+ Create")
+        self.create_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.create_btn.setFixedHeight(25)
+        self.create_btn.setCursor(Qt.PointingHandCursor)
+        self.create_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFFFF;
+                color: #222222;
+                border: 1px solid #CBD5E0;
+                border-radius: 2px;
+                padding: 0px 12px;
+            }
+            QPushButton:hover {
+                background-color: #F1F5F9;
+                border: 1px solid #94A3B8;
+            }
+        """)
+        self.create_btn.clicked.connect(self.handle_create_action)
+
         tool_layout.addWidget(grid_btn)
         tool_layout.addWidget(list_btn)
+        tool_layout.addWidget(self.create_btn)
         tool_layout.addStretch()
 
         main_layout.addWidget(tool_bar)
@@ -281,11 +300,10 @@ class EntrustDashboard(QWidget):
         self.content_stack.setStyleSheet("background-color: #FFFFFF;")
 
         # --- HOME PAGES ---
-        self.home_cred_page = QLabel("Credentials Content Workspace")
+        self.home_cred_page = QLabel("Home > Credentials Content Workspace")
         self.home_cred_page.setAlignment(Qt.AlignCenter)
         self.home_reports_page = QWidget()
         
-        # Build Home Reports Page
         reports_layout = QHBoxLayout(self.home_reports_page)
         reports_layout.setContentsMargins(15, 15, 15, 15)
         reports_layout.setSpacing(15)
@@ -344,9 +362,8 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(status_bar)
 
-        # Initialize to Home View
         self.sub_tab_buttons = []
-        self.select_home_nav()
+        self.select_design_nav()
 
     # ---------------------------------------------------------
     # Navigation & Sub-Tab Switch Logic
@@ -364,7 +381,6 @@ class EntrustDashboard(QWidget):
 
         self.clear_sub_tabs()
         
-        # Build Home Sub-tabs: Credentials, Reports
         tabs_info = [("Credentials", 0), ("Reports", 1)]
         for text, page_idx in tabs_info:
             btn = QPushButton(text)
@@ -375,7 +391,6 @@ class EntrustDashboard(QWidget):
             self.sub_tabs_layout.addWidget(btn)
             self.sub_tab_buttons.append(btn)
 
-        # Default to Home > Reports
         self.activate_sub_tab(1, self.sub_tab_buttons[1])
 
     def select_design_nav(self):
@@ -385,7 +400,6 @@ class EntrustDashboard(QWidget):
 
         self.clear_sub_tabs()
 
-        # Build Design Sub-tabs: Credentials, Workflows, Reports, Field Connections
         tabs_info = [
             ("Credentials", 2),
             ("Workflows", 3),
@@ -401,13 +415,17 @@ class EntrustDashboard(QWidget):
             self.sub_tabs_layout.addWidget(btn)
             self.sub_tab_buttons.append(btn)
 
-        # Default to Design > Credentials
         self.activate_sub_tab(2, self.sub_tab_buttons[0])
 
     def activate_sub_tab(self, target_index, active_btn):
         self.content_stack.setCurrentIndex(target_index)
         
-        # Style inactive and active sub-tabs
+        # Design Menu အောက်ရှိ Credentials (2), Workflows (3), Reports (4) ဖြစ်လျှင် + Create button ပြရန်
+        if self.current_main_nav == "Design" and target_index in [2, 3, 4]:
+            self.create_btn.setVisible(True)
+        else:
+            self.create_btn.setVisible(False)
+
         active_style = """
             QPushButton {
                 background-color: #FFFFFF;
@@ -433,6 +451,15 @@ class EntrustDashboard(QWidget):
                 btn.setStyleSheet(active_style)
             else:
                 btn.setStyleSheet(inactive_style)
+
+    def handle_create_action(self):
+        current_idx = self.content_stack.currentIndex()
+        if current_idx == 2:
+            QMessageBox.information(self, "Create Action", "Create New Credential Design Workflow Initiated.")
+        elif current_idx == 3:
+            QMessageBox.information(self, "Create Action", "Create New Workflow Initiated.")
+        elif current_idx == 4:
+            QMessageBox.information(self, "Create Action", "Create New Report Template Initiated.")
 
     def create_report_card(self, title_text, run_callback):
         card = QFrame()
