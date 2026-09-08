@@ -246,7 +246,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(purple_bar)
 
         # ---------------------------------------------------------
-        # BAR 3: Light Grey Toolbar (+ Create Button Added)
+        # BAR 3: Light Grey Toolbar
         # ---------------------------------------------------------
         tool_bar = QFrame()
         tool_bar.setFixedHeight(34)
@@ -266,7 +266,6 @@ class EntrustDashboard(QWidget):
         list_btn.setFixedSize(28, 25)
         list_btn.setStyleSheet("QToolButton { background-color: #FFFFFF; border: 1px solid #CBD5E0; border-radius: 2px; }")
 
-        # + Create Button
         self.create_btn = QPushButton("+ Create")
         self.create_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
         self.create_btn.setFixedHeight(25)
@@ -312,7 +311,7 @@ class EntrustDashboard(QWidget):
         reports_layout.addWidget(self.create_report_card("Credentials Printed", self.run_printed_report))
 
         # --- DESIGN PAGES ---
-        self.design_cred_page = QLabel("Design > Credentials Workspace")
+        self.design_cred_page = QLabel("Design > Credential Designs Workspace")
         self.design_cred_page.setAlignment(Qt.AlignCenter)
 
         self.design_workflows_page = QLabel("Design > Workflows Workspace")
@@ -400,8 +399,9 @@ class EntrustDashboard(QWidget):
 
         self.clear_sub_tabs()
 
+        # Design sub-tab တွင် "Credentials" ကို "Credential Designs" ဟု ပြောင်းလဲထားပါသည်
         tabs_info = [
-            ("Credentials", 2),
+            ("Credential Designs", 2),
             ("Workflows", 3),
             ("Reports", 4),
             ("Field Connections", 5)
@@ -420,7 +420,6 @@ class EntrustDashboard(QWidget):
     def activate_sub_tab(self, target_index, active_btn):
         self.content_stack.setCurrentIndex(target_index)
         
-        # Design Menu အောက်ရှိ Credentials (2), Workflows (3), Reports (4) ဖြစ်လျှင် + Create button ပြရန်
         if self.current_main_nav == "Design" and target_index in [2, 3, 4]:
             self.create_btn.setVisible(True)
         else:
@@ -455,7 +454,7 @@ class EntrustDashboard(QWidget):
     def handle_create_action(self):
         current_idx = self.content_stack.currentIndex()
         if current_idx == 2:
-            QMessageBox.information(self, "Create Action", "Create New Credential Design Workflow Initiated.")
+            QMessageBox.information(self, "Create Action", "Create New Credential Design Initiated.")
         elif current_idx == 3:
             QMessageBox.information(self, "Create Action", "Create New Workflow Initiated.")
         elif current_idx == 4:
