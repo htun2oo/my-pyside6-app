@@ -311,7 +311,7 @@ class EntrustDashboard(QWidget):
         reports_layout.addWidget(self.create_report_card("Credentials Printed", self.run_printed_report))
 
         # --- DESIGN PAGES ---
-        self.design_cred_page = QLabel("Design > Credential Designs Workspace")
+        self.design_cred_page = QLabel("Design > Credentials Workspace")
         self.design_cred_page.setAlignment(Qt.AlignCenter)
 
         self.design_workflows_page = QLabel("Design > Workflows Workspace")
@@ -334,7 +334,7 @@ class EntrustDashboard(QWidget):
         main_layout.addWidget(self.content_stack, stretch=1)
 
         # ---------------------------------------------------------
-        # BOTTOM STATUS BAR
+        # BOTTOM STATUS BAR (Printer Queue Status Button Reference)
         # ---------------------------------------------------------
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
@@ -344,10 +344,10 @@ class EntrustDashboard(QWidget):
         status_layout.setContentsMargins(10, 0, 15, 0)
         status_layout.addStretch()
 
-        queue_status_btn = QPushButton(" Printer Queue Status")
-        queue_status_btn.setIcon(get_sprite_icon(self.sprite, 915, 0, 20, 20))
-        queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
-        queue_status_btn.setStyleSheet("""
+        self.queue_status_btn = QPushButton(" Printer Queue Status")
+        self.queue_status_btn.setIcon(get_sprite_icon(self.sprite, 915, 0, 20, 20))
+        self.queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
+        self.queue_status_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E2E8F0);
                 color: #1E3A8A;
@@ -357,7 +357,7 @@ class EntrustDashboard(QWidget):
             }
             QPushButton:hover { background-color: #EDF2F7; }
         """)
-        status_layout.addWidget(queue_status_btn)
+        status_layout.addWidget(self.queue_status_btn)
 
         main_layout.addWidget(status_bar)
 
@@ -399,9 +399,8 @@ class EntrustDashboard(QWidget):
 
         self.clear_sub_tabs()
 
-        # Design sub-tab တွင် "Credentials" ကို "Credential Designs" ဟု ပြောင်းလဲထားပါသည်
         tabs_info = [
-            ("Credential Designs", 2),
+            ("Credentials", 2),
             ("Workflows", 3),
             ("Reports", 4),
             ("Field Connections", 5)
@@ -420,10 +419,16 @@ class EntrustDashboard(QWidget):
     def activate_sub_tab(self, target_index, active_btn):
         self.content_stack.setCurrentIndex(target_index)
         
-        if self.current_main_nav == "Design" and target_index in [2, 3, 4]:
-            self.create_btn.setVisible(True)
+        # Design Menu အောက်ရှိ Sub-tabs များဖြစ်လျှင် + Create button ပြပြီး Printer Queue Status button ကို ဖျောက်ထားမည်
+        if self.current_main_nav == "Design":
+            self.queue_status_btn.setVisible(False)
+            if target_index in [2, 3, 4]:
+                self.create_btn.setVisible(True)
+            else:
+                self.create_btn.setVisible(False)
         else:
             self.create_btn.setVisible(False)
+            self.queue_status_btn.setVisible(True)
 
         active_style = """
             QPushButton {
