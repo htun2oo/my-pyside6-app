@@ -1,22 +1,26 @@
 import sys
 import os
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QToolButton,
-    QComboBox, QCheckBox, QScrollArea
+    QLabel, QPushButton, QFrame, QStackedWidget
 )
 
-# Current Script Directory Path
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Root Directory & Assets Paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
+
+GRID_ICON_PATH = os.path.join(ICONS_DIR, "grid_icon.png")
+LIST_ICON_PATH = os.path.join(ICONS_DIR, "list_icon.png")
+REPORT_PREVIEW_PATH = os.path.join(ICONS_DIR, "report_preview.png")
 
 
 # -------------------------------------------------------------
-# 1. View Mode Toggle Buttons Component (Grid & List View Icons)
+# 1. View Mode Toggle Toolbar Component
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self, sprite_pixmap):
+    def __init__(self):
         super().__init__()
         self.setFixedHeight(34)
         self.setStyleSheet("background-color: #F8FAFC; border-bottom: 1px solid #E2E8F0;")
@@ -25,21 +29,12 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(8, 0, 8, 0)
         layout.setSpacing(2)
 
-        # Sprite image ကို တိုက်ရိုက် သို့မဟုတ် path မှ ပြန် load လုပ်ခြင်း
-        if sprite_pixmap is None or sprite_pixmap.isNull():
-            sprite_path = os.path.join(SCRIPT_DIR, "sprite_button_2.png")
-            sprite_pixmap = QPixmap(sprite_path)
-
-        # sprite_button_2.png ပေါ်ရှိ Grid (4-Squares) နှင့် List (3-Lines) ၏ Pixel Coordinates
-        grid_icon = self.crop_icon(sprite_pixmap, 305, 170, 24, 24)
-        list_icon = self.crop_icon(sprite_pixmap, 368, 170, 24, 24)
-
-        # Grid View Button (Active Dark Style)
+        # Grid Button (Active Dark Style)
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(28, 26)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
-        if not grid_icon.isNull():
-            self.grid_btn.setIcon(grid_icon)
+        if os.path.exists(GRID_ICON_PATH):
+            self.grid_btn.setIcon(QIcon(GRID_ICON_PATH))
         else:
             self.grid_btn.setText("▦")
 
@@ -51,12 +46,12 @@ class ViewToggleToolbar(QFrame):
             }
         """)
 
-        # List View Button (Inactive Grey Style)
+        # List Button (Inactive Grey Style)
         self.list_btn = QPushButton()
         self.list_btn.setFixedSize(28, 26)
         self.list_btn.setCursor(Qt.PointingHandCursor)
-        if not list_icon.isNull():
-            self.list_btn.setIcon(list_icon)
+        if os.path.exists(LIST_ICON_PATH):
+            self.list_btn.setIcon(QIcon(LIST_ICON_PATH))
         else:
             self.list_btn.setText("≡")
 
@@ -73,17 +68,12 @@ class ViewToggleToolbar(QFrame):
         layout.addWidget(self.list_btn)
         layout.addStretch()
 
-    def crop_icon(self, pixmap, x, y, w, h):
-        if pixmap and not pixmap.isNull():
-            return QIcon(pixmap.copy(QRect(x, y, w, h)))
-        return QIcon()
-
 
 # -------------------------------------------------------------
 # 2. Report Card Widget Component
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
-    def __init__(self, title, image_path):
+    def __init__(self, title):
         super().__init__()
         self.setFixedSize(140, 150)
         self.setStyleSheet("QFrame { background-color: #888888; border-radius: 4px; }")
@@ -97,12 +87,12 @@ class ReportCardWidget(QFrame):
         img_lbl.setAlignment(Qt.AlignCenter)
         img_lbl.setStyleSheet("background-color: transparent; border: none;")
 
-        if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
+        if os.path.exists(REPORT_PREVIEW_PATH):
+            pixmap = QPixmap(REPORT_PREVIEW_PATH)
             img_lbl.setPixmap(pixmap.scaled(120, 75, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
-            img_lbl.setText("Image\nNot Found")
-            img_lbl.setStyleSheet("color: white; font-size: 8pt;")
+            img_lbl.setText("📄\nReport Preview")
+            img_lbl.setStyleSheet("color: white; font-size: 9pt; font-weight: bold;")
 
         layout.addWidget(img_lbl)
 
@@ -127,16 +117,16 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 3. Home > Credentials View Widget
+# 3. Workspaces Layout
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
-    def __init__(self, sprite_pixmap):
+    def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.toolbar = ViewToggleToolbar(sprite_pixmap)
+        self.toolbar = ViewToggleToolbar()
         layout.addWidget(self.toolbar)
 
         content_area = QWidget()
@@ -151,17 +141,14 @@ class HomeCredentialsWidget(QWidget):
         layout.addWidget(content_area, stretch=1)
 
 
-# -------------------------------------------------------------
-# 4. Home > Reports View Widget
-# -------------------------------------------------------------
 class HomeReportsWidget(QWidget):
-    def __init__(self, sprite_pixmap, image_path):
+    def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.toolbar = ViewToggleToolbar(sprite_pixmap)
+        self.toolbar = ViewToggleToolbar()
         layout.addWidget(self.toolbar)
 
         content_area = QWidget()
@@ -170,8 +157,8 @@ class HomeReportsWidget(QWidget):
         content_layout.setSpacing(15)
         content_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        card1 = ReportCardWidget("Credentials Issued", image_path)
-        card2 = ReportCardWidget("Credentials Printed", image_path)
+        card1 = ReportCardWidget("Credentials Issued")
+        card2 = ReportCardWidget("Credentials Printed")
 
         content_layout.addWidget(card1)
         content_layout.addWidget(card2)
@@ -180,85 +167,30 @@ class HomeReportsWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 5. Credential Design Editor View
-# -------------------------------------------------------------
-class CredentialDesignEditor(QWidget):
-    def __init__(self, on_close_callback):
-        super().__init__()
-        self.on_close_callback = on_close_callback
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        purple_bar = QFrame()
-        purple_bar.setFixedHeight(42)
-        purple_bar.setStyleSheet("background-color: #7A0A8A;")
-        purple_layout = QHBoxLayout(purple_bar)
-        purple_layout.setContentsMargins(15, 0, 15, 0)
-
-        title_lbl = QLabel("Credential Design 1")
-        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
-        title_lbl.setStyleSheet("color: white;")
-
-        purple_layout.addWidget(title_lbl)
-        purple_layout.addStretch()
-        main_layout.addWidget(purple_bar)
-
-        center_body = QLabel("Design Editor Content")
-        center_body.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(center_body, stretch=1)
-
-        bottom_bar = QFrame()
-        bottom_bar.setFixedHeight(40)
-        bottom_bar.setStyleSheet("background-color: #F1F5F9; border-top: 1px solid #CBD5E0;")
-        bottom_layout = QHBoxLayout(bottom_bar)
-
-        close_btn = QPushButton("Close")
-        close_btn.clicked.connect(self.on_close_callback)
-        bottom_layout.addWidget(close_btn)
-        bottom_layout.addStretch()
-
-        main_layout.addWidget(bottom_bar)
-
-
-# -------------------------------------------------------------
-# 6. Main Dashboard Component
+# 4. Main Dashboard
 # -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
-        # Dynamic Absolute Path Resolution
-        self.sprite_path = os.path.join(SCRIPT_DIR, "sprite_button_2.png")
-        self.report_img_path = os.path.join(SCRIPT_DIR, "stock_report_preview.png")
-        self.sprite = QPixmap(self.sprite_path)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        self.root_stack = QStackedWidget(self)
-        main_box = QVBoxLayout(self)
-        main_box.setContentsMargins(0, 0, 0, 0)
-        main_box.addWidget(self.root_stack)
-
-        self.dashboard_view = QWidget()
-        dash_layout = QVBoxLayout(self.dashboard_view)
-        dash_layout.setContentsMargins(0, 0, 0, 0)
-        dash_layout.setSpacing(0)
-
-        # Top Header Bar
+        # Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(18, 0, 20, 0)
 
-        logo_box = QHBoxLayout()
         logo_icon = QLabel("⬡")
         logo_icon.setStyleSheet("color: #7A0A8A; font-size: 24px; font-weight: bold;")
         logo_text = QLabel("ENTRUST")
         logo_text.setFont(QFont("Segoe UI", 14, QFont.Bold))
         logo_text.setStyleSheet("color: #4A4A4A; letter-spacing: 1.5px;")
-        logo_box.addWidget(logo_icon)
-        logo_box.addWidget(logo_text)
-        top_layout.addLayout(logo_box)
+        
+        top_layout.addWidget(logo_icon)
+        top_layout.addWidget(logo_text)
 
         sub_title = QLabel("  |  Adaptive Issuance™\n     Instant ID")
         sub_title.setFont(QFont("Segoe UI", 8, QFont.Bold))
@@ -266,120 +198,74 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(sub_title)
         top_layout.addSpacing(40)
 
-        nav_box = QHBoxLayout()
-        nav_box.setSpacing(25)
-
         self.home_btn = QPushButton("Home")
-        self.home_btn.setCursor(Qt.PointingHandCursor)
-        self.home_btn.clicked.connect(self.select_home_nav)
+        self.home_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        self.home_btn.setStyleSheet("border: none; color: #7A0A8A; background: transparent;")
+        top_layout.addWidget(self.home_btn)
 
-        self.design_btn = QPushButton("Design ▾")
-        self.design_btn.setCursor(Qt.PointingHandCursor)
-        self.design_btn.clicked.connect(self.select_design_nav)
+        design_btn = QPushButton("Design ▾")
+        design_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        design_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
+        top_layout.addWidget(design_btn)
 
-        self.printer_btn = QPushButton("Printer Queues")
-        self.printer_btn.setCursor(Qt.PointingHandCursor)
-        self.printer_btn.clicked.connect(self.select_printer_nav)
+        printer_btn = QPushButton("Printer Queues")
+        printer_btn.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        printer_btn.setStyleSheet("border: none; color: #222222; background: transparent;")
+        top_layout.addWidget(printer_btn)
 
-        nav_box.addWidget(self.home_btn)
-        nav_box.addWidget(self.design_btn)
-        nav_box.addWidget(self.printer_btn)
-        top_layout.addLayout(nav_box)
         top_layout.addStretch()
+        main_layout.addWidget(top_bar)
 
-        dash_layout.addWidget(top_bar)
-
-        # Purple Sub-Tabs Bar
+        # Purple Tab Bar
         purple_bar = QFrame()
         purple_bar.setFixedHeight(36)
         purple_bar.setStyleSheet("background-color: #7A0A8A;")
         purple_layout = QHBoxLayout(purple_bar)
         purple_layout.setContentsMargins(15, 0, 15, 0)
 
-        self.sub_tabs_container = QWidget()
-        self.sub_tabs_layout = QHBoxLayout(self.sub_tabs_container)
-        self.sub_tabs_layout.setContentsMargins(0, 0, 0, 0)
-        self.sub_tabs_layout.setSpacing(0)
+        self.cred_tab = QPushButton("Credentials")
+        self.cred_tab.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.cred_tab.setFixedHeight(36)
+        self.cred_tab.setCursor(Qt.PointingHandCursor)
+        self.cred_tab.clicked.connect(self.show_cred_page)
 
-        purple_layout.addWidget(self.sub_tabs_container)
+        self.reports_tab = QPushButton("Reports")
+        self.reports_tab.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.reports_tab.setFixedHeight(36)
+        self.reports_tab.setCursor(Qt.PointingHandCursor)
+        self.reports_tab.clicked.connect(self.show_reports_page)
+
+        purple_layout.addWidget(self.cred_tab)
+        purple_layout.addWidget(self.reports_tab)
         purple_layout.addStretch()
 
         login_info = QLabel("Last Login at Wed Sep 09 10:18:38 MMT 2026 from IP 192.168.56.1  admin ▾")
         login_info.setStyleSheet("color: #DDA0DD; font-size: 8pt;")
         purple_layout.addWidget(login_info)
 
-        dash_layout.addWidget(purple_bar)
+        main_layout.addWidget(purple_bar)
 
-        # Create Button Toolbar (Design Tab Only)
-        self.tool_bar = QFrame()
-        self.tool_bar.setFixedHeight(34)
-        self.tool_bar.setStyleSheet("background-color: #F3F4F6; border-bottom: 1px solid #E5E7EB;")
-        tool_layout = QHBoxLayout(self.tool_bar)
-        tool_layout.setContentsMargins(8, 0, 8, 0)
-
-        self.create_btn = QPushButton("+ Create")
-        self.create_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-        self.create_btn.setFixedHeight(25)
-        self.create_btn.setCursor(Qt.PointingHandCursor)
-        self.create_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #FFFFFF;
-                color: #222222;
-                border: 1px solid #CBD5E0;
-                border-radius: 2px;
-                padding: 0px 12px;
-            }
-            QPushButton:hover { background-color: #F1F5F9; }
-        """)
-        self.create_btn.clicked.connect(self.open_editor_view)
-
-        tool_layout.addWidget(self.create_btn)
-        tool_layout.addStretch()
-        dash_layout.addWidget(self.tool_bar)
-
-        # Content Workspaces Stack
+        # Workspace Stack
         self.content_stack = QStackedWidget()
-        self.content_stack.setStyleSheet("background-color: #FFFFFF;")
+        self.cred_page = HomeCredentialsWidget()
+        self.reports_page = HomeReportsWidget()
 
-        # Home Pages
-        self.home_cred_page = HomeCredentialsWidget(self.sprite)
-        self.home_reports_page = HomeReportsWidget(self.sprite, self.report_img_path)
+        self.content_stack.addWidget(self.cred_page)    # Index 0
+        self.content_stack.addWidget(self.reports_page) # Index 1
 
-        # Design Pages
-        self.design_cred_page = QLabel("Design > Credential Designs Workspace")
-        self.design_cred_page.setAlignment(Qt.AlignCenter)
-        self.design_workflows_page = QLabel("Design > Workflows Workspace")
-        self.design_workflows_page.setAlignment(Qt.AlignCenter)
-        self.design_reports_page = QLabel("Design > Reports Workspace")
-        self.design_reports_page.setAlignment(Qt.AlignCenter)
-        self.design_field_conn_page = QLabel("Design > Field Connections Workspace")
-        self.design_field_conn_page.setAlignment(Qt.AlignCenter)
-
-        # Printer Queue Page
-        self.printer_queues_page = QLabel("Printer Queues Workspace Content")
-        self.printer_queues_page.setAlignment(Qt.AlignCenter)
-
-        self.content_stack.addWidget(self.home_cred_page)        # Index 0
-        self.content_stack.addWidget(self.home_reports_page)     # Index 1
-        self.content_stack.addWidget(self.design_cred_page)      # Index 2
-        self.content_stack.addWidget(self.design_workflows_page) # Index 3
-        self.content_stack.addWidget(self.design_reports_page)   # Index 4
-        self.content_stack.addWidget(self.design_field_conn_page)# Index 5
-        self.content_stack.addWidget(self.printer_queues_page)   # Index 6
-
-        dash_layout.addWidget(self.content_stack, stretch=1)
+        main_layout.addWidget(self.content_stack, stretch=1)
 
         # Status Bar
-        self.status_bar = QFrame()
-        self.status_bar.setFixedHeight(32)
-        self.status_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
-        status_layout = QHBoxLayout(self.status_bar)
+        status_bar = QFrame()
+        status_bar.setFixedHeight(32)
+        status_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
+        status_layout = QHBoxLayout(status_bar)
         status_layout.setContentsMargins(10, 0, 15, 0)
         status_layout.addStretch()
 
-        self.queue_status_btn = QPushButton(" Printer Queue Status")
-        self.queue_status_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
-        self.queue_status_btn.setStyleSheet("""
+        queue_btn = QPushButton(" Printer Queue Status")
+        queue_btn.setFont(QFont("Segoe UI", 8.5, QFont.Bold))
+        queue_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E2E8F0);
                 color: #1E3A8A;
@@ -387,129 +273,35 @@ class EntrustDashboard(QWidget):
                 border-radius: 3px;
                 padding: 4px 12px;
             }
-            QPushButton:hover { background-color: #EDF2F7; }
         """)
-        status_layout.addWidget(self.queue_status_btn)
-        dash_layout.addWidget(self.status_bar)
+        status_layout.addWidget(queue_btn)
+        main_layout.addWidget(status_bar)
 
-        self.editor_view = CredentialDesignEditor(on_close_callback=self.close_editor_view)
+        self.show_cred_page()
 
-        self.root_stack.addWidget(self.dashboard_view) # Index 0
-        self.root_stack.addWidget(self.editor_view)    # Index 1
+    def show_cred_page(self):
+        self.content_stack.setCurrentIndex(0)
+        self.cred_tab.setStyleSheet("""
+            background-color: #FFFFFF; color: #7A0A8A; border: none;
+            padding: 0px 18px; border-top-left-radius: 3px; border-top-right-radius: 3px;
+        """)
+        self.reports_tab.setStyleSheet("background-color: transparent; color: #FFFFFF; border: none; padding: 0px 18px;")
 
-        self.sub_tab_buttons = []
-        self.select_home_nav()
-
-    # Navigation Methods
-    def update_top_nav_styles(self, active_nav):
-        active_style = "border: none; color: #7A0A8A; font-weight: bold; font-size: 10pt; background: transparent;"
-        inactive_style = "border: none; color: #222222; font-weight: bold; font-size: 10pt; background: transparent;"
-
-        self.home_btn.setStyleSheet(active_style if active_nav == "Home" else inactive_style)
-        self.design_btn.setStyleSheet(active_style if active_nav == "Design" else inactive_style)
-        self.printer_btn.setStyleSheet(active_style if active_nav == "Printer" else inactive_style)
-
-    def clear_sub_tabs(self):
-        for btn in self.sub_tab_buttons:
-            self.sub_tabs_layout.removeWidget(btn)
-            btn.deleteLater()
-        self.sub_tab_buttons = []
-
-    def select_home_nav(self):
-        self.update_top_nav_styles("Home")
-        self.clear_sub_tabs()
-        self.tool_bar.setVisible(False)
-        self.queue_status_btn.setVisible(True)
-
-        tabs_info = [("Credentials", 0), ("Reports", 1)]
-        for text, page_idx in tabs_info:
-            btn = QPushButton(text)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-            btn.setFixedHeight(36)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.clicked.connect(lambda _, idx=page_idx, b=btn: self.activate_sub_tab(idx, b))
-            self.sub_tabs_layout.addWidget(btn)
-            self.sub_tab_buttons.append(btn)
-
-        self.activate_sub_tab(1, self.sub_tab_buttons[1]) # Default Home > Reports view
-
-    def select_design_nav(self):
-        self.update_top_nav_styles("Design")
-        self.clear_sub_tabs()
-        self.tool_bar.setVisible(True)
-        self.queue_status_btn.setVisible(False)
-
-        tabs_info = [
-            ("Credential Designs", 2),
-            ("Workflows", 3),
-            ("Reports", 4),
-            ("Field Connections", 5)
-        ]
-        for text, page_idx in tabs_info:
-            btn = QPushButton(text)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
-            btn.setFixedHeight(36)
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.clicked.connect(lambda _, idx=page_idx, b=btn: self.activate_sub_tab(idx, b))
-            self.sub_tabs_layout.addWidget(btn)
-            self.sub_tab_buttons.append(btn)
-
-        self.activate_sub_tab(2, self.sub_tab_buttons[0])
-
-    def select_printer_nav(self):
-        self.update_top_nav_styles("Printer")
-        self.clear_sub_tabs()
-        self.tool_bar.setVisible(False)
-        self.queue_status_btn.setVisible(True)
-        self.content_stack.setCurrentIndex(6)
-
-    def activate_sub_tab(self, target_index, active_btn):
-        self.content_stack.setCurrentIndex(target_index)
-
-        active_style = """
-            QPushButton {
-                background-color: #FFFFFF;
-                color: #7A0A8A;
-                border: none;
-                padding: 0px 18px;
-                border-top-left-radius: 3px;
-                border-top-right-radius: 3px;
-            }
-        """
-        inactive_style = """
-            QPushButton {
-                background-color: transparent;
-                color: #FFFFFF;
-                border: none;
-                padding: 0px 18px;
-            }
-            QPushButton:hover { color: #E0B0FF; }
-        """
-
-        for btn in self.sub_tab_buttons:
-            if btn == active_btn:
-                btn.setStyleSheet(active_style)
-            else:
-                btn.setStyleSheet(inactive_style)
-
-    def open_editor_view(self):
-        self.root_stack.setCurrentIndex(1)
-
-    def close_editor_view(self):
-        self.root_stack.setCurrentIndex(0)
+    def show_reports_page(self):
+        self.content_stack.setCurrentIndex(1)
+        self.reports_tab.setStyleSheet("""
+            background-color: #FFFFFF; color: #7A0A8A; border: none;
+            padding: 0px 18px; border-top-left-radius: 3px; border-top-right-radius: 3px;
+        """)
+        self.cred_tab.setStyleSheet("background-color: transparent; color: #FFFFFF; border: none; padding: 0px 18px;")
 
 
-# -------------------------------------------------------------
-# 7. Main Window Entry
-# -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
         self.resize(1280, 720)
-
-        self.dashboard = EntrustDashboard()
-        self.setCentralWidget(self.dashboard)
+        self.setCentralWidget(EntrustDashboard())
 
 
 if __name__ == "__main__":
