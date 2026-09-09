@@ -1,46 +1,14 @@
 import sys
 from PySide6.QtCore import Qt, QSize, QRectF
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QBrush, QLinearGradient, QPolygonF
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QBrush, QPolygonF
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
 )
 
 # -------------------------------------------------------------
-# Custom Icon & Pattern Rendering Functions
+# Icons & Background Drawings
 # -------------------------------------------------------------
-def draw_purple_banner_background(width=1200, height=36):
-    """Draws the geometric pattern found in the purple header bar."""
-    pixmap = QPixmap(width, height)
-    pixmap.fill(QColor("#7B0082"))  # Base Purple
-    
-    p = QPainter(pixmap)
-    p.setRenderHint(QPainter.Antialiasing)
-    
-    # Polygon overlay 1
-    p.setPen(Qt.NoPen)
-    p.setBrush(QBrush(QColor(135, 0, 142, 120)))
-    poly1 = QPolygonF([
-        QRectF(0, 0, width, height).topLeft(),
-        QRectF(380, 0, 0, 0).topRight(),
-        QRectF(220, height, 0, 0).bottomLeft(),
-        QRectF(0, height, 0, 0).bottomLeft()
-    ])
-    p.drawPolygon(poly1)
-
-    # Polygon overlay 2
-    p.setBrush(QBrush(QColor(95, 0, 100, 150)))
-    poly2 = QPolygonF([
-        QRectF(width - 400, 0, 0, 0).topLeft(),
-        QRectF(width, 0, 0, 0).topRight(),
-        QRectF(width, height, 0, 0).bottomRight(),
-        QRectF(width - 250, height, 0, 0).bottomLeft()
-    ])
-    p.drawPolygon(poly2)
-
-    p.end()
-    return pixmap
-
 def draw_grid_icon(size=14, color="#1E293B"):
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.transparent)
@@ -68,45 +36,12 @@ def draw_list_icon(size=14, color="#1E293B"):
     p.end()
     return QIcon(pixmap)
 
-def draw_bar_chart_preview(width=110, height=55):
-    pixmap = QPixmap(width, height)
-    pixmap.fill(Qt.transparent)
-    p = QPainter(pixmap)
-    p.setRenderHint(QPainter.Antialiasing)
-
-    paper_rect = QRectF(5, 2, width - 10, height - 4)
-    p.setBrush(QBrush(QColor("#FFFFFF")))
-    p.setPen(QPen(QColor("#D1D5DB"), 1))
-    p.drawRoundedRect(paper_rect, 4, 4)
-
-    bar_color = QColor("#00875A")
-    p.setBrush(QBrush(bar_color))
-    p.setPen(Qt.NoPen)
-
-    bars = [
-        (22, 28, 8, 14),
-        (34, 23, 8, 19),
-        (46, 17, 8, 25),
-        (58, 15, 8, 27),
-        (70, 15, 8, 27),
-        (82, 21, 8, 21)
-    ]
-    for x, y, w, h in bars:
-        p.drawRect(x, y, w, h)
-
-    p.setPen(QPen(QColor("#9CA3AF")))
-    p.setFont(QFont("Arial", 6))
-    p.drawText(paper_rect.adjusted(0, 36, 0, -2), Qt.AlignCenter, "Week 30, 2013")
-
-    p.end()
-    return pixmap
-
 
 # -------------------------------------------------------------
-# Toolbar Component with Active / Inactive States
+# View Toggle Toolbar Component
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self, on_grid_click=None, on_list_click=None, is_list_active=True):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True):
         super().__init__()
         self.setFixedHeight(32)
         self.setStyleSheet("""
@@ -128,16 +63,15 @@ class ViewToggleToolbar(QFrame):
         self.list_btn.setFixedSize(26, 22)
         self.list_btn.setCursor(Qt.PointingHandCursor)
 
-        if is_list_active:
-            self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
-            self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
-            self.grid_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
-            self.list_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
-        else:
-            self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
-            self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
+        self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
+        self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
+
+        if is_grid_active:
             self.grid_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
             self.list_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
+        else:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
 
         if on_grid_click:
             self.grid_btn.clicked.connect(on_grid_click)
@@ -243,7 +177,7 @@ class CredentialsListViewWidget(QWidget):
 
         layout.addWidget(pagination_bar)
 
-        # Horizontal Scrollbar Section (Pixel-Perfect match to original GUI)
+        # Horizontal Scrollbar
         scroll_container = QWidget()
         scroll_container.setFixedHeight(28)
         scroll_layout = QHBoxLayout(scroll_container)
@@ -292,27 +226,27 @@ class HomeCredentialsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        # Toolbar
         self.toolbar = ViewToggleToolbar(
             on_grid_click=self.show_grid_view,
             on_list_click=self.show_list_view,
-            is_list_active=True
+            is_grid_active=True
         )
         layout.addWidget(self.toolbar)
 
         self.view_stack = QStackedWidget()
         
+        # Grid View (Completely Blank Workspace as requested in image 2)
         grid_view = QWidget()
-        g_layout = QVBoxLayout(grid_view)
-        g_layout.setContentsMargins(15, 15, 15, 15)
-        g_lbl = QLabel("Credentials Grid Workspace Area")
-        g_lbl.setStyleSheet("color: #4B5568; font-size: 10pt;")
-        g_layout.addWidget(g_lbl)
+        grid_view.setStyleSheet("background-color: #FFFFFF;")
         
         self.list_view = CredentialsListViewWidget()
 
         self.view_stack.addWidget(grid_view)
         self.view_stack.addWidget(self.list_view)
-        self.view_stack.setCurrentIndex(1)
+        
+        # Default Grid Active view (Matching image 2)
+        self.view_stack.setCurrentIndex(0)
 
         layout.addWidget(self.view_stack, stretch=1)
 
@@ -334,32 +268,16 @@ class HomeReportsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.toolbar = ViewToggleToolbar(is_list_active=False)
+        self.toolbar = ViewToggleToolbar(is_grid_active=False)
         layout.addWidget(self.toolbar)
 
         content = QWidget()
         content.setStyleSheet("background-color: #FFFFFF;")
-        c_layout = QHBoxLayout(content)
-        c_layout.setContentsMargins(15, 15, 15, 15)
-        c_layout.setSpacing(12)
-        c_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
-        card1 = QFrame()
-        card1.setFixedSize(142, 135)
-        card1.setStyleSheet("QFrame { background-color: #838383; border-radius: 4px; }")
-        
-        card2 = QFrame()
-        card2.setFixedSize(142, 135)
-        card2.setStyleSheet("QFrame { background-color: #838383; border-radius: 4px; }")
-
-        c_layout.addWidget(card1)
-        c_layout.addWidget(card2)
-
         layout.addWidget(content, stretch=1)
 
 
 # -------------------------------------------------------------
-# Main Application Dashboard Window
+# Main Dashboard Window
 # -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
@@ -423,13 +341,9 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Purple Pattern Header Navigation
+        # 2. Purple Header Navigation Bar + Last Login Info Text Added
         purple_bar = QFrame()
         purple_bar.setFixedHeight(34)
-        
-        # Apply painted pattern pixmap
-        palette = purple_bar.palette()
-        purple_bar.setAutoFillBackground(True)
         purple_bar.setStyleSheet("background-color: #7B0082;")
 
         purple_layout = QHBoxLayout(purple_bar)
@@ -451,9 +365,15 @@ class EntrustDashboard(QWidget):
         purple_layout.addWidget(self.reports_tab)
         purple_layout.addStretch()
 
+        # Last Login text (Corrected according to circle 1 in image)
+        last_login_lbl = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109")
+        last_login_lbl.setFont(QFont("Arial", 8))
+        last_login_lbl.setStyleSheet("color: #D8B4FE; background: transparent; border: none; margin-right: 15px;")
+        purple_layout.addWidget(last_login_lbl)
+
         main_layout.addWidget(purple_bar)
 
-        # 3. Main Body Container
+        # 3. Main Workspace & Right Panel Layout Alignment
         body_container = QWidget()
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
@@ -468,15 +388,15 @@ class EntrustDashboard(QWidget):
 
         body_layout.addWidget(self.content_stack, stretch=1)
 
-        # Right Vertical Divider Line
+        # Right Vertical Panel (Width set to match Printer Queue Status button perfectly)
         right_panel_line = QFrame()
-        right_panel_line.setFixedWidth(180)
+        right_panel_line.setFixedWidth(200)
         right_panel_line.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FFFFFF;")
         body_layout.addWidget(right_panel_line)
 
         main_layout.addWidget(body_container, stretch=1)
 
-        # 4. Bottom Status Bar with Printer Queue Status Button
+        # 4. Bottom Status Bar with Perfectly Aligned Printer Queue Status Button
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
         status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
@@ -486,21 +406,18 @@ class EntrustDashboard(QWidget):
 
         status_layout.addStretch()
 
-        v_line = QFrame()
-        v_line.setFrameShape(QFrame.VLine)
-        v_line.setStyleSheet("border-left: 1px solid #D1D5DB; background: transparent;")
-        status_layout.addWidget(v_line)
-
         queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
         queue_status_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
         queue_status_btn.setFixedHeight(32)
+        queue_status_btn.setFixedWidth(200)  # Width matching the right panel divider exactly
         queue_status_btn.setCursor(Qt.PointingHandCursor)
         queue_status_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E5EFF8, stop:1 #C5D9EC);
                 color: #0F172A;
                 border: none;
-                padding: 0px 18px;
+                border-left: 1px solid #D1D5DB;
+                padding: 0px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #D5E5F5, stop:1 #B5CDE2);
