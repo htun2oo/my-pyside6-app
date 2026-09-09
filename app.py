@@ -3,11 +3,11 @@ from PySide6.QtCore import Qt, QSize, QRectF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QBrush
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget
+    QLabel, QPushButton, QFrame, QStackedWidget, QSplitter
 )
 
 # -------------------------------------------------------------
-# Dynamic Drawing Functions (Keeping working parts intact)
+# Icons and Graphics Drawing
 # -------------------------------------------------------------
 def draw_grid_icon(size=14, color="#374151"):
     pixmap = QPixmap(size, size)
@@ -72,20 +72,26 @@ def draw_bar_chart_preview(width=110, height=55):
 
 
 # -------------------------------------------------------------
-# Sub-Components
+# Toolbar with Precise Full-width Horizontal Bottom Border Line
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self):
         super().__init__()
-        self.setFixedHeight(30)
-        self.setStyleSheet("background-color: #F3F4F6; border-bottom: 1px solid #E5E7EB;")
+        self.setFixedHeight(32)
+        # အောက်ခြေတစ်လျှောက် မီးခိုးရောင်မျဉ်း (Horizontal Line) တိကျစွာ ရေးဆွဲခြင်း
+        self.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-bottom: 1px solid #D1D5DB;
+            }
+        """)
         
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(6, 3, 6, 3)
+        layout.setContentsMargins(8, 4, 8, 4)
         layout.setSpacing(4)
 
         self.grid_btn = QPushButton()
-        self.grid_btn.setFixedSize(24, 22)
+        self.grid_btn.setFixedSize(26, 22)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
         self.grid_btn.setIcon(draw_grid_icon(12, "#374151"))
         self.grid_btn.setIconSize(QSize(12, 12))
@@ -98,7 +104,7 @@ class ViewToggleToolbar(QFrame):
         """)
 
         self.list_btn = QPushButton()
-        self.list_btn.setFixedSize(24, 22)
+        self.list_btn.setFixedSize(26, 22)
         self.list_btn.setCursor(Qt.PointingHandCursor)
         self.list_btn.setIcon(draw_list_icon(12, "#4B5563"))
         self.list_btn.setIconSize(QSize(12, 12))
@@ -156,9 +162,6 @@ class ReportCardWidget(QFrame):
         layout.addWidget(run_btn, alignment=Qt.AlignRight)
 
 
-# -------------------------------------------------------------
-# Main Navigation & Pages
-# -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -204,6 +207,9 @@ class HomeReportsWidget(QWidget):
         layout.addWidget(content, stretch=1)
 
 
+# -------------------------------------------------------------
+# Main Dashboard
+# -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
@@ -212,9 +218,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # -------------------------------------------------------------
-        # EXACT MATCH TOP HEADER (Refined as requested)
-        # -------------------------------------------------------------
+        # Top Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(44)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
@@ -222,7 +226,6 @@ class EntrustDashboard(QWidget):
         top_layout.setContentsMargins(10, 0, 15, 0)
         top_layout.setSpacing(12)
 
-        # Left Section: ENTRUST Logo + Divider
         logo_container = QWidget()
         logo_layout = QHBoxLayout(logo_container)
         logo_layout.setContentsMargins(0, 0, 12, 0)
@@ -236,11 +239,9 @@ class EntrustDashboard(QWidget):
 
         logo_layout.addWidget(logo_hex)
         logo_layout.addWidget(logo_text)
-        
         logo_container.setStyleSheet("border-right: 1px solid #D1D5DB;")
         top_layout.addWidget(logo_container)
 
-        # Sub-title
         sub_text = QLabel("Adaptive Issuance™\nInstant ID")
         sub_text.setFont(QFont("Arial", 7, QFont.Bold))
         sub_text.setStyleSheet("color: #374151; border: none;")
@@ -248,7 +249,6 @@ class EntrustDashboard(QWidget):
 
         top_layout.addSpacing(60)
 
-        # Top Navigation Items
         home_btn = QPushButton("Home")
         home_btn.setFont(QFont("Arial", 9, QFont.Bold))
         home_btn.setStyleSheet("border: none; color: #374151; background: transparent; padding: 0 8px;")
@@ -267,9 +267,7 @@ class EntrustDashboard(QWidget):
         top_layout.addStretch()
         main_layout.addWidget(top_bar)
 
-        # -------------------------------------------------------------
-        # Purple Tab Navigation (Preserved as requested)
-        # -------------------------------------------------------------
+        # Purple Header Navigation
         purple_bar = QFrame()
         purple_bar.setFixedHeight(34)
         purple_bar.setStyleSheet("background-color: #7B0082;")
@@ -292,13 +290,18 @@ class EntrustDashboard(QWidget):
         purple_layout.addWidget(self.reports_tab)
         purple_layout.addStretch()
 
-        login_info = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109   admin ▾  ⚙  🔔2  ❓  ℹ")
+        login_info = QLabel("Last Login at Wed Sep 09 14:14:30 MMT 2026 from IP 192.168.56.1   admin ▾  ⚙  🔔2  ❓  ℹ")
         login_info.setStyleSheet("color: #E9D5FF; font-size: 8pt;")
         purple_layout.addWidget(login_info)
 
         main_layout.addWidget(purple_bar)
 
-        # Central View Stack
+        # Body Layout Area (Includes Vertical Right Border)
+        body_container = QWidget()
+        body_layout = QHBoxLayout(body_container)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(0)
+
         self.content_stack = QStackedWidget()
         self.cred_page = HomeCredentialsWidget()
         self.reports_page = HomeReportsWidget()
@@ -306,28 +309,50 @@ class EntrustDashboard(QWidget):
         self.content_stack.addWidget(self.cred_page)
         self.content_stack.addWidget(self.reports_page)
 
-        main_layout.addWidget(self.content_stack, stretch=1)
+        body_layout.addWidget(self.content_stack, stretch=1)
 
-        # Bottom Status Bar
+        # Main Workspace Right Vertical Border Line
+        right_panel_line = QFrame()
+        right_panel_line.setFixedWidth(200)
+        right_panel_line.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FBFBFB;")
+        body_layout.addWidget(right_panel_line)
+
+        main_layout.addWidget(body_container, stretch=1)
+
+        # -------------------------------------------------------------
+        # Bottom Status Bar with Vertical Line Divider for Printer Queue Status
+        # -------------------------------------------------------------
         status_bar = QFrame()
-        status_bar.setFixedHeight(30)
-        status_bar.setStyleSheet("background-color: #F9FAFB; border-top: 1px solid #E5E7EB;")
+        status_bar.setFixedHeight(32)
+        status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
         status_layout = QHBoxLayout(status_bar)
-        status_layout.setContentsMargins(10, 0, 10, 0)
+        status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(0)
+
         status_layout.addStretch()
 
+        # Vertical Border Line (Printer Queue Status ၏ ဘယ်ဘက်ဒေါင်လိုက်မျဉ်း)
+        v_line = QFrame()
+        v_line.setFrameShape(QFrame.VLine)
+        v_line.setStyleSheet("border-left: 1px solid #D1D5DB; background: transparent;")
+        status_layout.addWidget(v_line)
+
+        # Printer Queue Status Button Box
         queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
         queue_status_btn.setFont(QFont("Arial", 8, QFont.Bold))
+        queue_status_btn.setFixedHeight(32)
+        queue_status_btn.setCursor(Qt.PointingHandCursor)
         queue_status_btn.setStyleSheet("""
             QPushButton {
-                background-color: #E0E7FF;
-                color: #1E40AF;
-                border: 1px solid #C7D2FE;
-                border-radius: 2px;
-                padding: 3px 10px;
+                background-color: #EBF3FA;
+                color: #1E3A8A;
+                border: none;
+                padding: 0px 16px;
             }
+            QPushButton:hover { background-color: #DCEAF7; }
         """)
         status_layout.addWidget(queue_status_btn)
+
         main_layout.addWidget(status_bar)
 
         self.show_reports_page()
