@@ -8,16 +8,12 @@ from PySide6.QtWidgets import (
     QComboBox, QCheckBox, QScrollArea
 )
 
-# Sprite Sheet မှ Icon များကို Crop လုပ်ထုတ်ယူသည့် Helper Function
-def get_sprite_icon(sprite_pixmap, x, y, width=28, height=28):
-    if sprite_pixmap.isNull():
-        return QIcon()
-    cropped = sprite_pixmap.copy(QRect(x, y, width, height))
-    return QIcon(cropped)
+# Current Script Directory Path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # -------------------------------------------------------------
-# 1. View Mode Toggle Buttons Component (Grid vs List Buttons)
+# 1. View Mode Toggle Buttons Component (Grid & List View Icons)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, sprite_pixmap):
@@ -29,11 +25,16 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(8, 0, 8, 0)
         layout.setSpacing(2)
 
-        # sprite_button_2.png ထဲမှ Icon များ၏ Coord (Grid & List Icon)
-        grid_icon = get_sprite_icon(sprite_pixmap, 495, 270, 32, 32)
-        list_icon = get_sprite_icon(sprite_pixmap, 598, 270, 32, 32)
+        # Sprite image ကို တိုက်ရိုက် သို့မဟုတ် path မှ ပြန် load လုပ်ခြင်း
+        if sprite_pixmap is None or sprite_pixmap.isNull():
+            sprite_path = os.path.join(SCRIPT_DIR, "sprite_button_2.png")
+            sprite_pixmap = QPixmap(sprite_path)
 
-        # Grid View Button (Active Dark Blue Style)
+        # sprite_button_2.png ပေါ်ရှိ Grid (4-Squares) နှင့် List (3-Lines) ၏ Pixel Coordinates
+        grid_icon = self.crop_icon(sprite_pixmap, 305, 170, 24, 24)
+        list_icon = self.crop_icon(sprite_pixmap, 368, 170, 24, 24)
+
+        # Grid View Button (Active Dark Style)
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(28, 26)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
@@ -41,7 +42,7 @@ class ViewToggleToolbar(QFrame):
             self.grid_btn.setIcon(grid_icon)
         else:
             self.grid_btn.setText("▦")
-            
+
         self.grid_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2F3E46;
@@ -72,12 +73,17 @@ class ViewToggleToolbar(QFrame):
         layout.addWidget(self.list_btn)
         layout.addStretch()
 
+    def crop_icon(self, pixmap, x, y, w, h):
+        if pixmap and not pixmap.isNull():
+            return QIcon(pixmap.copy(QRect(x, y, w, h)))
+        return QIcon()
+
 
 # -------------------------------------------------------------
 # 2. Report Card Widget Component
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
-    def __init__(self, title, image_path="stock_report_preview.png"):
+    def __init__(self, title, image_path):
         super().__init__()
         self.setFixedSize(140, 150)
         self.setStyleSheet("QFrame { background-color: #888888; border-radius: 4px; }")
@@ -121,7 +127,7 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 3. Home > Credentials View Widget (With Sprite Buttons)
+# 3. Home > Credentials View Widget
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self, sprite_pixmap):
@@ -130,11 +136,9 @@ class HomeCredentialsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Toolbar
         self.toolbar = ViewToggleToolbar(sprite_pixmap)
         layout.addWidget(self.toolbar)
 
-        # Workspace Content Area
         content_area = QWidget()
         content_layout = QVBoxLayout(content_area)
         content_layout.setContentsMargins(15, 15, 15, 15)
@@ -148,20 +152,18 @@ class HomeCredentialsWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# 4. Home > Reports View Widget (With Sprite Buttons)
+# 4. Home > Reports View Widget
 # -------------------------------------------------------------
 class HomeReportsWidget(QWidget):
-    def __init__(self, sprite_pixmap, image_path="stock_report_preview.png"):
+    def __init__(self, sprite_pixmap, image_path):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Toolbar
         self.toolbar = ViewToggleToolbar(sprite_pixmap)
         layout.addWidget(self.toolbar)
 
-        # Reports Content Area
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(15, 15, 15, 15)
@@ -226,8 +228,10 @@ class CredentialDesignEditor(QWidget):
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
-        self.sprite = QPixmap("sprite_button_2.png")
-        self.report_img_path = "stock_report_preview.png"
+        # Dynamic Absolute Path Resolution
+        self.sprite_path = os.path.join(SCRIPT_DIR, "sprite_button_2.png")
+        self.report_img_path = os.path.join(SCRIPT_DIR, "stock_report_preview.png")
+        self.sprite = QPixmap(self.sprite_path)
 
         self.root_stack = QStackedWidget(self)
         main_box = QVBoxLayout(self)
@@ -239,7 +243,7 @@ class EntrustDashboard(QWidget):
         dash_layout.setContentsMargins(0, 0, 0, 0)
         dash_layout.setSpacing(0)
 
-        # Top Navigation Bar
+        # Top Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
@@ -333,15 +337,15 @@ class EntrustDashboard(QWidget):
         tool_layout.addStretch()
         dash_layout.addWidget(self.tool_bar)
 
-        # Main Workspace Views Stack
+        # Content Workspaces Stack
         self.content_stack = QStackedWidget()
         self.content_stack.setStyleSheet("background-color: #FFFFFF;")
 
-        # Home Sub-tab Workspaces
+        # Home Pages
         self.home_cred_page = HomeCredentialsWidget(self.sprite)
         self.home_reports_page = HomeReportsWidget(self.sprite, self.report_img_path)
 
-        # Design Sub-tab Workspaces
+        # Design Pages
         self.design_cred_page = QLabel("Design > Credential Designs Workspace")
         self.design_cred_page.setAlignment(Qt.AlignCenter)
         self.design_workflows_page = QLabel("Design > Workflows Workspace")
@@ -351,7 +355,7 @@ class EntrustDashboard(QWidget):
         self.design_field_conn_page = QLabel("Design > Field Connections Workspace")
         self.design_field_conn_page.setAlignment(Qt.AlignCenter)
 
-        # Printer Queues Workspace
+        # Printer Queue Page
         self.printer_queues_page = QLabel("Printer Queues Workspace Content")
         self.printer_queues_page.setAlignment(Qt.AlignCenter)
 
@@ -365,7 +369,7 @@ class EntrustDashboard(QWidget):
 
         dash_layout.addWidget(self.content_stack, stretch=1)
 
-        # Footer Status Bar
+        # Status Bar
         self.status_bar = QFrame()
         self.status_bar.setFixedHeight(32)
         self.status_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
@@ -396,7 +400,7 @@ class EntrustDashboard(QWidget):
         self.sub_tab_buttons = []
         self.select_home_nav()
 
-    # Dynamic Navigation Logic
+    # Navigation Methods
     def update_top_nav_styles(self, active_nav):
         active_style = "border: none; color: #7A0A8A; font-weight: bold; font-size: 10pt; background: transparent;"
         inactive_style = "border: none; color: #222222; font-weight: bold; font-size: 10pt; background: transparent;"
@@ -427,7 +431,7 @@ class EntrustDashboard(QWidget):
             self.sub_tabs_layout.addWidget(btn)
             self.sub_tab_buttons.append(btn)
 
-        self.activate_sub_tab(0, self.sub_tab_buttons[0])
+        self.activate_sub_tab(1, self.sub_tab_buttons[1]) # Default Home > Reports view
 
     def select_design_nav(self):
         self.update_top_nav_styles("Design")
@@ -496,7 +500,7 @@ class EntrustDashboard(QWidget):
 
 
 # -------------------------------------------------------------
-# 7. Main Window
+# 7. Main Window Entry
 # -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
