@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QSize, QRectF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QBrush
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QSplitter
+    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
 )
 
 # -------------------------------------------------------------
@@ -72,13 +72,12 @@ def draw_bar_chart_preview(width=110, height=55):
 
 
 # -------------------------------------------------------------
-# Toolbar with Precise Full-width Horizontal Bottom Border Line
+# View Toggle Toolbar Component
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_list_active=False):
         super().__init__()
         self.setFixedHeight(32)
-        # အောက်ခြေတစ်လျှောက် မီးခိုးရောင်မျဉ်း (Horizontal Line) တိကျစွာ ရေးဆွဲခြင်း
         self.setStyleSheet("""
             QFrame {
                 background-color: #FFFFFF;
@@ -93,29 +92,26 @@ class ViewToggleToolbar(QFrame):
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(26, 22)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
-        self.grid_btn.setIcon(draw_grid_icon(12, "#374151"))
+        self.grid_btn.setIcon(draw_grid_icon(12, "#FFFFFF" if not is_list_active else "#374151"))
         self.grid_btn.setIconSize(QSize(12, 12))
-        self.grid_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #D1D5DB;
-                border: 1px solid #9CA3AF;
-                border-radius: 1px;
-            }
-        """)
 
         self.list_btn = QPushButton()
         self.list_btn.setFixedSize(26, 22)
         self.list_btn.setCursor(Qt.PointingHandCursor)
-        self.list_btn.setIcon(draw_list_icon(12, "#4B5563"))
+        self.list_btn.setIcon(draw_list_icon(12, "#FFFFFF" if is_list_active else "#374151"))
         self.list_btn.setIconSize(QSize(12, 12))
-        self.list_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #E5E7EB;
-                border: 1px solid #D1D5DB;
-                border-radius: 1px;
-            }
-            QPushButton:hover { background-color: #D1D5DB; }
-        """)
+
+        if is_list_active:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #CBD5E1; border: 1px solid #94A3B8; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #334155; border: 1px solid #1E293B; border-radius: 1px; }")
+        else:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #334155; border: 1px solid #1E293B; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #CBD5E1; border: 1px solid #94A3B8; border-radius: 1px; }")
+
+        if on_grid_click:
+            self.grid_btn.clicked.connect(on_grid_click)
+        if on_list_click:
+            self.list_btn.clicked.connect(on_list_click)
 
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
@@ -162,6 +158,126 @@ class ReportCardWidget(QFrame):
         layout.addWidget(run_btn, alignment=Qt.AlignRight)
 
 
+# -------------------------------------------------------------
+# Exact Credentials List View (Table Widget & Pagination Bar)
+# -------------------------------------------------------------
+class CredentialsListViewWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet("background-color: #FFFFFF;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Table Component
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setRowCount(1)
+        self.table.setHorizontalHeaderLabels([
+            "Credential Design Name", 
+            "▲  Workflow Name", 
+            "⬍  Workflow Notes", 
+            "⬍  Actions"
+        ])
+
+        # Table Styles (Exact Font, Gray Borders, White Background)
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: #FFFFFF;
+                border: none;
+                gridline-color: #E5E7EB;
+            }
+            QHeaderView::section {
+                background-color: #FFFFFF;
+                color: #374151;
+                font-family: Arial;
+                font-size: 8.5pt;
+                padding: 6px;
+                border: none;
+                border-bottom: 1px solid #D1D5DB;
+                border-right: 1px solid #F3F4F6;
+                text-align: left;
+            }
+        """)
+
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
+        self.table.setColumnWidth(3, 100)
+
+        # "No data is available" Empty Table Row
+        empty_item = QTableWidgetItem("No data is available.")
+        empty_item.setTextAlignment(Qt.AlignCenter)
+        empty_item.setFlags(Qt.NoItemFlags)
+        
+        self.table.setItem(0, 0, empty_item)
+        self.table.setSpan(0, 0, 1, 4)
+        self.table.setRowHeight(0, 45)
+        self.table.verticalHeader().setVisible(False)
+
+        layout.addWidget(self.table, stretch=1)
+
+        # Pagination & Entries Bar
+        pagination_bar = QFrame()
+        pagination_bar.setFixedHeight(34)
+        pagination_bar.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F3F4F6, stop:1 #E5E7EB);
+                border-top: 1px solid #D1D5DB;
+                border-bottom: 1px solid #D1D5DB;
+            }
+        """)
+        p_layout = QHBoxLayout(pagination_bar)
+        p_layout.setContentsMargins(12, 0, 12, 0)
+
+        entries_lbl = QLabel("Showing 0 - 0 of 0 entries")
+        entries_lbl.setFont(QFont("Arial", 8.5))
+        entries_lbl.setStyleSheet("color: #374151; border: none; background: transparent;")
+
+        prev_btn = QPushButton("Previous")
+        prev_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+        prev_btn.setStyleSheet("border: none; color: #6B7280; background: transparent;")
+
+        next_btn = QPushButton("Next")
+        next_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+        next_btn.setStyleSheet("border: none; color: #6B7280; background: transparent; margin-left: 10px;")
+
+        p_layout.addWidget(entries_lbl)
+        p_layout.addStretch()
+        p_layout.addWidget(prev_btn)
+        p_layout.addWidget(next_btn)
+
+        layout.addWidget(pagination_bar)
+
+        # Horizontal Scrollbar Simulation Area
+        scroll_area = QWidget()
+        scroll_area.setFixedHeight(30)
+        scroll_layout = QHBoxLayout(scroll_area)
+        scroll_layout.setContentsMargins(4, 4, 4, 4)
+        
+        fake_scrollbar = QScrollBar(Qt.Horizontal)
+        fake_scrollbar.setStyleSheet("""
+            QScrollBar:horizontal {
+                height: 12px;
+                background: #F3F4F6;
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #9CA3AF;
+                border-radius: 5px;
+                min-width: 200px;
+            }
+        """)
+        scroll_layout.addWidget(fake_scrollbar)
+        layout.addWidget(scroll_area)
+
+
+# -------------------------------------------------------------
+# Credentials Main Workspace Widget (Supporting Grid & List)
+# -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -169,16 +285,49 @@ class HomeCredentialsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.toolbar = ViewToggleToolbar()
+        # Header View Toggle Bar
+        self.toolbar = ViewToggleToolbar(
+            on_grid_click=self.show_grid_view,
+            on_list_click=self.show_list_view,
+            is_list_active=True
+        )
         layout.addWidget(self.toolbar)
 
-        content = QWidget()
-        c_layout = QVBoxLayout(content)
-        c_layout.setContentsMargins(15, 15, 15, 15)
-        lbl = QLabel("Credentials Workspace Area")
-        lbl.setStyleSheet("color: #4B5568; font-size: 10pt;")
-        c_layout.addWidget(lbl)
-        layout.addWidget(content, stretch=1)
+        # Stack for Grid / List Switch
+        self.view_stack = QStackedWidget()
+        
+        # Grid View (Empty Area)
+        grid_view = QWidget()
+        g_layout = QVBoxLayout(grid_view)
+        g_layout.setContentsMargins(15, 15, 15, 15)
+        g_lbl = QLabel("Credentials Grid Workspace Area")
+        g_lbl.setStyleSheet("color: #4B5568; font-size: 10pt;")
+        g_layout.addWidget(g_lbl)
+        
+        # List View Widget
+        self.list_view = CredentialsListViewWidget()
+
+        self.view_stack.addWidget(grid_view)
+        self.view_stack.addWidget(self.list_view)
+        
+        # Default active view: List View (as per user image)
+        self.view_stack.setCurrentIndex(1)
+
+        layout.addWidget(self.view_stack, stretch=1)
+
+    def show_grid_view(self):
+        self.view_stack.setCurrentIndex(0)
+        self.toolbar.grid_btn.setStyleSheet("QPushButton { background-color: #334155; border: 1px solid #1E293B; border-radius: 1px; }")
+        self.toolbar.list_btn.setStyleSheet("QPushButton { background-color: #CBD5E1; border: 1px solid #94A3B8; border-radius: 1px; }")
+        self.toolbar.grid_btn.setIcon(draw_grid_icon(12, "#FFFFFF"))
+        self.toolbar.list_btn.setIcon(draw_list_icon(12, "#374151"))
+
+    def show_list_view(self):
+        self.view_stack.setCurrentIndex(1)
+        self.toolbar.grid_btn.setStyleSheet("QPushButton { background-color: #CBD5E1; border: 1px solid #94A3B8; border-radius: 1px; }")
+        self.toolbar.list_btn.setStyleSheet("QPushButton { background-color: #334155; border: 1px solid #1E293B; border-radius: 1px; }")
+        self.toolbar.grid_btn.setIcon(draw_grid_icon(12, "#374151"))
+        self.toolbar.list_btn.setIcon(draw_list_icon(12, "#FFFFFF"))
 
 
 class HomeReportsWidget(QWidget):
@@ -208,7 +357,7 @@ class HomeReportsWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Main Dashboard
+# Main Entrust Dashboard
 # -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
@@ -265,6 +414,11 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(queue_btn)
 
         top_layout.addStretch()
+
+        login_info = QLabel("admin ▾  ⚙  🔔2  ❓  ℹ")
+        login_info.setStyleSheet("color: #374151; font-size: 9pt; font-weight: bold;")
+        top_layout.addWidget(login_info)
+
         main_layout.addWidget(top_bar)
 
         # Purple Header Navigation
@@ -290,13 +444,9 @@ class EntrustDashboard(QWidget):
         purple_layout.addWidget(self.reports_tab)
         purple_layout.addStretch()
 
-        login_info = QLabel("Last Login at Wed Sep 09 14:14:30 MMT 2026 from IP 192.168.56.1   admin ▾  ⚙  🔔2  ❓  ℹ")
-        login_info.setStyleSheet("color: #E9D5FF; font-size: 8pt;")
-        purple_layout.addWidget(login_info)
-
         main_layout.addWidget(purple_bar)
 
-        # Body Layout Area (Includes Vertical Right Border)
+        # Body Layout Area (Workspace + Right Panel Line)
         body_container = QWidget()
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
@@ -311,7 +461,7 @@ class EntrustDashboard(QWidget):
 
         body_layout.addWidget(self.content_stack, stretch=1)
 
-        # Main Workspace Right Vertical Border Line
+        # Right Vertical Line Divider
         right_panel_line = QFrame()
         right_panel_line.setFixedWidth(200)
         right_panel_line.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FBFBFB;")
@@ -319,9 +469,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(body_container, stretch=1)
 
-        # -------------------------------------------------------------
-        # Bottom Status Bar with Vertical Line Divider for Printer Queue Status
-        # -------------------------------------------------------------
+        # Bottom Status Bar
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
         status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
@@ -331,13 +479,11 @@ class EntrustDashboard(QWidget):
 
         status_layout.addStretch()
 
-        # Vertical Border Line (Printer Queue Status ၏ ဘယ်ဘက်ဒေါင်လိုက်မျဉ်း)
         v_line = QFrame()
         v_line.setFrameShape(QFrame.VLine)
         v_line.setStyleSheet("border-left: 1px solid #D1D5DB; background: transparent;")
         status_layout.addWidget(v_line)
 
-        # Printer Queue Status Button Box
         queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
         queue_status_btn.setFont(QFont("Arial", 8, QFont.Bold))
         queue_status_btn.setFixedHeight(32)
@@ -355,7 +501,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(status_bar)
 
-        self.show_reports_page()
+        self.show_cred_page()
 
     def show_cred_page(self):
         self.content_stack.setCurrentIndex(0)
