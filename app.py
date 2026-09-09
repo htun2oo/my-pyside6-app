@@ -1,23 +1,30 @@
 import sys
 import os
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget
 )
 
-# Root Directory & Assets Paths
+# -------------------------------------------------------------
+# 1. Path Setup (Folder အမည် အမှန်အတိုင်း ချိတ်ဆက်ခြင်း)
+# -------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
 
-GRID_ICON_PATH = os.path.join(ICONS_DIR, "grid_icon.png")
-LIST_ICON_PATH = os.path.join(ICONS_DIR, "list_icon.png")
-REPORT_PREVIEW_PATH = os.path.join(ICONS_DIR, "report_preview.png")
+# သင်၏ Folder အမည် "assests" သို့မဟုတ် "assets" တွင် ရှိနေပါက တိုက်ရိုက် စစ်ဆေးရန်
+ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
+if not os.path.exists(ICONS_DIR):
+    ICONS_DIR = os.path.join(BASE_DIR, "assests", "icons") # Folder အမည်မှားရိုက်ထားပါက စစ်ပေးမည်
+
+# PNG File Path များ
+GRID_ICON_PATH = os.path.join(ICONS_DIR, "grid.png")
+LIST_ICON_PATH = os.path.join(ICONS_DIR, "list.png")
+REPORT_PREVIEW_PATH = os.path.join(ICONS_DIR, "report.png")
 
 
 # -------------------------------------------------------------
-# 1. View Mode Toggle Toolbar Component
+# 2. View Toggle Toolbar (Icon Size & Path ပြင်ဆင်ပြီး)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self):
@@ -29,12 +36,14 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(8, 0, 8, 0)
         layout.setSpacing(2)
 
-        # Grid Button (Active Dark Style)
+        # Grid Button
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(28, 26)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
+        
         if os.path.exists(GRID_ICON_PATH):
             self.grid_btn.setIcon(QIcon(GRID_ICON_PATH))
+            self.grid_btn.setIconSize(QSize(18, 18))  # Icon အရွယ်အစား သတ်မှတ်ချက်
         else:
             self.grid_btn.setText("▦")
 
@@ -46,12 +55,14 @@ class ViewToggleToolbar(QFrame):
             }
         """)
 
-        # List Button (Inactive Grey Style)
+        # List Button
         self.list_btn = QPushButton()
         self.list_btn.setFixedSize(28, 26)
         self.list_btn.setCursor(Qt.PointingHandCursor)
+        
         if os.path.exists(LIST_ICON_PATH):
             self.list_btn.setIcon(QIcon(LIST_ICON_PATH))
+            self.list_btn.setIconSize(QSize(18, 18))  # Icon အရွယ်အစား သတ်မှတ်ချက်
         else:
             self.list_btn.setText("≡")
 
@@ -70,7 +81,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# 2. Report Card Widget Component
+# 3. Report Card Widget
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
     def __init__(self, title):
@@ -117,7 +128,7 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 3. Workspaces Layout
+# 4. Main App Layout & Window
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
@@ -166,9 +177,6 @@ class HomeReportsWidget(QWidget):
         layout.addWidget(content_area, stretch=1)
 
 
-# -------------------------------------------------------------
-# 4. Main Dashboard
-# -------------------------------------------------------------
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
@@ -176,7 +184,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Header Bar
+        # Top Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
@@ -277,7 +285,7 @@ class EntrustDashboard(QWidget):
         status_layout.addWidget(queue_btn)
         main_layout.addWidget(status_bar)
 
-        self.show_cred_page()
+        self.show_reports_page()
 
     def show_cred_page(self):
         self.content_stack.setCurrentIndex(0)
