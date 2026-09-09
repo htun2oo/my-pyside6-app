@@ -1,30 +1,58 @@
 import sys
 import os
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QFont, QPixmap, QIcon
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget
 )
 
 # -------------------------------------------------------------
-# 1. Path Setup (Folder အမည် အမှန်အတိုင်း ချိတ်ဆက်ခြင်း)
+# 1. GitHub Actions / PyInstaller Compatible Path Resolver
 # -------------------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def get_resource_path(relative_path):
+    """ PyInstaller / Executable build သောအခါ temp path ကို တိကျစွာ ရယူပေးသည့် Function """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
 
-# သင်၏ Folder အမည် "assests" သို့မဟုတ် "assets" တွင် ရှိနေပါက တိုက်ရိုက် စစ်ဆေးရန်
-ICONS_DIR = os.path.join(BASE_DIR, "assets", "icons")
-if not os.path.exists(ICONS_DIR):
-    ICONS_DIR = os.path.join(BASE_DIR, "assests", "icons") # Folder အမည်မှားရိုက်ထားပါက စစ်ပေးမည်
-
-# PNG File Path များ
-GRID_ICON_PATH = os.path.join(ICONS_DIR, "grid.png")
-LIST_ICON_PATH = os.path.join(ICONS_DIR, "list.png")
-REPORT_PREVIEW_PATH = os.path.join(ICONS_DIR, "report.png")
+GRID_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "grid.png"))
+LIST_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "list.png"))
+REPORT_PREVIEW_PATH = get_resource_path(os.path.join("assets", "icons", "report.png"))
 
 
 # -------------------------------------------------------------
-# 2. View Toggle Toolbar (Icon Size & Path ပြင်ဆင်ပြီး)
+# 2. Vector Icon Fallbacks (Image File မရှိပါက ပေါ်လာစေရန်)
+# -------------------------------------------------------------
+def draw_fallback_grid_icon(color="#2F3E46"):
+    pix = QPixmap(16, 16)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    p.setBrush(QColor(color))
+    p.setPen(Qt.NoPen)
+    p.drawRect(1, 1, 6, 6)
+    p.drawRect(9, 1, 6, 6)
+    p.drawRect(1, 9, 6, 6)
+    p.drawRect(9, 9, 6, 6)
+    p.end()
+    return QIcon(pix)
+
+def draw_fallback_list_icon(color="#2D3748"):
+    pix = QPixmap(16, 16)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    pen = QPen(QColor(color), 2)
+    pen.setCapStyle(Qt.RoundCap)
+    p.setPen(pen)
+    p.drawLine(2, 3, 14, 3)
+    p.drawLine(2, 8, 14, 8)
+    p.drawLine(2, 13, 14, 13)
+    p.end()
+    return QIcon(pix)
+
+
+# -------------------------------------------------------------
+# 3. View Toggle Toolbar
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self):
@@ -34,7 +62,7 @@ class ViewToggleToolbar(QFrame):
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(8, 0, 8, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(4)
 
         # Grid Button
         self.grid_btn = QPushButton()
@@ -43,9 +71,9 @@ class ViewToggleToolbar(QFrame):
         
         if os.path.exists(GRID_ICON_PATH):
             self.grid_btn.setIcon(QIcon(GRID_ICON_PATH))
-            self.grid_btn.setIconSize(QSize(18, 18))  # Icon အရွယ်အစား သတ်မှတ်ချက်
+            self.grid_btn.setIconSize(QSize(16, 16))
         else:
-            self.grid_btn.setText("▦")
+            self.grid_btn.setIcon(draw_fallback_grid_icon("#FFFFFF"))
 
         self.grid_btn.setStyleSheet("""
             QPushButton {
@@ -62,9 +90,9 @@ class ViewToggleToolbar(QFrame):
         
         if os.path.exists(LIST_ICON_PATH):
             self.list_btn.setIcon(QIcon(LIST_ICON_PATH))
-            self.list_btn.setIconSize(QSize(18, 18))  # Icon အရွယ်အစား သတ်မှတ်ချက်
+            self.list_btn.setIconSize(QSize(16, 16))
         else:
-            self.list_btn.setText("≡")
+            self.list_btn.setIcon(draw_fallback_list_icon("#2D3748"))
 
         self.list_btn.setStyleSheet("""
             QPushButton {
@@ -81,7 +109,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# 3. Report Card Widget
+# 4. Report Card Component
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
     def __init__(self, title):
@@ -128,7 +156,7 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 4. Main App Layout & Window
+# 5. Workspaces & Main Window
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
@@ -184,7 +212,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Top Header Bar
+        # Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
