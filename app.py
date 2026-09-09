@@ -1,58 +1,29 @@
 import sys
 import os
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen
+from PySide6.QtCore import Qt, QSize, QDir, QFileInfo
+from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget
 )
 
 # -------------------------------------------------------------
-# 1. GitHub Actions / PyInstaller Compatible Path Resolver
+# 1. Desktop & PyInstaller Compatible Resource Path
 # -------------------------------------------------------------
 def get_resource_path(relative_path):
-    """ PyInstaller / Executable build သောအခါ temp path ကို တိကျစွာ ရယူပေးသည့် Function """
+    """ Get absolute path to resource, works for dev and for PyInstaller """
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
+# Asset Paths
 GRID_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "grid.png"))
 LIST_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "list.png"))
 REPORT_PREVIEW_PATH = get_resource_path(os.path.join("assets", "icons", "report.png"))
 
 
 # -------------------------------------------------------------
-# 2. Vector Icon Fallbacks (Image File မရှိပါက ပေါ်လာစေရန်)
-# -------------------------------------------------------------
-def draw_fallback_grid_icon(color="#2F3E46"):
-    pix = QPixmap(16, 16)
-    pix.fill(Qt.transparent)
-    p = QPainter(pix)
-    p.setBrush(QColor(color))
-    p.setPen(Qt.NoPen)
-    p.drawRect(1, 1, 6, 6)
-    p.drawRect(9, 1, 6, 6)
-    p.drawRect(1, 9, 6, 6)
-    p.drawRect(9, 9, 6, 6)
-    p.end()
-    return QIcon(pix)
-
-def draw_fallback_list_icon(color="#2D3748"):
-    pix = QPixmap(16, 16)
-    pix.fill(Qt.transparent)
-    p = QPainter(pix)
-    pen = QPen(QColor(color), 2)
-    pen.setCapStyle(Qt.RoundCap)
-    p.setPen(pen)
-    p.drawLine(2, 3, 14, 3)
-    p.drawLine(2, 8, 14, 8)
-    p.drawLine(2, 13, 14, 13)
-    p.end()
-    return QIcon(pix)
-
-
-# -------------------------------------------------------------
-# 3. View Toggle Toolbar
+# 2. View Toggle Toolbar
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self):
@@ -73,7 +44,7 @@ class ViewToggleToolbar(QFrame):
             self.grid_btn.setIcon(QIcon(GRID_ICON_PATH))
             self.grid_btn.setIconSize(QSize(16, 16))
         else:
-            self.grid_btn.setIcon(draw_fallback_grid_icon("#FFFFFF"))
+            self.grid_btn.setText("▦")
 
         self.grid_btn.setStyleSheet("""
             QPushButton {
@@ -92,7 +63,7 @@ class ViewToggleToolbar(QFrame):
             self.list_btn.setIcon(QIcon(LIST_ICON_PATH))
             self.list_btn.setIconSize(QSize(16, 16))
         else:
-            self.list_btn.setIcon(draw_fallback_list_icon("#2D3748"))
+            self.list_btn.setText("≡")
 
         self.list_btn.setStyleSheet("""
             QPushButton {
@@ -109,7 +80,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# 4. Report Card Component
+# 3. Report Card Widget
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
     def __init__(self, title):
@@ -156,7 +127,7 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 5. Workspaces & Main Window
+# 4. Main App Components
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
@@ -212,7 +183,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Header Bar
+        # Top Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(54)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #DCDCDC;")
@@ -281,13 +252,13 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(purple_bar)
 
-        # Workspace Stack
+        # Stack Pages
         self.content_stack = QStackedWidget()
         self.cred_page = HomeCredentialsWidget()
         self.reports_page = HomeReportsWidget()
 
-        self.content_stack.addWidget(self.cred_page)    # Index 0
-        self.content_stack.addWidget(self.reports_page) # Index 1
+        self.content_stack.addWidget(self.cred_page)
+        self.content_stack.addWidget(self.reports_page)
 
         main_layout.addWidget(self.content_stack, stretch=1)
 
