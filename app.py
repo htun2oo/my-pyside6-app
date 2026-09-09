@@ -1,13 +1,13 @@
 import sys
-from PySide6.QtCore import Qt, QSize, QRectF
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QBrush, QPolygonF
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
 )
 
 # -------------------------------------------------------------
-# Icons & Background Drawings
+# Custom Icon Drawings
 # -------------------------------------------------------------
 def draw_grid_icon(size=14, color="#1E293B"):
     pixmap = QPixmap(size, size)
@@ -41,7 +41,7 @@ def draw_list_icon(size=14, color="#1E293B"):
 # View Toggle Toolbar Component
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_list_active=True):
         super().__init__()
         self.setFixedHeight(32)
         self.setStyleSheet("""
@@ -66,12 +66,12 @@ class ViewToggleToolbar(QFrame):
         self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
         self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
 
-        if is_grid_active:
-            self.grid_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
-            self.list_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
-        else:
+        if is_list_active:
             self.grid_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
             self.list_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
+        else:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #D1D5DB; border: 1px solid #6B7280; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
 
         if on_grid_click:
             self.grid_btn.clicked.connect(on_grid_click)
@@ -84,7 +84,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credentials List Table View Widget
+# Credentials List Table View Widget (Exact Layout matching Image 2)
 # -------------------------------------------------------------
 class CredentialsListViewWidget(QWidget):
     def __init__(self):
@@ -94,10 +94,11 @@ class CredentialsListViewWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Table Control
+        # 1. Table Control
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setRowCount(1)
+        self.table.setFixedHeight(75)  # Set height for Header + Single "No data" Row
         self.table.setHorizontalHeaderLabels([
             "Credential Design Name", 
             "▲  Workflow Name", 
@@ -143,9 +144,9 @@ class CredentialsListViewWidget(QWidget):
         self.table.setRowHeight(0, 42)
         self.table.verticalHeader().setVisible(False)
 
-        layout.addWidget(self.table, stretch=1)
+        layout.addWidget(self.table)
 
-        # Pagination Container
+        # 2. Pagination Container (Positioned directly below the table row as shown in image 2)
         pagination_bar = QFrame()
         pagination_bar.setFixedHeight(34)
         pagination_bar.setStyleSheet("""
@@ -177,7 +178,12 @@ class CredentialsListViewWidget(QWidget):
 
         layout.addWidget(pagination_bar)
 
-        # Horizontal Scrollbar
+        # 3. Main Blank Workspace Area (Occupies the middle remaining space)
+        workspace_area = QWidget()
+        workspace_area.setStyleSheet("background-color: #FFFFFF;")
+        layout.addWidget(workspace_area, stretch=1)
+
+        # 4. Horizontal Scrollbar Section (Placed at the bottom of list view)
         scroll_container = QWidget()
         scroll_container.setFixedHeight(28)
         scroll_layout = QHBoxLayout(scroll_container)
@@ -226,17 +232,15 @@ class HomeCredentialsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Toolbar
         self.toolbar = ViewToggleToolbar(
             on_grid_click=self.show_grid_view,
             on_list_click=self.show_list_view,
-            is_grid_active=True
+            is_list_active=True
         )
         layout.addWidget(self.toolbar)
 
         self.view_stack = QStackedWidget()
         
-        # Grid View (Completely Blank Workspace as requested in image 2)
         grid_view = QWidget()
         grid_view.setStyleSheet("background-color: #FFFFFF;")
         
@@ -245,8 +249,8 @@ class HomeCredentialsWidget(QWidget):
         self.view_stack.addWidget(grid_view)
         self.view_stack.addWidget(self.list_view)
         
-        # Default Grid Active view (Matching image 2)
-        self.view_stack.setCurrentIndex(0)
+        # List View Active by default
+        self.view_stack.setCurrentIndex(1)
 
         layout.addWidget(self.view_stack, stretch=1)
 
@@ -268,7 +272,7 @@ class HomeReportsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.toolbar = ViewToggleToolbar(is_grid_active=False)
+        self.toolbar = ViewToggleToolbar(is_list_active=False)
         layout.addWidget(self.toolbar)
 
         content = QWidget()
@@ -287,7 +291,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top White Header Bar
+        # 1. Top Header Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(44)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
@@ -341,7 +345,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Purple Header Navigation Bar + Last Login Info Text Added
+        # 2. Purple Header Navigation Bar
         purple_bar = QFrame()
         purple_bar.setFixedHeight(34)
         purple_bar.setStyleSheet("background-color: #7B0082;")
@@ -365,15 +369,14 @@ class EntrustDashboard(QWidget):
         purple_layout.addWidget(self.reports_tab)
         purple_layout.addStretch()
 
-        # Last Login text (Corrected according to circle 1 in image)
-        last_login_lbl = QLabel("Last Login at Tue Sep 08 01:41:31 MMT 2026 from IP 192.168.99.109")
+        last_login_lbl = QLabel("Last Login at Wed Sep 09 15:11:29 MMT 2026 from IP 192.168.56.1")
         last_login_lbl.setFont(QFont("Arial", 8))
         last_login_lbl.setStyleSheet("color: #D8B4FE; background: transparent; border: none; margin-right: 15px;")
         purple_layout.addWidget(last_login_lbl)
 
         main_layout.addWidget(purple_bar)
 
-        # 3. Main Workspace & Right Panel Layout Alignment
+        # 3. Main Body Container
         body_container = QWidget()
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
@@ -388,7 +391,7 @@ class EntrustDashboard(QWidget):
 
         body_layout.addWidget(self.content_stack, stretch=1)
 
-        # Right Vertical Panel (Width set to match Printer Queue Status button perfectly)
+        # Right Vertical Panel
         right_panel_line = QFrame()
         right_panel_line.setFixedWidth(200)
         right_panel_line.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FFFFFF;")
@@ -396,7 +399,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(body_container, stretch=1)
 
-        # 4. Bottom Status Bar with Perfectly Aligned Printer Queue Status Button
+        # 4. Bottom Status Bar
         status_bar = QFrame()
         status_bar.setFixedHeight(32)
         status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
@@ -409,7 +412,7 @@ class EntrustDashboard(QWidget):
         queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
         queue_status_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
         queue_status_btn.setFixedHeight(32)
-        queue_status_btn.setFixedWidth(200)  # Width matching the right panel divider exactly
+        queue_status_btn.setFixedWidth(200)
         queue_status_btn.setCursor(Qt.PointingHandCursor)
         queue_status_btn.setStyleSheet("""
             QPushButton {
