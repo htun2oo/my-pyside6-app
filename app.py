@@ -1,29 +1,45 @@
 import sys
 import os
-from PySide6.QtCore import Qt, QSize, QDir, QFileInfo
-from PySide6.QtGui import QFont, QPixmap, QIcon
+from PySide6.QtCore import Qt, QSize, QByteArray
+from PySide6.QtGui import QFont, QPixmap, QIcon, QImage
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget
 )
 
 # -------------------------------------------------------------
-# 1. Desktop & PyInstaller Compatible Resource Path
+# Inline Vector/Base64 Icon Data (External File မလိုဘဲ Icon ဖော်ပြရန်)
 # -------------------------------------------------------------
-def get_resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
+GRID_ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="white">
+<rect x="1" y="1" width="6" height="6" rx="1"/>
+<rect x="9" y="1" width="6" height="6" rx="1"/>
+<rect x="1" y="9" width="6" height="6" rx="1"/>
+<rect x="9" y="9" width="6" height="6" rx="1"/>
+</svg>"""
 
-# Asset Paths
-GRID_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "grid.png"))
-LIST_ICON_PATH = get_resource_path(os.path.join("assets", "icons", "list.png"))
-REPORT_PREVIEW_PATH = get_resource_path(os.path.join("assets", "icons", "report.png"))
+LIST_ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#4A5568">
+<rect x="1" y="2" width="14" height="2" rx="1"/>
+<rect x="1" y="7" width="14" height="2" rx="1"/>
+<rect x="1" y="12" width="14" height="2" rx="1"/>
+</svg>"""
+
+REPORT_DOC_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="#E2E8F0">
+<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+</svg>"""
+
+def get_svg_icon(svg_str):
+    pixmap = QPixmap()
+    pixmap.loadFromData(QByteArray(svg_str.encode('utf-8')))
+    return QIcon(pixmap)
+
+def get_svg_pixmap(svg_str):
+    pixmap = QPixmap()
+    pixmap.loadFromData(QByteArray(svg_str.encode('utf-8')))
+    return pixmap
 
 
 # -------------------------------------------------------------
-# 2. View Toggle Toolbar
+# 1. View Toggle Toolbar
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self):
@@ -39,12 +55,8 @@ class ViewToggleToolbar(QFrame):
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(28, 26)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
-        
-        if os.path.exists(GRID_ICON_PATH):
-            self.grid_btn.setIcon(QIcon(GRID_ICON_PATH))
-            self.grid_btn.setIconSize(QSize(16, 16))
-        else:
-            self.grid_btn.setText("▦")
+        self.grid_btn.setIcon(get_svg_icon(GRID_ICON_SVG))
+        self.grid_btn.setIconSize(QSize(14, 14))
 
         self.grid_btn.setStyleSheet("""
             QPushButton {
@@ -58,12 +70,8 @@ class ViewToggleToolbar(QFrame):
         self.list_btn = QPushButton()
         self.list_btn.setFixedSize(28, 26)
         self.list_btn.setCursor(Qt.PointingHandCursor)
-        
-        if os.path.exists(LIST_ICON_PATH):
-            self.list_btn.setIcon(QIcon(LIST_ICON_PATH))
-            self.list_btn.setIconSize(QSize(16, 16))
-        else:
-            self.list_btn.setText("≡")
+        self.list_btn.setIcon(get_svg_icon(LIST_ICON_SVG))
+        self.list_btn.setIconSize(QSize(14, 14))
 
         self.list_btn.setStyleSheet("""
             QPushButton {
@@ -80,7 +88,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# 3. Report Card Widget
+# 2. Report Card Widget
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
     def __init__(self, title):
@@ -90,19 +98,13 @@ class ReportCardWidget(QFrame):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 8)
-        layout.setSpacing(6)
+        layout.setSpacing(4)
 
         img_lbl = QLabel()
-        img_lbl.setFixedHeight(80)
+        img_lbl.setFixedHeight(75)
         img_lbl.setAlignment(Qt.AlignCenter)
         img_lbl.setStyleSheet("background-color: transparent; border: none;")
-
-        if os.path.exists(REPORT_PREVIEW_PATH):
-            pixmap = QPixmap(REPORT_PREVIEW_PATH)
-            img_lbl.setPixmap(pixmap.scaled(120, 75, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        else:
-            img_lbl.setText("📄\nReport Preview")
-            img_lbl.setStyleSheet("color: white; font-size: 9pt; font-weight: bold;")
+        img_lbl.setPixmap(get_svg_pixmap(REPORT_DOC_SVG))
 
         layout.addWidget(img_lbl)
 
@@ -127,7 +129,7 @@ class ReportCardWidget(QFrame):
 
 
 # -------------------------------------------------------------
-# 4. Main App Components
+# 3. Main Pages & Layout
 # -------------------------------------------------------------
 class HomeCredentialsWidget(QWidget):
     def __init__(self):
@@ -252,7 +254,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(purple_bar)
 
-        # Stack Pages
+        # Content Stack
         self.content_stack = QStackedWidget()
         self.cred_page = HomeCredentialsWidget()
         self.reports_page = HomeReportsWidget()
