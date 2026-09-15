@@ -105,7 +105,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Reports - Grid View Widget (Image 1)
+# Reports - Grid View Widget
 # -------------------------------------------------------------
 class ReportCardWidget(QFrame):
     def __init__(self, title):
@@ -172,7 +172,7 @@ class ReportsGridViewWidget(QWidget):
 
 
 # -------------------------------------------------------------
-# Reports - List View Widget (Image 2)
+# Reports - List View Widget
 # -------------------------------------------------------------
 class ReportsListViewWidget(QWidget):
     def __init__(self):
@@ -503,7 +503,7 @@ class EntrustDashboard(QWidget):
         status_layout.addWidget(queue_status_btn)
         main_layout.addWidget(status_bar)
 
-        # Show Reports Page by Default as requested
+        # Show Reports Page by Default
         self.show_reports_page()
 
     def show_cred_page(self):
