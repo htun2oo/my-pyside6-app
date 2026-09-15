@@ -50,6 +50,9 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(6, 3, 6, 3)
         layout.setSpacing(5)
 
+        # ညာဘက်အစွန်းသို့ ရွှေ့ရန်အတွက် addStretch() ကို ထိပ်ဆုံးသို့ ပြောင်းလိုက်ပါသည်
+        layout.addStretch()
+
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(24, 22)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
@@ -93,8 +96,6 @@ class ViewToggleToolbar(QFrame):
             if on_create_click:
                 self.create_btn.clicked.connect(on_create_click)
             layout.addWidget(self.create_btn)
-
-        layout.addStretch()
 
     def set_active_state(self, is_grid_active):
         if is_grid_active:
@@ -157,7 +158,6 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(logo_text)
         top_layout.addWidget(sub_text)
 
-        # Single Stretch to push Navigation buttons to the Right side (Left of vertical boundary line)
         top_layout.addStretch()
 
         # Main Nav Buttons
