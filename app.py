@@ -38,17 +38,17 @@ def draw_list_icon(size=14, color="#1E293B"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget
+# Reusable Toolbar Widget (With optional Create Button)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
         super().__init__()
         self.setFixedHeight(30)
         self.setStyleSheet("QFrame { background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB; }")
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(6, 3, 6, 3)
-        layout.setSpacing(3)
+        layout.setSpacing(5)
 
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(24, 22)
@@ -70,6 +70,30 @@ class ViewToggleToolbar(QFrame):
 
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
+
+        # "+ Create" Button Implementation
+        if show_create_btn:
+            layout.addSpacing(3)
+            self.create_btn = QPushButton("+ Create")
+            self.create_btn.setFixedHeight(22)
+            self.create_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+            self.create_btn.setCursor(Qt.PointingHandCursor)
+            self.create_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #E5E7EB;
+                    color: #1F2937;
+                    border: 1px solid #9CA3AF;
+                    border-radius: 2px;
+                    padding: 0 8px;
+                }
+                QPushButton:hover {
+                    background-color: #D1D5DB;
+                }
+            """)
+            if on_create_click:
+                self.create_btn.clicked.connect(on_create_click)
+            layout.addWidget(self.create_btn)
+
         layout.addStretch()
 
     def set_active_state(self, is_grid_active):
@@ -85,14 +109,14 @@ class ViewToggleToolbar(QFrame):
 # Placeholder Workspace View
 # -------------------------------------------------------------
 class GenericWorkspace(QWidget):
-    def __init__(self, title_text="Workspace"):
+    def __init__(self, title_text="Workspace", show_create=False):
         super().__init__()
         self.setStyleSheet("background-color: #FFFFFF;")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        toolbar = ViewToggleToolbar(is_grid_active=False)
+        toolbar = ViewToggleToolbar(is_grid_active=False, show_create_btn=show_create)
         layout.addWidget(toolbar)
 
         content = QLabel(f" {title_text} View Content")
@@ -113,7 +137,7 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Bar (Height increased to 48px to prevent text clipping)
+        # 1. Top Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(48)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
@@ -151,7 +175,6 @@ class EntrustDashboard(QWidget):
                 }
             """)
 
-        # Direct navigation actions (No QMenu)
         self.home_nav_btn.clicked.connect(self.switch_to_home_section)
         self.design_nav_btn.clicked.connect(lambda: self.switch_to_design_section(0))
 
@@ -186,17 +209,17 @@ class EntrustDashboard(QWidget):
 
         # Build Home View Stack (Credentials, Reports)
         self.home_stack = QStackedWidget()
-        self.home_credentials_page = GenericWorkspace("Home -> Credentials")
-        self.home_reports_page = GenericWorkspace("Home -> Reports")
+        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False)
+        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Build Design View Stack (Credential Designs, Workflows, Reports, Field Connections)
+        # Build Design View Stack (Credential Designs [with Create Button], Workflows, Reports, Field Connections)
         self.design_stack = QStackedWidget()
-        self.design_cred_page = GenericWorkspace("Design -> Credential Designs")
-        self.design_workflow_page = GenericWorkspace("Design -> Workflows")
-        self.design_reports_page = GenericWorkspace("Design -> Reports")
-        self.design_fields_page = GenericWorkspace("Design -> Field Connections")
+        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
+        self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=False)
+        self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=False)
+        self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=False)
 
         self.design_stack.addWidget(self.design_cred_page)
         self.design_stack.addWidget(self.design_workflow_page)
