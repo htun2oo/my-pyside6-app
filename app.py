@@ -156,7 +156,9 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(logo_hex)
         top_layout.addWidget(logo_text)
         top_layout.addWidget(sub_text)
-        top_layout.addSpacing(30)
+
+        # Left Stretch to push Navigation buttons to Center
+        top_layout.addStretch()
 
         # Main Nav Buttons
         self.home_nav_btn = QPushButton("Home")
@@ -171,7 +173,7 @@ class EntrustDashboard(QWidget):
                     border: none; 
                     color: #1A202C; 
                     background: transparent; 
-                    padding: 2px 8px;
+                    padding: 2px 12px;
                 }
             """)
 
@@ -181,6 +183,8 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(self.home_nav_btn)
         top_layout.addWidget(self.design_nav_btn)
         top_layout.addWidget(self.queue_nav_btn)
+
+        # Right Stretch to keep Navigation buttons perfectly centered
         top_layout.addStretch()
 
         main_layout.addWidget(top_bar)
@@ -283,7 +287,7 @@ class EntrustDashboard(QWidget):
         btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
         btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
 
-        # Add Stretch first to push buttons to the right edge
+        # Push sub-tabs to the right
         self.purple_layout.addStretch()
         self.purple_layout.addWidget(btn_credentials)
         self.purple_layout.addWidget(btn_reports)
@@ -303,7 +307,7 @@ class EntrustDashboard(QWidget):
 
         tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
 
-        # Add Stretch first to push buttons to the right edge
+        # Push sub-tabs to the right
         self.purple_layout.addStretch()
 
         for idx, btn in enumerate(tab_buttons):
