@@ -185,12 +185,12 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Purple Secondary Navigation Bar (Margin left set to 230px to align with Home nav above)
+        # 2. Purple Secondary Navigation Bar
         self.purple_bar = QFrame()
         self.purple_bar.setFixedHeight(34)
         self.purple_bar.setStyleSheet("background-color: #7B0082;")
         self.purple_layout = QHBoxLayout(self.purple_bar)
-        self.purple_layout.setContentsMargins(230, 0, 15, 0)
+        self.purple_layout.setContentsMargins(10, 0, 20, 0)
         self.purple_layout.setSpacing(0)
 
         main_layout.addWidget(self.purple_bar)
@@ -283,9 +283,10 @@ class EntrustDashboard(QWidget):
         btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
         btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
 
+        # Add Stretch first to push buttons to the right edge
+        self.purple_layout.addStretch()
         self.purple_layout.addWidget(btn_credentials)
         self.purple_layout.addWidget(btn_reports)
-        self.purple_layout.addStretch()
 
         # Select first tab by default
         self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
@@ -302,14 +303,15 @@ class EntrustDashboard(QWidget):
 
         tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
 
+        # Add Stretch first to push buttons to the right edge
+        self.purple_layout.addStretch()
+
         for idx, btn in enumerate(tab_buttons):
             btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             btn.setFixedHeight(34)
             btn.setCursor(Qt.PointingHandCursor)
             btn.clicked.connect(lambda _, i=idx: self.set_sub_tab(self.design_stack, i, tab_buttons))
             self.purple_layout.addWidget(btn)
-
-        self.purple_layout.addStretch()
 
         # Select specified sub-tab
         self.set_sub_tab(self.design_stack, target_tab_index, tab_buttons)
