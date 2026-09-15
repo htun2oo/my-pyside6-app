@@ -183,10 +183,6 @@ class EntrustDashboard(QWidget):
         top_layout.addWidget(self.queue_nav_btn)
         top_layout.addStretch()
 
-        user_info = QLabel("admin ▾   ⚙ ▾   🔔²   ❓   ℹ")
-        user_info.setStyleSheet("color: #2D3748; font-size: 8.5pt; font-weight: bold;")
-        top_layout.addWidget(user_info)
-
         main_layout.addWidget(top_bar)
 
         # 2. Purple Secondary Navigation Bar
