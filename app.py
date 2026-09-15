@@ -185,12 +185,12 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Purple Secondary Navigation Bar
+        # 2. Purple Secondary Navigation Bar (Margin left set to 95px to shift sub-tabs right)
         self.purple_bar = QFrame()
         self.purple_bar.setFixedHeight(34)
         self.purple_bar.setStyleSheet("background-color: #7B0082;")
         self.purple_layout = QHBoxLayout(self.purple_bar)
-        self.purple_layout.setContentsMargins(10, 0, 15, 0)
+        self.purple_layout.setContentsMargins(95, 0, 15, 0)
         self.purple_layout.setSpacing(0)
 
         main_layout.addWidget(self.purple_bar)
