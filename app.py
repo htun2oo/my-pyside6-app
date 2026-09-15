@@ -1,230 +1,354 @@
 import sys
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QFont, QPixmap, QIcon
+from PySide6.QtCore import Qt, QRectF
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView
+    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
 )
 
-class EntrustDashboard(QMainWindow):
+# -------------------------------------------------------------
+# Icons and Graphics Helpers
+# -------------------------------------------------------------
+def draw_grid_icon(size=14, color="#1E293B"):
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.transparent)
+    p = QPainter(pixmap)
+    p.setRenderHint(QPainter.Antialiasing, False)
+    p.setBrush(QBrush(QColor(color)))
+    p.setPen(Qt.NoPen)
+    p.drawRect(0, 0, 6, 6)
+    p.drawRect(8, 0, 6, 6)
+    p.drawRect(0, 8, 6, 6)
+    p.drawRect(8, 8, 6, 6)
+    p.end()
+    return QIcon(pixmap)
+
+def draw_list_icon(size=14, color="#1E293B"):
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.transparent)
+    p = QPainter(pixmap)
+    p.setRenderHint(QPainter.Antialiasing, False)
+    p.setBrush(QBrush(QColor(color)))
+    p.setPen(Qt.NoPen)
+    p.drawRect(0, 1, 14, 3)
+    p.drawRect(0, 6, 14, 3)
+    p.drawRect(0, 11, 14, 3)
+    p.end()
+    return QIcon(pixmap)
+
+
+# -------------------------------------------------------------
+# Reusable Toolbar Widget (With optional Create Button)
+# -------------------------------------------------------------
+class ViewToggleToolbar(QFrame):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
+        super().__init__()
+        self.setFixedHeight(30)
+        self.setStyleSheet("QFrame { background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB; }")
+        
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 3, 6, 3)
+        layout.setSpacing(5)
+
+        self.grid_btn = QPushButton()
+        self.grid_btn.setFixedSize(24, 22)
+        self.grid_btn.setCursor(Qt.PointingHandCursor)
+
+        self.list_btn = QPushButton()
+        self.list_btn.setFixedSize(24, 22)
+        self.list_btn.setCursor(Qt.PointingHandCursor)
+
+        self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
+        self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
+
+        self.set_active_state(is_grid_active)
+
+        if on_grid_click:
+            self.grid_btn.clicked.connect(on_grid_click)
+        if on_list_click:
+            self.list_btn.clicked.connect(on_list_click)
+
+        layout.addWidget(self.grid_btn)
+        layout.addWidget(self.list_btn)
+
+        # "+ Create" Button
+        if show_create_btn:
+            layout.addSpacing(3)
+            self.create_btn = QPushButton("+ Create")
+            self.create_btn.setFixedHeight(22)
+            self.create_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+            self.create_btn.setCursor(Qt.PointingHandCursor)
+            self.create_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #E5E7EB;
+                    color: #1F2937;
+                    border: 1px solid #9CA3AF;
+                    border-radius: 2px;
+                    padding: 0 8px;
+                }
+                QPushButton:hover {
+                    background-color: #D1D5DB;
+                }
+            """)
+            if on_create_click:
+                self.create_btn.clicked.connect(on_create_click)
+            layout.addWidget(self.create_btn)
+
+        layout.addStretch()
+
+    def set_active_state(self, is_grid_active):
+        if is_grid_active:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #C5D1DF; border: 1px solid #4B5563; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
+        else:
+            self.grid_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
+            self.list_btn.setStyleSheet("QPushButton { background-color: #C5D1DF; border: 1px solid #4B5563; border-radius: 1px; }")
+
+
+# -------------------------------------------------------------
+# Placeholder Workspace View
+# -------------------------------------------------------------
+class GenericWorkspace(QWidget):
+    def __init__(self, title_text="Workspace", show_create=False):
+        super().__init__()
+        self.setStyleSheet("background-color: #FFFFFF;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        toolbar = ViewToggleToolbar(is_grid_active=False, show_create_btn=show_create)
+        layout.addWidget(toolbar)
+
+        content = QLabel(f" {title_text} View Content")
+        content.setFont(QFont("Arial", 11))
+        content.setStyleSheet("color: #6B7280; padding: 20px;")
+        content.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        layout.addWidget(content, stretch=1)
+
+
+# -------------------------------------------------------------
+# Main Application Dashboard
+# -------------------------------------------------------------
+class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
-        self.resize(1200, 800)
         self.setStyleSheet("background-color: #FFFFFF;")
-
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
-        main_layout = QVBoxLayout(main_widget)
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top White Header Bar
-        header_bar = QFrame()
-        header_bar.setFixedHeight(50)
-        header_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
-        header_layout = QHBoxLayout(header_bar)
-        header_layout.setContentsMargins(15, 0, 15, 0)
-        header_layout.setSpacing(10)
+        # 1. Top Bar
+        top_bar = QFrame()
+        top_bar.setFixedHeight(48)
+        top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
+        top_layout = QHBoxLayout(top_bar)
+        top_layout.setContentsMargins(10, 0, 15, 0)
 
-        logo_label = QLabel("⬡ ENTRUST")
-        logo_label.setFont(QFont("Arial", 14, QFont.Bold))
-        logo_label.setStyleSheet("color: #7B0082;")
-        header_layout.addWidget(logo_label)
+        logo_hex = QLabel("⬡")
+        logo_hex.setStyleSheet("color: #7B0082; font-size: 19px; font-weight: bold;")
+        logo_text = QLabel("ENTRUST")
+        logo_text.setFont(QFont("Arial", 11, QFont.Bold))
+        logo_text.setStyleSheet("color: #2D3748; padding-right: 8px; border-right: 1px solid #D1D5DB;")
 
-        sub_title = QLabel("Adaptive Issuance™\nInstant ID")
-        sub_title.setFont(QFont("Arial", 8))
-        sub_title.setStyleSheet("color: #4B5563;")
-        header_layout.addWidget(sub_title)
+        sub_text = QLabel("Adaptive Issuance™\nInstant ID")
+        sub_text.setFont(QFont("Arial", 7, QFont.Bold))
 
-        header_layout.addStretch()
+        top_layout.addWidget(logo_hex)
+        top_layout.addWidget(logo_text)
+        top_layout.addWidget(sub_text)
 
-        # Navigation Buttons (Now grouped to the right)
-        nav_frame = QFrame()
-        nav_layout = QHBoxLayout(nav_frame)
-        nav_layout.setContentsMargins(0, 0, 0, 0)
-        nav_layout.setSpacing(5)
+        # Single Stretch to push Navigation buttons to the Right side (Left of vertical boundary line)
+        top_layout.addStretch()
 
-        self.home_btn = QPushButton("Home")
-        self.design_btn = QPushButton("Design")
-        self.queues_btn = QPushButton("Printer Queues")
+        # Main Nav Buttons
+        self.home_nav_btn = QPushButton("Home")
+        self.design_nav_btn = QPushButton("Design")
+        self.queue_nav_btn = QPushButton("Printer Queues")
 
-        for btn in [self.home_btn, self.design_btn, self.queues_btn]:
-            btn.setFont(QFont("Arial", 9, QFont.Bold))
+        for btn in [self.home_nav_btn, self.design_nav_btn, self.queue_nav_btn]:
+            btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: transparent;
-                    color: #111827;
-                    border: none;
-                    padding: 8px 12px;
-                }
-                QPushButton:hover {
-                    color: #7B0082;
+                    border: none; 
+                    color: #1A202C; 
+                    background: transparent; 
+                    padding: 2px 12px;
                 }
             """)
-        
-        nav_layout.addWidget(self.home_btn)
-        nav_layout.addWidget(self.design_btn)
-        nav_layout.addWidget(self.queues_btn)
-        
-        # Spacer before buttons effectively moves them to the right edge
-        # BUT user requested them Left of the vertical separator line (the right panel boundary)
-        # In this layout, the Right stretch pushes them against the separator.
-        
-        header_layout.addWidget(nav_frame)
 
-        # Right-side icons (admin dropdown, notifications, help, info)
-        icon_frame = QFrame()
-        icon_layout = QHBoxLayout(icon_frame)
-        icon_layout.setContentsMargins(0, 0, 0, 0)
-        icon_layout.setSpacing(12)
+        self.home_nav_btn.clicked.connect(self.switch_to_home_section)
+        self.design_nav_btn.clicked.connect(lambda: self.switch_to_design_section(0))
 
-        user_label = QLabel("admin")
-        user_label.setStyleSheet("font-weight: bold; color: #374151;")
-        
-        # Simplified icons for demo purposes
-        icons = ["⚙", "🔔", "❓", "ℹ"]
-        for icon_str in icons:
-            lbl = QLabel(icon_str)
-            lbl.setFont(QFont("Arial", 11))
-            lbl.setStyleSheet("color: #4B5563;")
-            icon_layout.addWidget(lbl)
-        
-        icon_layout.insertWidget(0, user_label)
-        header_layout.addWidget(icon_frame)
+        top_layout.addWidget(self.home_nav_btn)
+        top_layout.addWidget(self.design_nav_btn)
+        top_layout.addWidget(self.queue_nav_btn)
 
-        main_layout.addWidget(header_bar)
+        main_layout.addWidget(top_bar)
 
-        # 2. Purple Banner Section
-        purple_banner = QFrame()
-        purple_banner.setFixedHeight(40)
-        purple_banner.setStyleSheet("background-color: #7B0082; border-bottom: 1px solid #D1D5DB;")
-        banner_layout = QHBoxLayout(purple_banner)
-        banner_layout.setContentsMargins(15, 0, 15, 0)
-        banner_layout.setSpacing(10)
+        # 2. Purple Secondary Navigation Bar
+        self.purple_bar = QFrame()
+        self.purple_bar.setFixedHeight(34)
+        self.purple_bar.setStyleSheet("background-color: #7B0082;")
+        self.purple_layout = QHBoxLayout(self.purple_bar)
+        self.purple_layout.setContentsMargins(10, 0, 20, 0)
+        self.purple_layout.setSpacing(0)
 
-        title_lbl = QLabel("Credential Designs")
-        title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
-        title_lbl.setStyleSheet("color: #FFFFFF;")
-        banner_layout.addWidget(title_lbl)
+        main_layout.addWidget(self.purple_bar)
 
-        last_login_lbl = QLabel("Last Login at Wed Sep 09 18:33:05 MMT 2026 from IP 192.168.56.1")
-        last_login_lbl.setFont(QFont("Arial", 8))
-        last_login_lbl.setStyleSheet("color: #D1D5DB;")
-        banner_layout.addWidget(last_login_lbl)
+        # 3. Middle Body Content (Stacked Pages)
+        body_container = QWidget()
+        body_layout = QHBoxLayout(body_container)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(0)
 
-        main_layout.addWidget(purple_banner)
+        self.section_stack = QStackedWidget()
 
-        # 3. Middle Body Section (Table, Pagination)
-        body_layout = QHBoxLayout()
-        main_layout.addLayout(body_layout)
+        # Build Home View Stack (Credentials, Reports)
+        self.home_stack = QStackedWidget()
+        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False)
+        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False)
+        self.home_stack.addWidget(self.home_credentials_page)
+        self.home_stack.addWidget(self.home_reports_page)
 
-        # 3a. Table and Actions Area (occupies remaining width)
-        content_frame = QFrame()
-        content_frame.setStyleSheet("background-color: #FFFFFF;")
-        content_layout = QVBoxLayout(content_frame)
-        content_layout.setContentsMargins(15, 15, 15, 0)
-        body_layout.addWidget(content_frame, stretch=1)
+        # Build Design View Stack (Credential Designs, Workflows, Reports, Field Connections)
+        self.design_stack = QStackedWidget()
+        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
+        self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=False)
+        self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=False)
+        self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=False)
 
-        # Action Buttons (Create, Search)
-        action_layout = QHBoxLayout()
-        create_btn = QPushButton("+ Create")
-        create_btn.setStyleSheet("""
-            background-color: #7B0082;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-        """)
-        action_layout.addWidget(create_btn)
-        action_layout.addStretch()
-        search_lbl = QLabel("🔍 Search:")
-        search_lbl.setStyleSheet("color: #4B5563;")
-        action_layout.addWidget(search_lbl)
-        content_layout.addLayout(action_layout)
+        self.design_stack.addWidget(self.design_cred_page)
+        self.design_stack.addWidget(self.design_workflow_page)
+        self.design_stack.addWidget(self.design_reports_page)
+        self.design_stack.addWidget(self.design_fields_page)
 
-        # Table Control
-        self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Name", "Type", "Description", "Actions"])
-        
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self.section_stack.addWidget(self.home_stack)
+        self.section_stack.addWidget(self.design_stack)
 
-        self.table.setRowCount(1)
-        # Empty row data
-        empty_item = QTableWidgetItem("No data available in table")
-        empty_item.setTextAlignment(Qt.AlignCenter)
-        empty_item.setFlags(Qt.NoItemFlags)
-        self.table.setItem(0, 0, empty_item)
-        self.table.setSpan(0, 0, 1, 4)
+        body_layout.addWidget(self.section_stack, stretch=1)
 
-        self.table.setStyleSheet("""
-            QTableWidget {
-                border: 1px solid #D1D5DB;
-                gridline-color: #E5E7EB;
-            }
-            QHeaderView::section {
-                background-color: #F9FAFB;
-                padding: 8px;
-                border: none;
-                border-bottom: 1px solid #D1D5DB;
-                font-weight: bold;
-                color: #374151;
-            }
-        """)
-        content_layout.addWidget(self.table)
-
-        # Pagination controls
-        pagination_layout = QHBoxLayout()
-        pagination_layout.setContentsMargins(0, 5, 0, 5)
-        pagination_lbl = QLabel("Showing 0 to 0 of 0 entries")
-        pagination_lbl.setStyleSheet("color: #4B5563;")
-        pagination_layout.addWidget(pagination_lbl)
-        pagination_layout.addStretch()
-        prev_btn = QPushButton("Previous")
-        next_btn = QPushButton("Next")
-        for btn in [prev_btn, next_btn]:
-             btn.setStyleSheet("padding: 5px 10px; border: 1px solid #D1D5DB; background-color: white; color: #374151;")
-        pagination_layout.addWidget(prev_btn)
-        pagination_layout.addWidget(next_btn)
-        content_layout.addLayout(pagination_layout)
-        
-        # Create horizontal separator line at the bottom boundary of the table area
-        horiz_sep = QFrame()
-        horiz_sep.setFrameShape(QFrame.HLine)
-        horiz_sep.setStyleSheet("color: #D1D5DB;")
-        content_layout.addWidget(horiz_sep)
-        
-        content_layout.addStretch()
-
-        # 3b. Empty Right Panel (User interface boundary)
+        # Right Blank Side Panel
         right_panel = QFrame()
-        right_panel.setFixedWidth(200) # Give it some width to act as user interface boundary
+        right_panel.setFixedWidth(200)
         right_panel.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FFFFFF;")
         body_layout.addWidget(right_panel)
 
-        # 4. Status Bar (Bottom fixed bar)
+        main_layout.addWidget(body_container, stretch=1)
+
+        # 4. Bottom Status Bar
         status_bar = QFrame()
         status_bar.setFixedHeight(30)
         status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
         status_layout = QHBoxLayout(status_bar)
-        status_layout.setContentsMargins(15, 0, 0, 0)
-        
-        queue_status_lbl = QLabel("🖨️ Printer Queue Status")
-        queue_status_lbl.setFont(QFont("Arial", 9))
-        queue_status_lbl.setStyleSheet("color: #111827; font-weight: bold;")
-        status_layout.addWidget(queue_status_lbl)
+        status_layout.setContentsMargins(0, 0, 0, 0)
         status_layout.addStretch()
-        
+
+        queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
+        queue_status_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+        queue_status_btn.setFixedHeight(30)
+        queue_status_btn.setFixedWidth(200)
+        queue_status_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E2ECF7, stop:1 #BCCFE3);
+                color: #0F172A;
+                border: none;
+                border-left: 1px solid #D1D5DB;
+            }
+        """)
+        status_layout.addWidget(queue_status_btn)
         main_layout.addWidget(status_bar)
+
+        # Start at Home Section
+        self.switch_to_home_section()
+
+    def clear_purple_bar(self):
+        while self.purple_layout.count() > 0:
+            item = self.purple_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+    # --- HOME SECTION NAVIGATION ---
+    def switch_to_home_section(self):
+        self.section_stack.setCurrentIndex(0)
+        self.clear_purple_bar()
+
+        btn_credentials = QPushButton("Credentials")
+        btn_reports = QPushButton("Reports")
+
+        for btn in [btn_credentials, btn_reports]:
+            btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+            btn.setFixedHeight(34)
+            btn.setCursor(Qt.PointingHandCursor)
+
+        btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
+        btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
+
+        # Push sub-tabs to the right
+        self.purple_layout.addStretch()
+        self.purple_layout.addWidget(btn_credentials)
+        self.purple_layout.addWidget(btn_reports)
+
+        # Select first tab by default
+        self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
+
+    # --- DESIGN SECTION NAVIGATION ---
+    def switch_to_design_section(self, target_tab_index=0):
+        self.section_stack.setCurrentIndex(1)
+        self.clear_purple_bar()
+
+        btn_cred_designs = QPushButton("Credential Designs")
+        btn_workflows = QPushButton("Workflows")
+        btn_reports = QPushButton("Reports")
+        btn_fields = QPushButton("Field Connections")
+
+        tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
+
+        # Push sub-tabs to the right
+        self.purple_layout.addStretch()
+
+        for idx, btn in enumerate(tab_buttons):
+            btn.setFont(QFont("Arial", 8.5, QFont.Bold))
+            btn.setFixedHeight(34)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.clicked.connect(lambda _, i=idx: self.set_sub_tab(self.design_stack, i, tab_buttons))
+            self.purple_layout.addWidget(btn)
+
+        # Select specified sub-tab
+        self.set_sub_tab(self.design_stack, target_tab_index, tab_buttons)
+
+    # Helper function to switch tabs and update active tab UI style
+    def set_sub_tab(self, stack_widget, index, button_list):
+        stack_widget.setCurrentIndex(index)
+        for i, btn in enumerate(button_list):
+            if i == index:
+                btn.setStyleSheet("""
+                    background-color: #FFFFFF; 
+                    color: #7B0082; 
+                    border: none; 
+                    padding: 0 16px;
+                    border-top-left-radius: 2px;
+                    border-top-right-radius: 2px;
+                """)
+            else:
+                btn.setStyleSheet("""
+                    background-color: transparent; 
+                    color: #FFFFFF; 
+                    border: none; 
+                    padding: 0 16px;
+                """)
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
+        self.resize(1120, 640)
+        self.setCentralWidget(EntrustDashboard())
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = EntrustDashboard()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
