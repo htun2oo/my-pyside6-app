@@ -36,24 +36,6 @@ def draw_list_icon(size=14, color="#1E293B"):
     p.end()
     return QIcon(pixmap)
 
-def create_report_thumbnail():
-    pixmap = QPixmap(100, 60)
-    pixmap.fill(QColor("#FFFFFF"))
-    p = QPainter(pixmap)
-    p.setRenderHint(QPainter.Antialiasing)
-    p.setPen(QPen(QColor("#D1D5DB"), 1))
-    p.drawRect(2, 2, 95, 55)
-    p.setBrush(QBrush(QColor("#059669")))
-    p.setPen(Qt.NoPen)
-    bars = [(15, 20, 8, 25), (28, 15, 8, 30), (41, 10, 8, 35), (54, 18, 8, 27), (67, 8, 8, 37)]
-    for x, y, w, h in bars:
-        p.drawRect(x, y + 5, w, h)
-    p.setFont(QFont("Arial", 5))
-    p.setPen(QPen(QColor("#6B7280")))
-    p.drawText(QRectF(0, 42, 100, 12), Qt.AlignCenter, "Week 30, 2013")
-    p.end()
-    return pixmap
-
 
 # -------------------------------------------------------------
 # Reusable Toolbar Widget
@@ -154,13 +136,24 @@ class EntrustDashboard(QWidget):
 
         # Main Nav Buttons
         self.home_nav_btn = QPushButton("Home")
-        self.design_nav_btn = QPushButton("Design ▾")
+        self.design_nav_btn = QPushButton("Design")  # Arrow text removed
         self.queue_nav_btn = QPushButton("Printer Queues")
 
         for btn in [self.home_nav_btn, self.design_nav_btn, self.queue_nav_btn]:
             btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet("border: none; color: #1A202C; background: transparent; padding: 0 6px;")
+            btn.setStyleSheet("""
+                QPushButton {
+                    border: none; 
+                    color: #1A202C; 
+                    background: transparent; 
+                    padding: 0 6px;
+                }
+                QPushButton::menu-indicator { 
+                    image: none; 
+                    width: 0px; 
+                }
+            """)
 
         self.home_nav_btn.clicked.connect(self.switch_to_home_section)
         self.design_nav_btn.clicked.connect(self.switch_to_design_section)
