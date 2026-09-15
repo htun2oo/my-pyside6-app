@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar, QMenu
+    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
 )
 
 # -------------------------------------------------------------
@@ -113,9 +113,9 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Bar
+        # 1. Top Bar (Height increased to 48px to prevent text clipping)
         top_bar = QFrame()
-        top_bar.setFixedHeight(42)
+        top_bar.setFixedHeight(48)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
         top_layout = QHBoxLayout(top_bar)
         top_layout.setContentsMargins(10, 0, 15, 0)
@@ -136,7 +136,7 @@ class EntrustDashboard(QWidget):
 
         # Main Nav Buttons
         self.home_nav_btn = QPushButton("Home")
-        self.design_nav_btn = QPushButton("Design")  # Arrow text removed
+        self.design_nav_btn = QPushButton("Design")
         self.queue_nav_btn = QPushButton("Printer Queues")
 
         for btn in [self.home_nav_btn, self.design_nav_btn, self.queue_nav_btn]:
@@ -147,24 +147,13 @@ class EntrustDashboard(QWidget):
                     border: none; 
                     color: #1A202C; 
                     background: transparent; 
-                    padding: 0 6px;
-                }
-                QPushButton::menu-indicator { 
-                    image: none; 
-                    width: 0px; 
+                    padding: 2px 8px;
                 }
             """)
 
+        # Direct navigation actions (No QMenu)
         self.home_nav_btn.clicked.connect(self.switch_to_home_section)
-        self.design_nav_btn.clicked.connect(self.switch_to_design_section)
-
-        # Dropdown Menu for Design
-        design_menu = QMenu(self)
-        design_menu.addAction("Credential Designs", lambda: self.switch_to_design_section(0))
-        design_menu.addAction("Workflows", lambda: self.switch_to_design_section(1))
-        design_menu.addAction("Reports", lambda: self.switch_to_design_section(2))
-        design_menu.addAction("Field Connections", lambda: self.switch_to_design_section(3))
-        self.design_nav_btn.setMenu(design_menu)
+        self.design_nav_btn.clicked.connect(lambda: self.switch_to_design_section(0))
 
         top_layout.addWidget(self.home_nav_btn)
         top_layout.addWidget(self.design_nav_btn)
