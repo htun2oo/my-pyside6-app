@@ -71,7 +71,7 @@ class ViewToggleToolbar(QFrame):
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
 
-        # "+ Create" Button Implementation
+        # "+ Create" Button
         if show_create_btn:
             layout.addSpacing(3)
             self.create_btn = QPushButton("+ Create")
@@ -214,7 +214,7 @@ class EntrustDashboard(QWidget):
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Build Design View Stack (Credential Designs [with Create Button], Workflows, Reports, Field Connections)
+        # Build Design View Stack (Credential Designs, Workflows, Reports, Field Connections)
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=False)
@@ -291,11 +291,6 @@ class EntrustDashboard(QWidget):
         self.purple_layout.addWidget(btn_reports)
         self.purple_layout.addStretch()
 
-        last_login = QLabel("Last Login at Wed Sep 09 18:33:05 MMT 2026 from IP 192.168.56.1")
-        last_login.setFont(QFont("Arial", 8))
-        last_login.setStyleSheet("color: #E9D5FF; border: none;")
-        self.purple_layout.addWidget(last_login)
-
         # Select first tab by default
         self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
 
@@ -319,11 +314,6 @@ class EntrustDashboard(QWidget):
             self.purple_layout.addWidget(btn)
 
         self.purple_layout.addStretch()
-
-        last_login = QLabel("Last Login at Wed Sep 09 18:33:05 MMT 2026 from IP 192.168.56.1")
-        last_login.setFont(QFont("Arial", 8))
-        last_login.setStyleSheet("color: #E9D5FF; border: none;")
-        self.purple_layout.addWidget(last_login)
 
         # Select specified sub-tab
         self.set_sub_tab(self.design_stack, target_tab_index, tab_buttons)
