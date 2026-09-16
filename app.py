@@ -3,13 +3,13 @@ from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QTableWidget, QTableWidgetItem, QHeaderView, QScrollBar
+    QLabel, QPushButton, QFrame, QStackedWidget
 )
 
 # -------------------------------------------------------------
-# Icons and Graphics Helpers
+# Icons and Graphics Helpers (Updated to Dark Blue Icon Color)
 # -------------------------------------------------------------
-def draw_grid_icon(size=14, color="#1E293B"):
+def draw_grid_icon(size=14, color="#003366"):
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.transparent)
     p = QPainter(pixmap)
@@ -23,7 +23,7 @@ def draw_grid_icon(size=14, color="#1E293B"):
     p.end()
     return QIcon(pixmap)
 
-def draw_list_icon(size=14, color="#1E293B"):
+def draw_list_icon(size=14, color="#003366"):
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.transparent)
     p = QPainter(pixmap)
@@ -38,30 +38,28 @@ def draw_list_icon(size=14, color="#1E293B"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget
+# Reusable Toolbar Widget (Left Aligned & Styled to Match Image)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
         super().__init__()
-        self.setFixedHeight(30)
+        self.setFixedHeight(34)
         self.setStyleSheet("QFrame { background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB; }")
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(6, 3, 6, 3)
-        layout.setSpacing(5)
-
-        layout.addStretch()
+        layout.setSpacing(0)  # ခလုတ်နှစ်ခုကို ကပ်ထားရန်
 
         self.grid_btn = QPushButton()
-        self.grid_btn.setFixedSize(24, 22)
+        self.grid_btn.setFixedSize(32, 26)
         self.grid_btn.setCursor(Qt.PointingHandCursor)
 
         self.list_btn = QPushButton()
-        self.list_btn.setFixedSize(24, 22)
+        self.list_btn.setFixedSize(32, 26)
         self.list_btn.setCursor(Qt.PointingHandCursor)
 
-        self.grid_btn.setIcon(draw_grid_icon(12, "#1F2937"))
-        self.list_btn.setIcon(draw_list_icon(12, "#1F2937"))
+        self.grid_btn.setIcon(draw_grid_icon(14, "#003366"))
+        self.list_btn.setIcon(draw_list_icon(14, "#003366"))
 
         self.set_active_state(is_grid_active)
 
@@ -70,13 +68,14 @@ class ViewToggleToolbar(QFrame):
         if on_list_click:
             self.list_btn.clicked.connect(on_list_click)
 
+        # ဘယ်ဘက်အစွန်းတွင် ခလုတ်များကို ယှဉ်လျက် ထားရှိပါမည်
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
 
         if show_create_btn:
-            layout.addSpacing(3)
+            layout.addSpacing(6)
             self.create_btn = QPushButton("+ Create")
-            self.create_btn.setFixedHeight(22)
+            self.create_btn.setFixedHeight(26)
             self.create_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             self.create_btn.setCursor(Qt.PointingHandCursor)
             self.create_btn.setStyleSheet("""
@@ -84,7 +83,7 @@ class ViewToggleToolbar(QFrame):
                     background-color: #E5E7EB;
                     color: #1F2937;
                     border: 1px solid #9CA3AF;
-                    border-radius: 2px;
+                    border-radius: 3px;
                     padding: 0 8px;
                 }
                 QPushButton:hover {
@@ -95,20 +94,62 @@ class ViewToggleToolbar(QFrame):
                 self.create_btn.clicked.connect(on_create_click)
             layout.addWidget(self.create_btn)
 
+        layout.addStretch()  # ညာဘက်သို့ အလွတ်နေရာ ပေးထားခြင်း
+
     def set_active_state(self, is_grid_active):
         if is_grid_active:
-            self.grid_btn.setStyleSheet("QPushButton { background-color: #C5D1DF; border: 1px solid #4B5563; border-radius: 1px; }")
-            self.list_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
+            # Active Grid Button Style (Grey Pressed look)
+            self.grid_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
+                    border: 1px solid #888888;
+                    border-top-left-radius: 4px;
+                    border-bottom-left-radius: 4px;
+                }
+            """)
+            # Inactive List Button Style (Light Grey Gradient look)
+            self.list_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
+                    border: 1px solid #B0B0B0;
+                    border-left: none;
+                    border-top-right-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                }
+                QPushButton:hover {
+                    background: #E0E0E0;
+                }
+            """)
         else:
-            self.grid_btn.setStyleSheet("QPushButton { background-color: #E5E7EB; border: 1px solid #9CA3AF; border-radius: 1px; }")
-            self.list_btn.setStyleSheet("QPushButton { background-color: #C5D1DF; border: 1px solid #4B5563; border-radius: 1px; }")
+            # Inactive Grid Button Style
+            self.grid_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
+                    border: 1px solid #B0B0B0;
+                    border-top-left-radius: 4px;
+                    border-bottom-left-radius: 4px;
+                }
+                QPushButton:hover {
+                    background: #E0E0E0;
+                }
+            """)
+            # Active List Button Style
+            self.list_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
+                    border: 1px solid #888888;
+                    border-left: none;
+                    border-top-right-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                }
+            """)
 
 
 # -------------------------------------------------------------
-# Functional Workspace View with Grid/List Toggle Logic
+# Functional Workspace View
 # -------------------------------------------------------------
 class GenericWorkspace(QWidget):
-    def __init__(self, title_text="Workspace", show_create=False):
+    def __init__(self, title_text="Workspace", show_create=False, default_grid_active=True):
         super().__init__()
         self.setStyleSheet("background-color: #FFFFFF;")
         layout = QVBoxLayout(self)
@@ -119,7 +160,7 @@ class GenericWorkspace(QWidget):
         self.toolbar = ViewToggleToolbar(
             on_grid_click=self.show_grid_view,
             on_list_click=self.show_list_view,
-            is_grid_active=False,
+            is_grid_active=default_grid_active,
             show_create_btn=show_create
         )
         layout.addWidget(self.toolbar)
@@ -148,8 +189,12 @@ class GenericWorkspace(QWidget):
         self.view_stack.addWidget(grid_widget)
         self.view_stack.addWidget(list_widget)
 
-        # Default to List View (Index 1)
-        self.view_stack.setCurrentIndex(1)
+        # Set default view state
+        if default_grid_active:
+            self.view_stack.setCurrentIndex(0)
+        else:
+            self.view_stack.setCurrentIndex(1)
+
         layout.addWidget(self.view_stack, stretch=1)
 
     def show_grid_view(self):
@@ -238,19 +283,19 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
-        # Build Home View Stack (Credentials, Reports)
+        # Build Home View Stack (Credentials, Reports) - Grid Active by default
         self.home_stack = QStackedWidget()
-        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False)
-        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False)
+        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False, default_grid_active=True)
+        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False, default_grid_active=True)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
         # Build Design View Stack
         self.design_stack = QStackedWidget()
-        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
-        self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True)
-        self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=True)
-        self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=True)
+        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True)
+        self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True, default_grid_active=True)
+        self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=True, default_grid_active=True)
+        self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=True, default_grid_active=True)
 
         self.design_stack.addWidget(self.design_cred_page)
         self.design_stack.addWidget(self.design_workflow_page)
@@ -318,10 +363,11 @@ class EntrustDashboard(QWidget):
         btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
         btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
 
-        # Push sub-tabs to the right
-        self.purple_layout.addStretch()
+        # Sub-tabs Alignment matching screenshot
+        self.purple_layout.addSpacing(60)
         self.purple_layout.addWidget(btn_credentials)
         self.purple_layout.addWidget(btn_reports)
+        self.purple_layout.addStretch()
 
         # Select first tab by default
         self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
@@ -338,8 +384,7 @@ class EntrustDashboard(QWidget):
 
         tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
 
-        # Push sub-tabs to the right
-        self.purple_layout.addStretch()
+        self.purple_layout.addSpacing(60)
 
         for idx, btn in enumerate(tab_buttons):
             btn.setFont(QFont("Arial", 8.5, QFont.Bold))
@@ -347,6 +392,8 @@ class EntrustDashboard(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.clicked.connect(lambda _, i=idx: self.set_sub_tab(self.design_stack, i, tab_buttons))
             self.purple_layout.addWidget(btn)
+
+        self.purple_layout.addStretch()
 
         # Select specified sub-tab
         self.set_sub_tab(self.design_stack, target_tab_index, tab_buttons)
@@ -361,8 +408,8 @@ class EntrustDashboard(QWidget):
                     color: #7B0082; 
                     border: none; 
                     padding: 0 16px;
-                    border-top-left-radius: 2px;
-                    border-top-right-radius: 2px;
+                    border-top-left-radius: 4px;
+                    border-top-right-radius: 4px;
                 """)
             else:
                 btn.setStyleSheet("""
