@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Toolbar Vector Icon Painter
+# Toolbar Vector Icon Painter (All Custom Tool Icons)
 # -------------------------------------------------------------
 def make_toolbar_icon(icon_type, color="#002D62", size=24):
     pixmap = QPixmap(size, size)
@@ -59,19 +59,78 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawRoundedRect(QRectF(9, 7, 11, 14), 1, 1)
         p.drawRect(QRectF(9, 2, 6, 3))
 
+    elif icon_type == "text":
+        p.setFont(QFont("Times New Roman", 13, QFont.Bold))
+        p.setPen(QPen(QColor(color)))
+        p.drawText(QRectF(1, 1, 14, 16), Qt.AlignLeft | Qt.AlignTop, "T")
+        p.setPen(QPen(QColor(color), 1.5))
+        p.drawRect(QRectF(11, 11, 11, 11))
+        p.drawLine(16, 13, 16, 20)
+        p.drawLine(14, 13, 18, 13)
+
+    elif icon_type == "static_text":
+        p.setFont(QFont("Times New Roman", 16, QFont.Bold))
+        p.setPen(QPen(QColor(color)))
+        p.drawText(QRectF(0, 0, 24, 24), Qt.AlignCenter, "T")
+
+    elif icon_type == "photo":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.drawRect(QRectF(3, 4, 18, 16))
+        p.setBrush(QColor(color))
+        p.drawEllipse(10, 7, 4, 4)
+        path = QPainterPath()
+        path.moveTo(7, 18)
+        path.arcTo(7, 12, 10, 8, 0, 180)
+        p.drawPath(path)
+
+    elif icon_type == "static_graphic":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.drawRect(QRectF(3, 4, 18, 16))
+        p.setBrush(QColor(color))
+        poly = [QPointF(5, 18), QPointF(10, 11), QPointF(14, 15), QPointF(17, 11), QPointF(21, 18)]
+        p.drawPolygon(poly)
+
+    elif icon_type == "variable_graphic":
+        p.setPen(QPen(QColor(color), 1.6))
+        p.drawRect(QRectF(2, 2, 14, 13))
+        p.drawRect(QRectF(5, 5, 14, 13))
+        p.setPen(QPen(QColor(color), 1.8))
+        p.drawArc(15, 15, 8, 8, 0, 270 * 16)
+        p.setBrush(QColor(color))
+        p.drawPolygon([QPointF(20, 14), QPointF(23, 17), QPointF(17, 17)])
+
+    elif icon_type == "date":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.drawRect(QRectF(4, 4, 16, 16))
+        p.setBrush(QColor(color))
+        for r in range(3):
+            for c in range(3):
+                p.drawRect(QRectF(7 + c*4, 7 + r*4, 2, 2))
+
+    elif icon_type == "signature":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.drawRect(QRectF(4, 5, 17, 15))
+        p.setPen(QPen(QColor(color), 2))
+        p.drawLine(3, 20, 6, 4)
+        path = QPainterPath()
+        path.moveTo(6, 14)
+        path.cubicTo(10, 8, 12, 18, 16, 12)
+        path.cubicTo(18, 10, 19, 14, 21, 14)
+        p.drawPath(path)
+
     p.end()
     return QIcon(pixmap)
 
 
 # -------------------------------------------------------------
-# Hover Edit Button Class (Tooltip စာတန်းပေါ်အောင် ပြင်ဆင်ထားသည်)
+# Hover Edit Button Class
 # -------------------------------------------------------------
 class HoverEditButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("✏", parent)
         self.setFixedSize(24, 24)
         self.setCursor(Qt.PointingHandCursor)
-        self.setToolTip("Edit Properties")  # Mouse တင်ပါက Tooltip ပေါ်မည်
+        self.setToolTip("Edit Properties")
         self.setStyleSheet("""
             QPushButton {
                 background-color: #FFFFFF;
@@ -485,15 +544,42 @@ class CredentialDesignEditorView(QWidget):
         grp2.addWidget(btn_cut)
         grp2.addWidget(btn_paste)
 
+        sep2 = QFrame()
+        sep2.setFixedWidth(8)
+
+        # Group 3: Text, Static Text, Photo, Static Graphic, Variable Graphic, Date, Signature
+        grp3 = QHBoxLayout()
+        grp3.setSpacing(0)
+
+        tools_config = [
+            ("text", "Text"),
+            ("static_text", "Static Text"),
+            ("photo", "Photo"),
+            ("static_graphic", "Static Graphic"),
+            ("variable_graphic", "Variable Graphic"),
+            ("date", "Date"),
+            ("signature", "Signature")
+        ]
+
+        for icon_key, tooltip_name in tools_config:
+            btn_tool = QToolButton()
+            btn_tool.setFixedSize(28, 26)
+            btn_tool.setIcon(make_toolbar_icon(icon_key))
+            btn_tool.setToolTip(tooltip_name)
+            btn_tool.setStyleSheet(btn_style)
+            grp3.addWidget(btn_tool)
+
         tb_layout.addLayout(grp1)
         tb_layout.addWidget(sep1)
         tb_layout.addLayout(grp2)
-
-        sep2 = QFrame()
-        sep2.setFixedWidth(8)
         tb_layout.addWidget(sep2)
+        tb_layout.addLayout(grp3)
 
-        other_tools = ["🗑", "T", "👤", "📷", "📊", "▦", "▤", "║", "▭", "╱", "◯"]
+        sep3 = QFrame()
+        sep3.setFixedWidth(8)
+        tb_layout.addWidget(sep3)
+
+        other_tools = ["🗑", "▦", "▤", "║", "▭", "╱", "◯"]
         for tool in other_tools:
             btn = QToolButton()
             btn.setText(tool)
@@ -809,7 +895,6 @@ class EntrustDashboard(QWidget):
         title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
         title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
 
-        # Mouse Hover တင်ပါက Tooltip ပေါ်မည့် HoverEditButton
         edit_icon_btn = HoverEditButton(self)
         edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
