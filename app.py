@@ -64,13 +64,14 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
 
 
 # -------------------------------------------------------------
-# Hover Edit Button Class (Mouse Hover လုပ်မှ စာသားပေါ်မည်)
+# Hover Edit Button Class (Tooltip စာတန်းပေါ်အောင် ပြင်ဆင်ထားသည်)
 # -------------------------------------------------------------
 class HoverEditButton(QPushButton):
     def __init__(self, parent=None):
         super().__init__("✏", parent)
-        self.setFixedHeight(24)
+        self.setFixedSize(24, 24)
         self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip("Edit Properties")  # Mouse တင်ပါက Tooltip ပေါ်မည်
         self.setStyleSheet("""
             QPushButton {
                 background-color: #FFFFFF;
@@ -78,20 +79,21 @@ class HoverEditButton(QPushButton):
                 border-radius: 3px;
                 font-weight: bold;
                 font-size: 11px;
-                padding: 0 6px;
+                border: none;
             }
             QPushButton:hover {
                 background-color: #E2E8F0;
             }
+            QToolTip {
+                background-color: #1E293B;
+                color: #FFFFFF;
+                border: none;
+                padding: 4px 8px;
+                font-size: 8pt;
+                font-family: Arial;
+                border-radius: 3px;
+            }
         """)
-
-    def enterEvent(self, event):
-        self.setText("✏ Edit Properties")
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.setText("✏")
-        super().leaveEvent(event)
 
 
 # -------------------------------------------------------------
@@ -415,7 +417,6 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.setContentsMargins(4, 3, 4, 3)
         tb_layout.setSpacing(0)
 
-        # Tooltip Styling ထည့်သွင်းထားသော Button Style
         btn_style = """
             QToolButton {
                 background-color: #F4F4F4;
@@ -443,13 +444,13 @@ class CredentialDesignEditorView(QWidget):
         btn_undo = QToolButton()
         btn_undo.setFixedSize(28, 26)
         btn_undo.setIcon(make_toolbar_icon("undo"))
-        btn_undo.setToolTip("Undo")  # Mouse တင်ပါက စာတန်းပေါ်မည်
+        btn_undo.setToolTip("Undo")
         btn_undo.setStyleSheet(btn_style)
 
         btn_redo = QToolButton()
         btn_redo.setFixedSize(28, 26)
         btn_redo.setIcon(make_toolbar_icon("redo"))
-        btn_redo.setToolTip("Redo")  # Mouse တင်ပါက စာတန်းပေါ်မည်
+        btn_redo.setToolTip("Redo")
         btn_redo.setStyleSheet(btn_style)
 
         grp1.addWidget(btn_undo)
@@ -465,19 +466,19 @@ class CredentialDesignEditorView(QWidget):
         btn_copy = QToolButton()
         btn_copy.setFixedSize(28, 26)
         btn_copy.setIcon(make_toolbar_icon("copy"))
-        btn_copy.setToolTip("Copy")  # Mouse တင်ပါက စာတန်းပေါ်မည်
+        btn_copy.setToolTip("Copy")
         btn_copy.setStyleSheet(btn_style)
 
         btn_cut = QToolButton()
         btn_cut.setFixedSize(28, 26)
         btn_cut.setIcon(make_toolbar_icon("cut"))
-        btn_cut.setToolTip("Cut")  # Mouse တင်ပါက စာတန်းပေါ်မည်
+        btn_cut.setToolTip("Cut")
         btn_cut.setStyleSheet(btn_style)
 
         btn_paste = QToolButton()
         btn_paste.setFixedSize(28, 26)
         btn_paste.setIcon(make_toolbar_icon("paste"))
-        btn_paste.setToolTip("Paste")  # Mouse တင်ပါက စာတန်းပေါ်မည်
+        btn_paste.setToolTip("Paste")
         btn_paste.setStyleSheet(btn_style)
 
         grp2.addWidget(btn_copy)
@@ -808,7 +809,7 @@ class EntrustDashboard(QWidget):
         title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
         title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
 
-        # Mouse Hover မှ စာသားပေါ်မည့် HoverEditButton
+        # Mouse Hover တင်ပါက Tooltip ပေါ်မည့် HoverEditButton
         edit_icon_btn = HoverEditButton(self)
         edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
