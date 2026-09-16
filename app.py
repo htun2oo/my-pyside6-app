@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Toolbar Vector Icon Painter (All Custom Tool Icons)
+# Toolbar & Custom Vector Icon Painter
 # -------------------------------------------------------------
 def make_toolbar_icon(icon_type, color="#002D62", size=24):
     pixmap = QPixmap(size, size)
@@ -16,7 +16,7 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
     p = QPainter(pixmap)
     p.setRenderHint(QPainter.Antialiasing, True)
     
-    pen = QPen(QColor(color), 2)
+    pen = QPen(QColor(color), 1.8)
     pen.setCapStyle(Qt.RoundCap)
     pen.setJoinStyle(Qt.RoundJoin)
     p.setPen(pen)
@@ -39,20 +39,17 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawPolygon([QPointF(20, 7), QPointF(15, 3), QPointF(15, 10)])
 
     elif icon_type == "copy":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawRoundedRect(QRectF(5, 4, 10, 12), 1, 1)
         p.setBrush(QColor("#F0F4F8"))
         p.drawRoundedRect(QRectF(9, 8, 10, 12), 1, 1)
 
     elif icon_type == "cut":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawEllipse(4, 15, 5, 5)
         p.drawEllipse(15, 15, 5, 5)
         p.drawLine(6.5, 15.5, 16, 4)
         p.drawLine(17.5, 15.5, 8, 4)
 
     elif icon_type == "paste":
-        p.setPen(QPen(QColor(color), 1.8))
         p.setBrush(QColor(color))
         p.drawRoundedRect(QRectF(6, 4, 12, 16), 1, 1)
         p.setBrush(QColor("#FFFFFF"))
@@ -74,7 +71,6 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawText(QRectF(0, 0, 24, 24), Qt.AlignCenter, "T")
 
     elif icon_type == "photo":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawRect(QRectF(3, 4, 18, 16))
         p.setBrush(QColor(color))
         p.drawEllipse(10, 7, 4, 4)
@@ -84,7 +80,6 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawPath(path)
 
     elif icon_type == "static_graphic":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawRect(QRectF(3, 4, 18, 16))
         p.setBrush(QColor(color))
         poly = [QPointF(5, 18), QPointF(10, 11), QPointF(14, 15), QPointF(17, 11), QPointF(21, 18)]
@@ -100,7 +95,6 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawPolygon([QPointF(20, 14), QPointF(23, 17), QPointF(17, 17)])
 
     elif icon_type == "date":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawRect(QRectF(4, 4, 16, 16))
         p.setBrush(QColor(color))
         for r in range(3):
@@ -108,7 +102,6 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
                 p.drawRect(QRectF(7 + c*4, 7 + r*4, 2, 2))
 
     elif icon_type == "signature":
-        p.setPen(QPen(QColor(color), 1.8))
         p.drawRect(QRectF(4, 5, 17, 15))
         p.setPen(QPen(QColor(color), 2))
         p.drawLine(3, 20, 6, 4)
@@ -118,58 +111,71 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         path.cubicTo(18, 10, 19, 14, 21, 14)
         p.drawPath(path)
 
-    # ------------------ New Icons ------------------
     elif icon_type == "barcode":
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(color))
-        # Draw barcode vertical bars with varying thicknesses
         bars = [(3, 2), (6, 1), (8, 2), (11, 3), (15, 1), (17, 2), (20, 1)]
         for x, w in bars:
             p.drawRect(QRectF(x, 4, w, 16))
 
     elif icon_type == "magnetic_stripe":
-        p.setPen(QPen(QColor(color), 1.8))
-        p.setBrush(Qt.NoBrush)
         p.drawRoundedRect(QRectF(3, 4, 18, 16), 2, 2)
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(color))
-        p.drawRect(QRectF(3, 7, 18, 4))  # Black mag-stripe band
+        p.drawRect(QRectF(3, 7, 18, 4))
 
+    # Updated Chip Icon (Exact match to Smart Card Chip Image)
     elif icon_type == "chip":
         p.setPen(QPen(QColor(color), 1.8))
-        p.setBrush(Qt.NoBrush)
-        p.drawRoundedRect(QRectF(4, 4, 16, 16), 3, 3)
-        # Inner chip pattern lines
-        p.drawLine(4, 9, 8, 9)
-        p.drawLine(4, 15, 8, 15)
-        p.drawLine(16, 9, 20, 9)
-        p.drawLine(16, 15, 20, 15)
-        p.drawLine(9, 4, 9, 8)
-        p.drawLine(15, 4, 15, 8)
-        p.drawLine(9, 16, 9, 20)
-        p.drawLine(15, 16, 15, 20)
-        p.drawRect(QRectF(9, 9, 6, 6))
+        p.drawRoundedRect(QRectF(3, 3, 18, 18), 4, 4)
+        p.drawLine(3, 12, 8, 12)
+        p.drawLine(16, 12, 21, 12)
+        p.drawLine(12, 3, 12, 8)
+        p.drawLine(12, 16, 12, 21)
+        p.drawEllipse(QRectF(8, 8, 8, 8))
+        p.drawLine(4, 7, 9, 9)
+        p.drawLine(4, 17, 9, 15)
+        p.drawLine(20, 7, 15, 9)
+        p.drawLine(20, 17, 15, 15)
+
+    # 45 Degree Pencil Icon for Edit Button
+    elif icon_type == "pencil_45":
+        p.save()
+        p.translate(size / 2, size / 2)
+        p.rotate(-45)
+        
+        pen_body = QPen(QColor(color), 1.6)
+        pen_body.setCapStyle(Qt.SquareCap)
+        pen_body.setJoinStyle(Qt.MiterJoin)
+        p.setPen(pen_body)
+        
+        # Eraser & Pencil Body
+        p.drawRoundedRect(QRectF(-4, -9, 8, 4), 1, 1)
+        p.drawRect(QRectF(-4, -5, 8, 10))
+        
+        # Pencil Tip
+        p.setBrush(QColor(color))
+        p.drawPolygon([QPointF(-4, 5), QPointF(4, 5), QPointF(0, 10)])
+        p.restore()
 
     p.end()
     return QIcon(pixmap)
 
 
 # -------------------------------------------------------------
-# Hover Edit Button Class
+# Hover Edit Button Class (Updated with 45-degree Pencil Icon)
 # -------------------------------------------------------------
 class HoverEditButton(QPushButton):
     def __init__(self, parent=None):
-        super().__init__("✏", parent)
+        super().__init__(parent)
         self.setFixedSize(24, 24)
         self.setCursor(Qt.PointingHandCursor)
+        self.setIcon(make_toolbar_icon("pencil_45", color="#002D62", size=20))
         self.setToolTip("Edit Properties")
         self.setStyleSheet("""
             QPushButton {
                 background-color: #FFFFFF;
-                color: #1E293B;
                 border-radius: 3px;
-                font-weight: bold;
-                font-size: 11px;
                 border: none;
             }
             QPushButton:hover {
@@ -239,7 +245,6 @@ class EditPropertiesDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Header Bar
         header = QFrame()
         header.setFixedHeight(34)
         header.setStyleSheet("background-color: #7B0082;")
@@ -264,7 +269,6 @@ class EditPropertiesDialog(QDialog):
         header_layout.addWidget(close_btn)
         layout.addWidget(header)
 
-        # Form Content Area
         form_widget = QWidget()
         form_layout = QVBoxLayout(form_widget)
         form_layout.setContentsMargins(16, 12, 16, 12)
@@ -500,7 +504,6 @@ class CredentialDesignEditorView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Top Editing Toolbar
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(34)
         editor_toolbar.setStyleSheet("background-color: #D6D6D6; border-bottom: 1px solid #B0B0B0;")
@@ -528,10 +531,8 @@ class CredentialDesignEditorView(QWidget):
             }
         """
 
-        # Group 1: Undo / Redo
         grp1 = QHBoxLayout()
         grp1.setSpacing(0)
-        
         btn_undo = QToolButton()
         btn_undo.setFixedSize(28, 26)
         btn_undo.setIcon(make_toolbar_icon("undo"))
@@ -550,10 +551,8 @@ class CredentialDesignEditorView(QWidget):
         sep1 = QFrame()
         sep1.setFixedWidth(8)
 
-        # Group 2: Copy / Cut / Paste
         grp2 = QHBoxLayout()
         grp2.setSpacing(0)
-
         btn_copy = QToolButton()
         btn_copy.setFixedSize(28, 26)
         btn_copy.setIcon(make_toolbar_icon("copy"))
@@ -579,10 +578,8 @@ class CredentialDesignEditorView(QWidget):
         sep2 = QFrame()
         sep2.setFixedWidth(8)
 
-        # Group 3: Text, Static Text, Photo, Static Graphic, Variable Graphic, Date, Signature
         grp3 = QHBoxLayout()
         grp3.setSpacing(0)
-
         tools_config = [
             ("text", "Text"),
             ("static_text", "Static Text"),
@@ -604,10 +601,8 @@ class CredentialDesignEditorView(QWidget):
         sep3 = QFrame()
         sep3.setFixedWidth(8)
 
-        # Group 4: Barcode, Magnetic Stripe, Smart Card Chip (Newly Added Group)
         grp4 = QHBoxLayout()
         grp4.setSpacing(0)
-
         new_tools_config = [
             ("barcode", "Barcode"),
             ("magnetic_stripe", "Magnetic Stripe"),
@@ -651,7 +646,6 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
 
-        # Canvas Area
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -703,7 +697,6 @@ class CredentialDesignEditorView(QWidget):
 
         content_layout.addWidget(canvas_container, stretch=1)
 
-        # Right Sidebar
         sidebar = QFrame()
         sidebar.setFixedWidth(220)
         sidebar.setStyleSheet("background-color: #F8FAFC; border-left: 1px solid #CBD5E1;")
@@ -753,7 +746,6 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # Bottom Action Bar
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(40)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
@@ -846,7 +838,6 @@ class EntrustDashboard(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Bar
         top_bar = QFrame()
         top_bar.setFixedHeight(48)
         top_bar.setStyleSheet("background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB;")
@@ -885,7 +876,6 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(top_bar)
 
-        # 2. Purple Secondary Navigation Bar
         self.purple_bar = QFrame()
         self.purple_bar.setFixedHeight(34)
         self.purple_bar.setStyleSheet("background-color: #7B0082;")
@@ -895,21 +885,18 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(self.purple_bar)
 
-        # 3. Middle Body Content
         body_container = QWidget()
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
 
         self.section_stack = QStackedWidget()
 
-        # Home Stack
         self.home_stack = QStackedWidget()
         self.home_credentials_page = GenericWorkspace("Home -> Credentials")
         self.home_reports_page = GenericWorkspace("Home -> Reports")
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Design Stack
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, on_create_click=self.open_editor_view)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True)
