@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Icons and Graphics Helpers (Updated to Dark Blue Icon Color)
+# Icons and Graphics Helpers
 # -------------------------------------------------------------
 def draw_grid_icon(size=14, color="#003366"):
     pixmap = QPixmap(size, size)
@@ -38,7 +38,7 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget (Left Aligned & Styled to Match Image)
+# Reusable Toolbar Widget
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -48,7 +48,7 @@ class ViewToggleToolbar(QFrame):
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(6, 3, 6, 3)
-        layout.setSpacing(0)  # ခလုတ်နှစ်ခုကို ကပ်ထားရန်
+        layout.setSpacing(0)
 
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(32, 26)
@@ -68,7 +68,6 @@ class ViewToggleToolbar(QFrame):
         if on_list_click:
             self.list_btn.clicked.connect(on_list_click)
 
-        # ဘယ်ဘက်အစွန်းတွင် ခလုတ်များကို ယှဉ်လျက် ထားရှိပါမည်
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
 
@@ -94,11 +93,10 @@ class ViewToggleToolbar(QFrame):
                 self.create_btn.clicked.connect(on_create_click)
             layout.addWidget(self.create_btn)
 
-        layout.addStretch()  # ညာဘက်သို့ အလွတ်နေရာ ပေးထားခြင်း
+        layout.addStretch()
 
     def set_active_state(self, is_grid_active):
         if is_grid_active:
-            # Active Grid Button Style (Grey Pressed look)
             self.grid_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
@@ -107,7 +105,6 @@ class ViewToggleToolbar(QFrame):
                     border-bottom-left-radius: 4px;
                 }
             """)
-            # Inactive List Button Style (Light Grey Gradient look)
             self.list_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
@@ -121,7 +118,6 @@ class ViewToggleToolbar(QFrame):
                 }
             """)
         else:
-            # Inactive Grid Button Style
             self.grid_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
@@ -133,7 +129,6 @@ class ViewToggleToolbar(QFrame):
                     background: #E0E0E0;
                 }
             """)
-            # Active List Button Style
             self.list_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
@@ -156,7 +151,6 @@ class GenericWorkspace(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Toolbar
         self.toolbar = ViewToggleToolbar(
             on_grid_click=self.show_grid_view,
             on_list_click=self.show_list_view,
@@ -165,10 +159,8 @@ class GenericWorkspace(QWidget):
         )
         layout.addWidget(self.toolbar)
 
-        # Content Views (Grid & List)
         self.view_stack = QStackedWidget()
 
-        # 1. Grid View Widget
         grid_widget = QWidget()
         grid_layout = QVBoxLayout(grid_widget)
         grid_label = QLabel(f"⬚ {title_text} - Grid View Content")
@@ -177,7 +169,6 @@ class GenericWorkspace(QWidget):
         grid_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         grid_layout.addWidget(grid_label)
 
-        # 2. List View Widget
         list_widget = QWidget()
         list_layout = QVBoxLayout(list_widget)
         list_label = QLabel(f"☰ {title_text} - List / Table View Content")
@@ -189,7 +180,6 @@ class GenericWorkspace(QWidget):
         self.view_stack.addWidget(grid_widget)
         self.view_stack.addWidget(list_widget)
 
-        # Set default view state
         if default_grid_active:
             self.view_stack.setCurrentIndex(0)
         else:
@@ -239,7 +229,6 @@ class EntrustDashboard(QWidget):
 
         top_layout.addStretch()
 
-        # Main Nav Buttons
         self.home_nav_btn = QPushButton("Home")
         self.design_nav_btn = QPushButton("Design")
         self.queue_nav_btn = QPushButton("Printer Queues")
@@ -275,7 +264,7 @@ class EntrustDashboard(QWidget):
 
         main_layout.addWidget(self.purple_bar)
 
-        # 3. Middle Body Content (Stacked Pages)
+        # 3. Middle Body Content
         body_container = QWidget()
         body_layout = QHBoxLayout(body_container)
         body_layout.setContentsMargins(0, 0, 0, 0)
@@ -283,14 +272,12 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
-        # Build Home View Stack (Credentials, Reports) - Grid Active by default
         self.home_stack = QStackedWidget()
         self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False, default_grid_active=True)
         self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False, default_grid_active=True)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Build Design View Stack
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True, default_grid_active=True)
@@ -307,7 +294,6 @@ class EntrustDashboard(QWidget):
 
         body_layout.addWidget(self.section_stack, stretch=1)
 
-        # Right Blank Side Panel
         right_panel = QFrame()
         right_panel.setFixedWidth(200)
         right_panel.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FFFFFF;")
@@ -338,7 +324,6 @@ class EntrustDashboard(QWidget):
         status_layout.addWidget(queue_status_btn)
         main_layout.addWidget(status_bar)
 
-        # Start at Home Section
         self.switch_to_home_section()
 
     def clear_purple_bar(self):
@@ -363,13 +348,11 @@ class EntrustDashboard(QWidget):
         btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
         btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
 
-        # Sub-tabs Alignment matching screenshot
-        self.purple_layout.addSpacing(60)
+        # Sub-tabs များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
+        self.purple_layout.addStretch()
         self.purple_layout.addWidget(btn_credentials)
         self.purple_layout.addWidget(btn_reports)
-        self.purple_layout.addStretch()
 
-        # Select first tab by default
         self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
 
     # --- DESIGN SECTION NAVIGATION ---
@@ -384,7 +367,8 @@ class EntrustDashboard(QWidget):
 
         tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
 
-        self.purple_layout.addSpacing(60)
+        # Sub-tabs များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
+        self.purple_layout.addStretch()
 
         for idx, btn in enumerate(tab_buttons):
             btn.setFont(QFont("Arial", 8.5, QFont.Bold))
@@ -393,12 +377,8 @@ class EntrustDashboard(QWidget):
             btn.clicked.connect(lambda _, i=idx: self.set_sub_tab(self.design_stack, i, tab_buttons))
             self.purple_layout.addWidget(btn)
 
-        self.purple_layout.addStretch()
-
-        # Select specified sub-tab
         self.set_sub_tab(self.design_stack, target_tab_index, tab_buttons)
 
-    # Helper function to switch tabs and update active tab UI style
     def set_sub_tab(self, stack_widget, index, button_list):
         stack_widget.setCurrentIndex(index)
         for i, btn in enumerate(button_list):
