@@ -27,12 +27,12 @@ jobs:
 
     - name: Build Executable with PyInstaller
       run: |
-        $target = Get-ChildItem -Recurse -Filter app.py | Select-Object -First 1
+        $target = Get-ChildItem -Recurse -Filter main.py | Select-Object -First 1
         if ($target) {
             Write-Host "Found target script at: $($target.FullName)"
             pyinstaller --noconfirm --onedir --windowed --name="InstantID" --collect-all PySide6 --hidden-import=PySide6 $target.FullName
         } else {
-            Write-Error "app.py file not found in repository!"
+            Write-Error "main.py file not found in repository!"
             exit 1
         }
 
