@@ -38,7 +38,7 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget
+# Reusable Toolbar Widget (Right-Aligned)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -49,6 +49,9 @@ class ViewToggleToolbar(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(6, 3, 6, 3)
         layout.setSpacing(0)
+
+        # ခလုတ်များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
+        layout.addStretch()
 
         self.grid_btn = QPushButton()
         self.grid_btn.setFixedSize(32, 26)
@@ -92,8 +95,6 @@ class ViewToggleToolbar(QFrame):
             if on_create_click:
                 self.create_btn.clicked.connect(on_create_click)
             layout.addWidget(self.create_btn)
-
-        layout.addStretch()
 
     def set_active_state(self, is_grid_active):
         if is_grid_active:
@@ -348,7 +349,6 @@ class EntrustDashboard(QWidget):
         btn_credentials.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports]))
         btn_reports.clicked.connect(lambda: self.set_sub_tab(self.home_stack, 1, [btn_credentials, btn_reports]))
 
-        # Sub-tabs များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
         self.purple_layout.addStretch()
         self.purple_layout.addWidget(btn_credentials)
         self.purple_layout.addWidget(btn_reports)
@@ -367,7 +367,6 @@ class EntrustDashboard(QWidget):
 
         tab_buttons = [btn_cred_designs, btn_workflows, btn_reports, btn_fields]
 
-        # Sub-tabs များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
         self.purple_layout.addStretch()
 
         for idx, btn in enumerate(tab_buttons):
