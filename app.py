@@ -172,17 +172,35 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawLine(6, 9.5, 13, 9.5)
         p.drawLine(9.5, 6, 9.5, 13)
 
-    elif icon_type == "card_rotate":
-        p.drawRoundedRect(QRectF(3, 8, 12, 13), 2, 2)
-        p.drawRoundedRect(QRectF(8, 4, 13, 12), 2, 2)
-        path = QPainterPath()
-        path.moveTo(3, 6)
-        path.arcTo(2, 2, 8, 8, 180, -120)
-        p.drawPath(path)
-        p.setBrush(QColor(color))
-        p.drawPolygon([QPointF(2, 4), QPointF(6, 2), QPointF(6, 6)])
+    # Orientation (Card Rotate) Icon matching the screenshot exactly
+    elif icon_type == "orientation":
+        pen_card = QPen(QColor(color), 1.8)
+        pen_card.setCapStyle(Qt.RoundCap)
+        pen_card.setJoinStyle(Qt.RoundJoin)
+        p.setPen(pen_card)
 
-    # 45 Degree Pencil Icon
+        # 1. Front Landscape Rect
+        p.drawRoundedRect(QRectF(7, 10, 6, 10), 1.5, 1.5)
+
+        # 2. Back Portrait Rect
+        p.drawRoundedRect(QRectF(12, 4, 8, 16), 1.5, 1.5)
+
+        # 3. Curved Arrow (Top-Left)
+        p.setPen(QPen(QColor(color), 1.5, Qt.SolidLine, Qt.RoundCap))
+        arrow_path = QPainterPath()
+        arrow_path.moveTo(5, 8)
+        arrow_path.quadTo(5, 4, 10, 4)
+        p.drawPath(arrow_path)
+
+        # Arrow Head
+        p.setBrush(QColor(color))
+        p.drawPolygon([QPointF(10, 2.5), QPointF(12, 4), QPointF(10, 5.5)])
+
+        # 4. Three horizontal dots inside the portrait card
+        p.drawEllipse(QRectF(14, 9, 1.2, 1.2))
+        p.drawEllipse(QRectF(16, 9, 1.2, 1.2))
+        p.drawEllipse(QRectF(18, 9, 1.2, 1.2))
+
     elif icon_type == "pencil_45":
         p.save()
         p.translate(size / 2, size / 2)
@@ -663,7 +681,7 @@ class CredentialDesignEditorView(QWidget):
         sep4 = QFrame()
         sep4.setFixedWidth(8)
 
-        # Drawing & View Tools Group (Line, Rectangle, Ellipse, Ruler, Grid, Zoom, Rotate)
+        # Drawing & View Tools Group (Line, Rectangle, Ellipse, Ruler, Grid, Zoom)
         grp5 = QHBoxLayout()
         grp5.setSpacing(0)
         drawing_tools = [
@@ -723,12 +741,13 @@ class CredentialDesignEditorView(QWidget):
 
         tb_layout.addSpacing(4)
 
-        btn_rotate = QToolButton()
-        btn_rotate.setFixedSize(28, 26)
-        btn_rotate.setIcon(make_toolbar_icon("card_rotate"))
-        btn_rotate.setToolTip("Rotate Card")
-        btn_rotate.setStyleSheet(btn_style)
-        tb_layout.addWidget(btn_rotate)
+        # Updated Orientation Button (Icon and Tooltip)
+        btn_orientation = QToolButton()
+        btn_orientation.setFixedSize(28, 26)
+        btn_orientation.setIcon(make_toolbar_icon("orientation"))
+        btn_orientation.setToolTip("Orientation")
+        btn_orientation.setStyleSheet(btn_style)
+        tb_layout.addWidget(btn_orientation)
 
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
