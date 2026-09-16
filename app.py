@@ -39,21 +39,21 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Edit Properties Dialog Popup Window
+# Edit Properties Dialog Popup Window (Updated UI)
 # -------------------------------------------------------------
 class EditPropertiesDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.setModal(True)
-        self.setFixedSize(400, 520)
-        self.setStyleSheet("QDialog { background-color: #FFFFFF; border: 1px solid #94A3B8; }")
+        self.setFixedSize(410, 560)
+        self.setStyleSheet("QDialog { background-color: #FFFFFF; border: 1px solid #000000; }")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # 1. Dialog Purple Header Bar
+        # 1. Header Bar
         header = QFrame()
         header.setFixedHeight(34)
         header.setStyleSheet("background-color: #7B0082;")
@@ -80,86 +80,149 @@ class EditPropertiesDialog(QDialog):
         header_layout.addWidget(close_btn)
         layout.addWidget(header)
 
-        # 2. Dialog Form Content
+        # 2. Form Content Area
         form_widget = QWidget()
         form_layout = QVBoxLayout(form_widget)
         form_layout.setContentsMargins(16, 12, 16, 12)
-        form_layout.setSpacing(8)
+        form_layout.setSpacing(6)
 
-        # Name Input
+        label_style = "color: #334155; font-size: 8.5pt; font-family: Arial;"
+        input_style = """
+            QLineEdit, QComboBox {
+                border: 1px solid #94A3B8;
+                border-radius: 3px;
+                padding: 2px 6px;
+                font-size: 8.5pt;
+                font-family: Arial;
+                background-color: #FFFFFF;
+                color: #0F172A;
+            }
+        """
+
+        # Name
         lbl_name = QLabel("Name")
-        lbl_name.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_name.setStyleSheet(label_style)
         txt_name = QLineEdit("Credential Design 1")
-        txt_name.setFixedHeight(26)
-        txt_name.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+        txt_name.setFixedSize(210, 26)
+        txt_name.setStyleSheet(input_style)
 
-        # Dimensions Combo
+        # Dimensions
         lbl_dim = QLabel("Dimensions")
-        lbl_dim.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_dim.setStyleSheet(label_style)
         cbo_dim = QComboBox()
         cbo_dim.addItems(["ISO ID-1", "CR-80", "Custom"])
-        cbo_dim.setFixedHeight(26)
-        cbo_dim.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; background-color: #FFFFFF;")
+        cbo_dim.setFixedSize(130, 26)
+        cbo_dim.setStyleSheet(input_style)
 
-        # Units Combo
+        # Units
         lbl_units = QLabel("Units")
-        lbl_units.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_units.setStyleSheet(label_style)
         cbo_units = QComboBox()
         cbo_units.addItems(["Centimeters", "Inches", "Millimeters"])
-        cbo_units.setFixedHeight(26)
-        cbo_units.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; background-color: #FFFFFF;")
+        cbo_units.setFixedSize(110, 26)
+        cbo_units.setStyleSheet(input_style)
 
-        # Width Line
+        # Width
         lbl_width = QLabel("Width")
-        lbl_width.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_width.setStyleSheet(label_style)
         width_box = QHBoxLayout()
+        width_box.setSpacing(8)
         txt_width = QLineEdit("8.5725")
-        txt_width.setFixedHeight(26)
-        txt_width.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+        txt_width.setFixedSize(110, 26)
+        txt_width.setStyleSheet(input_style)
         unit_w_lbl = QLabel("centimeters")
-        unit_w_lbl.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        unit_w_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
         width_box.addWidget(txt_width)
         width_box.addWidget(unit_w_lbl)
         width_box.addStretch()
 
-        # Height Line
+        # Height
         lbl_height = QLabel("Height")
-        lbl_height.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_height.setStyleSheet(label_style)
         height_box = QHBoxLayout()
+        height_box.setSpacing(8)
         txt_height = QLineEdit("5.3975")
-        txt_height.setFixedHeight(26)
-        txt_height.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+        txt_height.setFixedSize(110, 26)
+        txt_height.setStyleSheet(input_style)
         unit_h_lbl = QLabel("centimeters")
-        unit_h_lbl.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        unit_h_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
         height_box.addWidget(txt_height)
         height_box.addWidget(unit_h_lbl)
         height_box.addStretch()
 
-        # Checkboxes
-        chk_rewritable = QCheckBox("Rewritable credential  ?")
-        chk_rewritable.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
-        chk_print_edge = QCheckBox("Print over the edge  ?")
-        chk_print_edge.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        # Helper function for Checkboxes with Question Mark Badge
+        def make_checkbox_row(text):
+            row = QHBoxLayout()
+            row.setSpacing(6)
+            chk = QCheckBox(text)
+            chk.setStyleSheet("""
+                QCheckBox {
+                    font-size: 8.5pt;
+                    font-family: Arial;
+                    color: #334155;
+                }
+                QCheckBox::indicator {
+                    width: 12px;
+                    height: 12px;
+                    border: 1px solid #0284C7;
+                    border-radius: 2px;
+                    background-color: #FFFFFF;
+                }
+                QCheckBox::indicator:checked {
+                    background-color: #0284C7;
+                }
+            """)
+            
+            help_btn = QLabel("?")
+            help_btn.setFixedSize(16, 16)
+            help_btn.setAlignment(Qt.AlignCenter)
+            help_btn.setStyleSheet("""
+                background-color: #38BDF8;
+                color: #FFFFFF;
+                font-weight: bold;
+                font-size: 8pt;
+                border-radius: 8px;
+            """)
+            
+            row.addWidget(chk)
+            row.addWidget(help_btn)
+            row.addStretch()
+            return row
 
-        # Description Field
+        row_rewritable = make_checkbox_row("Rewritable credential")
+        row_print_edge = make_checkbox_row("Print over the edge")
+
+        # Description
         lbl_desc = QLabel("Description")
-        lbl_desc.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        lbl_desc.setStyleSheet(label_style)
         txt_desc = QTextEdit()
-        txt_desc.setFixedHeight(100)
-        txt_desc.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px;")
+        txt_desc.setFixedHeight(120)
+        txt_desc.setStyleSheet("""
+            QTextEdit {
+                border: 1px solid #94A3B8;
+                border-radius: 3px;
+                background-color: #FFFFFF;
+            }
+        """)
 
         form_layout.addWidget(lbl_name)
         form_layout.addWidget(txt_name)
+        form_layout.addSpacing(2)
         form_layout.addWidget(lbl_dim)
         form_layout.addWidget(cbo_dim)
+        form_layout.addSpacing(2)
         form_layout.addWidget(lbl_units)
         form_layout.addWidget(cbo_units)
+        form_layout.addSpacing(2)
         form_layout.addWidget(lbl_width)
         form_layout.addLayout(width_box)
+        form_layout.addSpacing(2)
         form_layout.addWidget(lbl_height)
         form_layout.addLayout(height_box)
-        form_layout.addWidget(chk_rewritable)
-        form_layout.addWidget(chk_print_edge)
+        form_layout.addSpacing(4)
+        form_layout.addLayout(row_rewritable)
+        form_layout.addLayout(row_print_edge)
+        form_layout.addSpacing(4)
         form_layout.addWidget(lbl_desc)
         form_layout.addWidget(txt_desc)
 
@@ -683,7 +746,6 @@ class EntrustDashboard(QWidget):
             QPushButton:hover { background-color: #CBD5E1; }
         """)
         
-        # Pencil Button နှိပ်ပါက Edit Properties Dialog ပွင့်လာမည်
         edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
         self.purple_layout.addWidget(title_lbl)
