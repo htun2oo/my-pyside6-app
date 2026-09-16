@@ -533,12 +533,12 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View
+# Credential Design Editor View (Matching Image 2 Layout Perfectly)
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
         super().__init__()
-        self.setStyleSheet("background-color: #EFEFEF;")
+        self.setStyleSheet("background-color: #A0A0A0;")
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
@@ -744,87 +744,103 @@ class CredentialDesignEditorView(QWidget):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Canvas Area
+        # Main Scroll Workspace
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #B3B3B3; }")
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #FFFFFF; }")
 
         canvas_container = QWidget()
-        canvas_container.setStyleSheet("background-color: #B3B3B3;")
+        canvas_container.setStyleSheet("background-color: #FFFFFF;")
         canvas_layout = QHBoxLayout(canvas_container)
-        canvas_layout.setContentsMargins(30, 25, 30, 25)
+        canvas_layout.setContentsMargins(15, 12, 15, 15)
         canvas_layout.setSpacing(30)
+        canvas_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # Front Side (Landscape 360x230)
-        front_box = QVBoxLayout()
-        front_box.setSpacing(8)
-        
-        front_header_layout = QHBoxLayout()
+        # ----------------- FRONT SIDE CARD AREA -----------------
+        front_container = QVBoxLayout()
+        front_container.setSpacing(6)
+
+        # Headers Row Above Grey Container
+        front_header_row = QHBoxLayout()
+        front_header_row.setContentsMargins(0, 0, 0, 0)
+
         front_title = QLabel("Front Side")
-        front_title.setFont(QFont("Arial", 9.5, QFont.Bold))
-        front_title.setStyleSheet("color: #0F172A;")
+        front_title.setFont(QFont("Arial", 10, QFont.Bold))
+        front_title.setStyleSheet("color: #000000;")
 
         self.active_layer_lbl = QLabel("Active Design Layer: Color")
-        self.active_layer_lbl.setFont(QFont("Arial", 9.5, QFont.Bold))
-        self.active_layer_lbl.setStyleSheet("color: #0F172A;")
+        self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
+        self.active_layer_lbl.setStyleSheet("color: #000000;")
 
-        front_header_layout.addWidget(front_title)
-        front_header_layout.addSpacing(40)
-        front_header_layout.addWidget(self.active_layer_lbl)
-        front_header_layout.addStretch()
-        
-        front_box.addLayout(front_header_layout)
+        front_header_row.addWidget(front_title)
+        front_header_row.addStretch()
+        front_header_row.addWidget(self.active_layer_lbl)
 
+        # Outer Grey Card Container Frame
         front_card_bg = QFrame()
-        front_card_bg.setFixedSize(380, 300)
-        front_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
+        front_card_bg.setFixedSize(360, 390)
+        front_card_bg.setStyleSheet("background-color: #999999; border: none;")
+        
         fc_layout = QVBoxLayout(front_card_bg)
-        fc_layout.setContentsMargins(10, 35, 10, 35)
+        fc_layout.setContentsMargins(0, 0, 0, 0)
         fc_layout.setAlignment(Qt.AlignCenter)
 
+        # White Card Canvas Area
         front_card = QFrame()
-        front_card.setFixedSize(360, 230)
-        front_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 16px;")
+        front_card.setFixedSize(325, 205)
+        front_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 18px;")
         fc_layout.addWidget(front_card)
-        front_box.addWidget(front_card_bg)
 
-        # Back Side (Landscape 360x230)
-        back_box = QVBoxLayout()
-        back_box.setSpacing(8)
-        
+        front_container.addLayout(front_header_row)
+        front_container.addWidget(front_card_bg)
+
+        # ----------------- BACK SIDE CARD AREA -----------------
+        back_container = QVBoxLayout()
+        back_container.setSpacing(6)
+
+        # Header Row Above Grey Container
+        back_header_row = QHBoxLayout()
+        back_header_row.setContentsMargins(0, 0, 0, 0)
+
         back_title = QLabel("Back Side")
-        back_title.setFont(QFont("Arial", 9.5, QFont.Bold))
-        back_title.setStyleSheet("color: #0F172A;")
-        back_box.addWidget(back_title)
+        back_title.setFont(QFont("Arial", 10, QFont.Bold))
+        back_title.setStyleSheet("color: #000000;")
 
+        back_header_row.addWidget(back_title)
+        back_header_row.addStretch()
+
+        # Outer Grey Card Container Frame
         back_card_bg = QFrame()
-        back_card_bg.setFixedSize(380, 300)
-        back_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
+        back_card_bg.setFixedSize(360, 390)
+        back_card_bg.setStyleSheet("background-color: #999999; border: none;")
+
         bc_layout = QVBoxLayout(back_card_bg)
-        bc_layout.setContentsMargins(10, 35, 10, 35)
+        bc_layout.setContentsMargins(0, 0, 0, 0)
         bc_layout.setAlignment(Qt.AlignCenter)
 
+        # White Card Canvas Area
         back_card = QFrame()
-        back_card.setFixedSize(360, 230)
-        back_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 16px;")
+        back_card.setFixedSize(325, 205)
+        back_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 18px;")
         bc_layout.addWidget(back_card)
-        back_box.addWidget(back_card_bg)
 
-        canvas_layout.addLayout(front_box)
-        canvas_layout.addLayout(back_box)
-        canvas_layout.addStretch()
+        back_container.addLayout(back_header_row)
+        back_container.addWidget(back_card_bg)
+
+        # Add Both Containers to Canvas
+        canvas_layout.addLayout(front_container)
+        canvas_layout.addLayout(back_container)
 
         scroll_area.setWidget(canvas_container)
         content_layout.addWidget(scroll_area, stretch=1)
 
-        # ---------------- Right Sidebar Panel (Matching Screenshot 2 Perfectly) ----------------
+        # ---------------- RIGHT SIDEBAR PANEL ----------------
         sidebar = QFrame()
         sidebar.setFixedWidth(270)
-        sidebar.setStyleSheet("background-color: #B3B3B3; border-left: 1px solid #999999;")
+        sidebar.setStyleSheet("background-color: #FFFFFF; border-left: 1px solid #CCCCCC;")
         sb_layout = QVBoxLayout(sidebar)
         sb_layout.setContentsMargins(0, 0, 0, 0)
 
-        # QTabWidget matching Native/Screenshot Look
         right_tabs = QTabWidget()
         
         # Tab 1: Properties
@@ -834,7 +850,6 @@ class CredentialDesignEditorView(QWidget):
         prop_tab_layout.setContentsMargins(12, 12, 12, 12)
         prop_tab_layout.setAlignment(Qt.AlignTop)
 
-        # Group Frame ("Front Side Properties")
         card_frame = QFrame()
         card_frame.setStyleSheet("""
             QFrame {
@@ -848,7 +863,6 @@ class CredentialDesignEditorView(QWidget):
         card_layout.setContentsMargins(0, 0, 0, 12)
         card_layout.setSpacing(10)
 
-        # Inner Header (- Front Side Properties)
         header_frame = QFrame()
         header_frame.setStyleSheet("""
             QFrame {
@@ -877,7 +891,6 @@ class CredentialDesignEditorView(QWidget):
 
         card_layout.addWidget(header_frame)
 
-        # Checkboxes Container & Styling
         checkbox_container = QWidget()
         checkbox_container.setStyleSheet("border: none;")
         checkbox_layout = QVBoxLayout(checkbox_container)
@@ -923,7 +936,6 @@ class CredentialDesignEditorView(QWidget):
         right_tabs.addTab(properties_tab, "Properties")
         right_tabs.addTab(layers_tab, "Layers")
 
-        # QTabWidget Styling matching Screenshot 2
         right_tabs.setStyleSheet("""
             QTabWidget::pane {
                 border: none;
@@ -953,7 +965,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # Bottom Controls
+        # Bottom Action Bar
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(54)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
