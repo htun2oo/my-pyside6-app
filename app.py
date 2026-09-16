@@ -39,7 +39,7 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Edit Properties Dialog Popup Window (Updated UI)
+# Edit Properties Dialog Popup Window
 # -------------------------------------------------------------
 class EditPropertiesDialog(QDialog):
     def __init__(self, parent=None):
@@ -106,19 +106,19 @@ class EditPropertiesDialog(QDialog):
         txt_name.setFixedSize(210, 26)
         txt_name.setStyleSheet(input_style)
 
-        # Dimensions
+        # Dimensions (ISO ID-1, CR-50, Custom ထည့်သွင်းထားပါသည်)
         lbl_dim = QLabel("Dimensions")
         lbl_dim.setStyleSheet(label_style)
         cbo_dim = QComboBox()
-        cbo_dim.addItems(["ISO ID-1", "CR-80", "Custom"])
+        cbo_dim.addItems(["ISO ID-1", "CR-50", "Custom"])
         cbo_dim.setFixedSize(130, 26)
         cbo_dim.setStyleSheet(input_style)
 
-        # Units
+        # Units (Centimeters, Millimeters ထည့်သွင်းထားပါသည်)
         lbl_units = QLabel("Units")
         lbl_units.setStyleSheet(label_style)
         cbo_units = QComboBox()
-        cbo_units.addItems(["Centimeters", "Inches", "Millimeters"])
+        cbo_units.addItems(["Centimeters", "Millimeters"])
         cbo_units.setFixedSize(110, 26)
         cbo_units.setStyleSheet(input_style)
 
