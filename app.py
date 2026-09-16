@@ -1,9 +1,10 @@
 import sys
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox, QToolButton
+    QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox,
+    QToolButton, QDialog, QLineEdit, QTextEdit
 )
 
 # -------------------------------------------------------------
@@ -38,7 +39,167 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Reusable View Toggle Toolbar Widget
+# Edit Properties Dialog Popup Window
+# -------------------------------------------------------------
+class EditPropertiesDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setModal(True)
+        self.setFixedSize(400, 520)
+        self.setStyleSheet("QDialog { background-color: #FFFFFF; border: 1px solid #94A3B8; }")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # 1. Dialog Purple Header Bar
+        header = QFrame()
+        header.setFixedHeight(34)
+        header.setStyleSheet("background-color: #7B0082;")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(12, 0, 8, 0)
+
+        title = QLabel("Edit Properties")
+        title.setFont(QFont("Arial", 9.5, QFont.Bold))
+        title.setStyleSheet("color: #FFFFFF;")
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(20, 20)
+        close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background: #6B0072; color: #FFFFFF; border: none; border-radius: 10px; font-weight: bold; font-size: 10px;
+            }
+            QPushButton:hover { background: #92009C; }
+        """)
+        close_btn.clicked.connect(self.reject)
+
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header_layout.addWidget(close_btn)
+        layout.addWidget(header)
+
+        # 2. Dialog Form Content
+        form_widget = QWidget()
+        form_layout = QVBoxLayout(form_widget)
+        form_layout.setContentsMargins(16, 12, 16, 12)
+        form_layout.setSpacing(8)
+
+        # Name Input
+        lbl_name = QLabel("Name")
+        lbl_name.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        txt_name = QLineEdit("Credential Design 1")
+        txt_name.setFixedHeight(26)
+        txt_name.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+
+        # Dimensions Combo
+        lbl_dim = QLabel("Dimensions")
+        lbl_dim.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        cbo_dim = QComboBox()
+        cbo_dim.addItems(["ISO ID-1", "CR-80", "Custom"])
+        cbo_dim.setFixedHeight(26)
+        cbo_dim.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; background-color: #FFFFFF;")
+
+        # Units Combo
+        lbl_units = QLabel("Units")
+        lbl_units.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        cbo_units = QComboBox()
+        cbo_units.addItems(["Centimeters", "Inches", "Millimeters"])
+        cbo_units.setFixedHeight(26)
+        cbo_units.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; background-color: #FFFFFF;")
+
+        # Width Line
+        lbl_width = QLabel("Width")
+        lbl_width.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        width_box = QHBoxLayout()
+        txt_width = QLineEdit("8.5725")
+        txt_width.setFixedHeight(26)
+        txt_width.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+        unit_w_lbl = QLabel("centimeters")
+        unit_w_lbl.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        width_box.addWidget(txt_width)
+        width_box.addWidget(unit_w_lbl)
+        width_box.addStretch()
+
+        # Height Line
+        lbl_height = QLabel("Height")
+        lbl_height.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        height_box = QHBoxLayout()
+        txt_height = QLineEdit("5.3975")
+        txt_height.setFixedHeight(26)
+        txt_height.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px; padding: 0 6px;")
+        unit_h_lbl = QLabel("centimeters")
+        unit_h_lbl.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        height_box.addWidget(txt_height)
+        height_box.addWidget(unit_h_lbl)
+        height_box.addStretch()
+
+        # Checkboxes
+        chk_rewritable = QCheckBox("Rewritable credential  ?")
+        chk_rewritable.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+        chk_print_edge = QCheckBox("Print over the edge  ?")
+        chk_print_edge.setStyleSheet("color: #1E293B; font-size: 8.5pt;")
+
+        # Description Field
+        lbl_desc = QLabel("Description")
+        lbl_desc.setStyleSheet("color: #475569; font-size: 8.5pt;")
+        txt_desc = QTextEdit()
+        txt_desc.setFixedHeight(100)
+        txt_desc.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 3px;")
+
+        form_layout.addWidget(lbl_name)
+        form_layout.addWidget(txt_name)
+        form_layout.addWidget(lbl_dim)
+        form_layout.addWidget(cbo_dim)
+        form_layout.addWidget(lbl_units)
+        form_layout.addWidget(cbo_units)
+        form_layout.addWidget(lbl_width)
+        form_layout.addLayout(width_box)
+        form_layout.addWidget(lbl_height)
+        form_layout.addLayout(height_box)
+        form_layout.addWidget(chk_rewritable)
+        form_layout.addWidget(chk_print_edge)
+        form_layout.addWidget(lbl_desc)
+        form_layout.addWidget(txt_desc)
+
+        layout.addWidget(form_widget, stretch=1)
+
+        # 3. Bottom Actions
+        bottom_bar = QFrame()
+        bottom_bar.setFixedHeight(44)
+        bottom_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
+        bb_layout = QHBoxLayout(bottom_bar)
+        bb_layout.setContentsMargins(16, 0, 16, 0)
+        bb_layout.setSpacing(10)
+
+        btn_ok = QPushButton("OK")
+        btn_ok.setFixedSize(72, 28)
+        btn_ok.setCursor(Qt.PointingHandCursor)
+        btn_ok.setStyleSheet("""
+            QPushButton { background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: none; border-radius: 3px; }
+            QPushButton:hover { background-color: #0369A1; }
+        """)
+        btn_ok.clicked.connect(self.accept)
+
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setFixedSize(72, 28)
+        btn_cancel.setCursor(Qt.PointingHandCursor)
+        btn_cancel.setStyleSheet("""
+            QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px; }
+            QPushButton:hover { background-color: #CBD5E1; }
+        """)
+        btn_cancel.clicked.connect(self.reject)
+
+        bb_layout.addWidget(btn_ok)
+        bb_layout.addWidget(btn_cancel)
+        bb_layout.addStretch()
+
+        layout.addWidget(bottom_bar)
+
+
+# -------------------------------------------------------------
+# Reusable Toolbar Widget
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -141,7 +302,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View (Full Interactive Screen)
+# Credential Design Editor View
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
@@ -159,7 +320,6 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.setContentsMargins(8, 2, 8, 2)
         tb_layout.setSpacing(4)
 
-        # Dummy Icons for Toolbar
         tools = ["↩", "↪", "|", "📋", "✂", "🗑", "|", "T", "T", "👤", "📷", "📊", "▦", "▤", "║", "▭", "╱", "❏", "◯", "|", "📏", "▦", "|", "🔍", "🔍"]
         for tool in tools:
             if tool == "|":
@@ -196,14 +356,12 @@ class CredentialDesignEditorView(QWidget):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Left Canvas View Area
         canvas_container = QWidget()
         canvas_container.setStyleSheet("background-color: #B3B3B3;")
         canvas_layout = QHBoxLayout(canvas_container)
         canvas_layout.setContentsMargins(30, 15, 30, 15)
         canvas_layout.setSpacing(30)
 
-        # Front Side Block
         front_box = QVBoxLayout()
         front_title = QLabel("Front Side                                Active Design Layer: Color")
         front_title.setFont(QFont("Arial", 9, QFont.Bold))
@@ -221,7 +379,6 @@ class CredentialDesignEditorView(QWidget):
         fc_layout.addWidget(front_card)
         front_box.addWidget(front_card_bg)
 
-        # Back Side Block
         back_box = QVBoxLayout()
         back_title = QLabel("Back Side")
         back_title.setFont(QFont("Arial", 9, QFont.Bold))
@@ -245,7 +402,6 @@ class CredentialDesignEditorView(QWidget):
 
         content_layout.addWidget(canvas_container, stretch=1)
 
-        # Right Properties Sidebar Panel
         sidebar = QFrame()
         sidebar.setFixedWidth(220)
         sidebar.setStyleSheet("background-color: #F8FAFC; border-left: 1px solid #CBD5E1;")
@@ -253,7 +409,6 @@ class CredentialDesignEditorView(QWidget):
         sb_layout.setContentsMargins(0, 0, 0, 0)
         sb_layout.setSpacing(0)
 
-        # Properties / Layers Tabs Header
         sb_tabs = QFrame()
         sb_tabs.setFixedHeight(30)
         sb_tabs.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E1;")
@@ -272,7 +427,6 @@ class CredentialDesignEditorView(QWidget):
         sb_tabs_layout.addWidget(layer_tab)
         sb_layout.addWidget(sb_tabs)
 
-        # Sidebar Content Body
         sb_content = QWidget()
         sb_content_layout = QVBoxLayout(sb_content)
         sb_content_layout.setContentsMargins(10, 10, 10, 10)
@@ -480,14 +634,13 @@ class EntrustDashboard(QWidget):
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Design Stack Pages (Including Editor Page)
+        # Design Stack Pages
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True, on_create_click=self.open_editor_view)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True, default_grid_active=True)
         self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=True, default_grid_active=True)
         self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=True, default_grid_active=True)
         
-        # Adding Credential Design Editor as Page Index 4
         self.editor_page = CredentialDesignEditorView(on_close_callback=self.close_editor_view)
 
         self.design_stack.addWidget(self.design_cred_page)
@@ -511,9 +664,9 @@ class EntrustDashboard(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-    # --- ACTION TO OPEN DESIGN EDITOR VIEW ---
+    # --- ACTION TO OPEN DESIGN EDITOR VIEW & HANDLE PENCIL CLICK ---
     def open_editor_view(self):
-        self.design_stack.setCurrentIndex(4)  # Switch to Editor View
+        self.design_stack.setCurrentIndex(4)
         self.clear_purple_bar()
 
         title_lbl = QLabel("Credential Design 1")
@@ -522,12 +675,25 @@ class EntrustDashboard(QWidget):
 
         edit_icon_btn = QPushButton("✏")
         edit_icon_btn.setFixedSize(22, 22)
-        edit_icon_btn.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border-radius: 3px; font-weight: bold;")
+        edit_icon_btn.setCursor(Qt.PointingHandCursor)
+        edit_icon_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #E2E8F0; color: #1E293B; border-radius: 3px; font-weight: bold; font-size: 11px;
+            }
+            QPushButton:hover { background-color: #CBD5E1; }
+        """)
+        
+        # Pencil Button နှိပ်ပါက Edit Properties Dialog ပွင့်လာမည်
+        edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
         self.purple_layout.addWidget(title_lbl)
         self.purple_layout.addSpacing(6)
         self.purple_layout.addWidget(edit_icon_btn)
         self.purple_layout.addStretch()
+
+    def show_edit_properties_dialog(self):
+        dialog = EditPropertiesDialog(self)
+        dialog.exec()
 
     def close_editor_view(self):
         self.switch_to_design_section(0)
