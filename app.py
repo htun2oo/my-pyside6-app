@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget
+    QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox, QToolButton
 )
 
 # -------------------------------------------------------------
@@ -38,7 +38,7 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget (Right-Aligned)
+# Reusable View Toggle Toolbar Widget
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -50,7 +50,6 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(6, 3, 6, 3)
         layout.setSpacing(0)
 
-        # ခလုတ်များကို ညာဘက်သို့ ကပ်ရန် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
         layout.addStretch()
 
         self.grid_btn = QPushButton()
@@ -142,10 +141,210 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Functional Workspace View
+# Credential Design Editor View (Full Interactive Screen)
+# -------------------------------------------------------------
+class CredentialDesignEditorView(QWidget):
+    def __init__(self, on_close_callback=None):
+        super().__init__()
+        self.setStyleSheet("background-color: #EFEFEF;")
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # 1. Top Editing Toolbar
+        editor_toolbar = QFrame()
+        editor_toolbar.setFixedHeight(38)
+        editor_toolbar.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E1;")
+        tb_layout = QHBoxLayout(editor_toolbar)
+        tb_layout.setContentsMargins(8, 2, 8, 2)
+        tb_layout.setSpacing(4)
+
+        # Dummy Icons for Toolbar
+        tools = ["↩", "↪", "|", "📋", "✂", "🗑", "|", "T", "T", "👤", "📷", "📊", "▦", "▤", "║", "▭", "╱", "❏", "◯", "|", "📏", "▦", "|", "🔍", "🔍"]
+        for tool in tools:
+            if tool == "|":
+                line = QFrame()
+                line.setFrameShape(QFrame.VLine)
+                line.setFrameShadow(QFrame.Sunken)
+                line.setStyleSheet("color: #94A3B8;")
+                tb_layout.addWidget(line)
+            else:
+                btn = QToolButton()
+                btn.setText(tool)
+                btn.setFixedSize(26, 26)
+                btn.setStyleSheet("QToolButton { background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; font-weight: bold; } QToolButton:hover { background-color: #F1F5F9; }")
+                tb_layout.addWidget(btn)
+
+        zoom_combo = QComboBox()
+        zoom_combo.addItems(["100%", "75%", "50%", "150%"])
+        zoom_combo.setFixedSize(70, 26)
+        zoom_combo.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px;")
+        tb_layout.addWidget(zoom_combo)
+
+        pop_btn = QToolButton()
+        pop_btn.setText("⇱")
+        pop_btn.setFixedSize(26, 26)
+        pop_btn.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px;")
+        tb_layout.addWidget(pop_btn)
+
+        tb_layout.addStretch()
+        main_layout.addWidget(editor_toolbar)
+
+        # 2. Canvas Area + Properties Sidebar
+        content_area = QWidget()
+        content_layout = QHBoxLayout(content_area)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+
+        # Left Canvas View Area
+        canvas_container = QWidget()
+        canvas_container.setStyleSheet("background-color: #B3B3B3;")
+        canvas_layout = QHBoxLayout(canvas_container)
+        canvas_layout.setContentsMargins(30, 15, 30, 15)
+        canvas_layout.setSpacing(30)
+
+        # Front Side Block
+        front_box = QVBoxLayout()
+        front_title = QLabel("Front Side                                Active Design Layer: Color")
+        front_title.setFont(QFont("Arial", 9, QFont.Bold))
+        front_title.setStyleSheet("color: #0F172A;")
+        front_box.addWidget(front_title)
+
+        front_card_bg = QFrame()
+        front_card_bg.setFixedSize(300, 380)
+        front_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
+        fc_layout = QVBoxLayout(front_card_bg)
+        fc_layout.setContentsMargins(20, 50, 20, 50)
+
+        front_card = QFrame()
+        front_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        fc_layout.addWidget(front_card)
+        front_box.addWidget(front_card_bg)
+
+        # Back Side Block
+        back_box = QVBoxLayout()
+        back_title = QLabel("Back Side")
+        back_title.setFont(QFont("Arial", 9, QFont.Bold))
+        back_title.setStyleSheet("color: #0F172A;")
+        back_box.addWidget(back_title)
+
+        back_card_bg = QFrame()
+        back_card_bg.setFixedSize(300, 380)
+        back_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
+        bc_layout = QVBoxLayout(back_card_bg)
+        bc_layout.setContentsMargins(20, 50, 20, 50)
+
+        back_card = QFrame()
+        back_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        bc_layout.addWidget(back_card)
+        back_box.addWidget(back_card_bg)
+
+        canvas_layout.addLayout(front_box)
+        canvas_layout.addLayout(back_box)
+        canvas_layout.addStretch()
+
+        content_layout.addWidget(canvas_container, stretch=1)
+
+        # Right Properties Sidebar Panel
+        sidebar = QFrame()
+        sidebar.setFixedWidth(220)
+        sidebar.setStyleSheet("background-color: #F8FAFC; border-left: 1px solid #CBD5E1;")
+        sb_layout = QVBoxLayout(sidebar)
+        sb_layout.setContentsMargins(0, 0, 0, 0)
+        sb_layout.setSpacing(0)
+
+        # Properties / Layers Tabs Header
+        sb_tabs = QFrame()
+        sb_tabs.setFixedHeight(30)
+        sb_tabs.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E1;")
+        sb_tabs_layout = QHBoxLayout(sb_tabs)
+        sb_tabs_layout.setContentsMargins(0, 0, 0, 0)
+        sb_tabs_layout.setSpacing(0)
+
+        prop_tab = QPushButton("Properties")
+        prop_tab.setFont(QFont("Arial", 8, QFont.Bold))
+        prop_tab.setStyleSheet("background-color: #FFFFFF; border: none; border-top: 2px solid #7B0082;")
+        layer_tab = QPushButton("Layers")
+        layer_tab.setFont(QFont("Arial", 8))
+        layer_tab.setStyleSheet("background-color: transparent; border: none; color: #475569;")
+
+        sb_tabs_layout.addWidget(prop_tab)
+        sb_tabs_layout.addWidget(layer_tab)
+        sb_layout.addWidget(sb_tabs)
+
+        # Sidebar Content Body
+        sb_content = QWidget()
+        sb_content_layout = QVBoxLayout(sb_content)
+        sb_content_layout.setContentsMargins(10, 10, 10, 10)
+
+        prop_header = QLabel("- Front Side Properties")
+        prop_header.setFont(QFont("Arial", 8.5, QFont.Bold))
+        prop_header.setStyleSheet("color: #1E293B; background-color: #E2E8F0; padding: 4px; border-radius: 2px;")
+        sb_content_layout.addWidget(prop_header)
+
+        chk_rotate = QCheckBox("Rotate print orientation 180\ndegrees")
+        chk_rotate.setFont(QFont("Arial", 8))
+        chk_rotate.setStyleSheet("color: #475569; margin-top: 6px;")
+
+        chk_tactile = QCheckBox("Tactile Impression Module")
+        chk_tactile.setFont(QFont("Arial", 8))
+        chk_tactile.setStyleSheet("color: #475569; margin-top: 6px;")
+
+        sb_content_layout.addWidget(chk_rotate)
+        sb_content_layout.addWidget(chk_tactile)
+        sb_content_layout.addStretch()
+
+        sb_layout.addWidget(sb_content)
+        content_layout.addWidget(sidebar)
+
+        main_layout.addWidget(content_area, stretch=1)
+
+        # 3. Bottom Action Buttons Bar
+        bottom_bar = QFrame()
+        bottom_bar.setFixedHeight(40)
+        bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
+        bb_layout = QHBoxLayout(bottom_bar)
+        bb_layout.setContentsMargins(10, 5, 10, 5)
+        bb_layout.setSpacing(8)
+
+        btn_save = QPushButton("Save")
+        btn_save.setFixedSize(70, 28)
+        btn_save.setStyleSheet("background-color: #0284C7; color: #FFFFFF; font-weight: bold; border: none; border-radius: 3px;")
+
+        btn_save_as = QPushButton("Save As...")
+        btn_save_as.setFixedSize(80, 28)
+        btn_save_as.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px;")
+
+        btn_close = QPushButton("Close")
+        btn_close.setFixedSize(70, 28)
+        btn_close.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px;")
+        if on_close_callback:
+            btn_close.clicked.connect(on_close_callback)
+
+        btn_print = QPushButton("Print Sample")
+        btn_print.setFixedSize(90, 28)
+        btn_print.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px;")
+
+        btn_quick = QPushButton("Quick Start")
+        btn_quick.setFixedSize(80, 28)
+        btn_quick.setEnabled(False)
+        btn_quick.setStyleSheet("background-color: #F1F5F9; color: #94A3B8; border: 1px solid #E2E8F0; border-radius: 3px;")
+
+        bb_layout.addWidget(btn_save)
+        bb_layout.addWidget(btn_save_as)
+        bb_layout.addWidget(btn_close)
+        bb_layout.addWidget(btn_print)
+        bb_layout.addWidget(btn_quick)
+        bb_layout.addStretch()
+
+        main_layout.addWidget(bottom_bar)
+
+
+# -------------------------------------------------------------
+# Generic Workspace Wrapper
 # -------------------------------------------------------------
 class GenericWorkspace(QWidget):
-    def __init__(self, title_text="Workspace", show_create=False, default_grid_active=True):
+    def __init__(self, title_text="Workspace", show_create=False, default_grid_active=True, on_create_click=None):
         super().__init__()
         self.setStyleSheet("background-color: #FFFFFF;")
         layout = QVBoxLayout(self)
@@ -156,7 +355,8 @@ class GenericWorkspace(QWidget):
             on_grid_click=self.show_grid_view,
             on_list_click=self.show_list_view,
             is_grid_active=default_grid_active,
-            show_create_btn=show_create
+            show_create_btn=show_create,
+            on_create_click=on_create_click
         )
         layout.addWidget(self.toolbar)
 
@@ -273,57 +473,35 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
+        # Home Stack Pages
         self.home_stack = QStackedWidget()
         self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False, default_grid_active=True)
         self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False, default_grid_active=True)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
+        # Design Stack Pages (Including Editor Page)
         self.design_stack = QStackedWidget()
-        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True)
+        self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True, on_create_click=self.open_editor_view)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True, default_grid_active=True)
         self.design_reports_page = GenericWorkspace("Design -> Reports", show_create=True, default_grid_active=True)
         self.design_fields_page = GenericWorkspace("Design -> Field Connections", show_create=True, default_grid_active=True)
+        
+        # Adding Credential Design Editor as Page Index 4
+        self.editor_page = CredentialDesignEditorView(on_close_callback=self.close_editor_view)
 
         self.design_stack.addWidget(self.design_cred_page)
         self.design_stack.addWidget(self.design_workflow_page)
         self.design_stack.addWidget(self.design_reports_page)
         self.design_stack.addWidget(self.design_fields_page)
+        self.design_stack.addWidget(self.editor_page)
 
         self.section_stack.addWidget(self.home_stack)
         self.section_stack.addWidget(self.design_stack)
 
         body_layout.addWidget(self.section_stack, stretch=1)
 
-        right_panel = QFrame()
-        right_panel.setFixedWidth(200)
-        right_panel.setStyleSheet("border-left: 1px solid #D1D5DB; background-color: #FFFFFF;")
-        body_layout.addWidget(right_panel)
-
         main_layout.addWidget(body_container, stretch=1)
-
-        # 4. Bottom Status Bar
-        status_bar = QFrame()
-        status_bar.setFixedHeight(30)
-        status_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #D1D5DB;")
-        status_layout = QHBoxLayout(status_bar)
-        status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.addStretch()
-
-        queue_status_btn = QPushButton(" 🖨   Printer Queue Status")
-        queue_status_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
-        queue_status_btn.setFixedHeight(30)
-        queue_status_btn.setFixedWidth(200)
-        queue_status_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E2ECF7, stop:1 #BCCFE3);
-                color: #0F172A;
-                border: none;
-                border-left: 1px solid #D1D5DB;
-            }
-        """)
-        status_layout.addWidget(queue_status_btn)
-        main_layout.addWidget(status_bar)
 
         self.switch_to_home_section()
 
@@ -332,6 +510,27 @@ class EntrustDashboard(QWidget):
             item = self.purple_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    # --- ACTION TO OPEN DESIGN EDITOR VIEW ---
+    def open_editor_view(self):
+        self.design_stack.setCurrentIndex(4)  # Switch to Editor View
+        self.clear_purple_bar()
+
+        title_lbl = QLabel("Credential Design 1")
+        title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
+        title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
+
+        edit_icon_btn = QPushButton("✏")
+        edit_icon_btn.setFixedSize(22, 22)
+        edit_icon_btn.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border-radius: 3px; font-weight: bold;")
+
+        self.purple_layout.addWidget(title_lbl)
+        self.purple_layout.addSpacing(6)
+        self.purple_layout.addWidget(edit_icon_btn)
+        self.purple_layout.addStretch()
+
+    def close_editor_view(self):
+        self.switch_to_design_section(0)
 
     # --- HOME SECTION NAVIGATION ---
     def switch_to_home_section(self):
