@@ -124,7 +124,6 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.setBrush(QColor(color))
         p.drawRect(QRectF(3, 7, 18, 4))
 
-    # Updated Chip Icon (Exact match to Smart Card Chip Image)
     elif icon_type == "chip":
         p.setPen(QPen(QColor(color), 1.8))
         p.drawRoundedRect(QRectF(3, 3, 18, 18), 4, 4)
@@ -138,11 +137,11 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawLine(20, 7, 15, 9)
         p.drawLine(20, 17, 15, 15)
 
-    # 45 Degree Pencil Icon for Edit Button
+    # 45 Degree Pencil Icon (Rotated to the opposite direction)
     elif icon_type == "pencil_45":
         p.save()
         p.translate(size / 2, size / 2)
-        p.rotate(-45)
+        p.rotate(45)  # Rotated +45° instead of -45°
         
         pen_body = QPen(QColor(color), 1.6)
         pen_body.setCapStyle(Qt.SquareCap)
@@ -163,7 +162,7 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
 
 
 # -------------------------------------------------------------
-# Hover Edit Button Class (Updated with 45-degree Pencil Icon)
+# Hover Edit Button Class
 # -------------------------------------------------------------
 class HoverEditButton(QPushButton):
     def __init__(self, parent=None):
@@ -603,10 +602,12 @@ class CredentialDesignEditorView(QWidget):
 
         grp4 = QHBoxLayout()
         grp4.setSpacing(0)
+        
+        # Tooltip for chip is changed from "Smart Card Chip" to "Chip"
         new_tools_config = [
             ("barcode", "Barcode"),
             ("magnetic_stripe", "Magnetic Stripe"),
-            ("chip", "Smart Card Chip")
+            ("chip", "Chip")  
         ]
 
         for icon_key, tooltip_name in new_tools_config:
