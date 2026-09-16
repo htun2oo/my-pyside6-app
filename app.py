@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtCore import Qt, QRectF
+from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen, QPainterPath
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -29,7 +29,7 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawPath(path)
         # Arrowhead
         p.setBrush(QColor(color))
-        p.drawPolygon([Qt.QPointF(4, 7), Qt.QPointF(9, 3), Qt.QPointF(9, 10)])
+        p.drawPolygon([QPointF(4, 7), QPointF(9, 3), QPointF(9, 10)])
 
     elif icon_type == "redo":
         path = QPainterPath()
@@ -38,15 +38,15 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawPath(path)
         # Arrowhead
         p.setBrush(QColor(color))
-        p.drawPolygon([Qt.QPointF(20, 7), Qt.QPointF(15, 3), Qt.QPointF(15, 10)])
+        p.drawPolygon([QPointF(20, 7), QPointF(15, 3), QPointF(15, 10)])
 
     elif icon_type == "copy":
         p.setPen(QPen(QColor(color), 1.8))
         # Back Doc
-        p.drawRoundedRect(RectF_compat(5, 4, 10, 12), 1, 1)
+        p.drawRoundedRect(QRectF(5, 4, 10, 12), 1, 1)
         # Front Doc
         p.setBrush(QColor("#F0F4F8"))
-        p.drawRoundedRect(RectF_compat(9, 8, 10, 12), 1, 1)
+        p.drawRoundedRect(QRectF(9, 8, 10, 12), 1, 1)
 
     elif icon_type == "cut":
         p.setPen(QPen(QColor(color), 1.8))
@@ -61,18 +61,15 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.setPen(QPen(QColor(color), 1.8))
         # Clipboard back
         p.setBrush(QColor(color))
-        p.drawRoundedRect(RectF_compat(6, 4, 12, 16), 1, 1)
+        p.drawRoundedRect(QRectF(6, 4, 12, 16), 1, 1)
         # Paper
         p.setBrush(QColor("#FFFFFF"))
-        p.drawRoundedRect(RectF_compat(9, 7, 11, 14), 1, 1)
+        p.drawRoundedRect(QRectF(9, 7, 11, 14), 1, 1)
         # Top Clip
-        p.drawRect(RectF_compat(9, 2, 6, 3))
+        p.drawRect(QRectF(9, 2, 6, 3))
 
     p.end()
     return QIcon(pixmap)
-
-def RectF_compat(x, y, w, h):
-    return QRectF(float(x), float(y), float(w), float(h))
 
 
 # -------------------------------------------------------------
@@ -178,7 +175,7 @@ class EditPropertiesDialog(QDialog):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View (ဒုတိယပုံ ပုံစံ Icon Bar ပါဝင်သည်)
+# Credential Design Editor View
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
@@ -188,9 +185,7 @@ class CredentialDesignEditorView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # -------------------------------------------------------------
-        # ဒုတိယပုံအတိုင်း သေသပ်စွာ ပြင်ဆင်ထားသော Top Editing Toolbar
-        # -------------------------------------------------------------
+        # Top Editing Toolbar (ဒုတိယပုံအတိုင်း အတိအကျ Styling)
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(34)
         editor_toolbar.setStyleSheet("background-color: #D6D6D6; border-bottom: 1px solid #B0B0B0;")
@@ -228,7 +223,6 @@ class CredentialDesignEditorView(QWidget):
         grp1.addWidget(btn_undo)
         grp1.addWidget(btn_redo)
 
-        # Separator Line 1
         sep1 = QFrame()
         sep1.setFixedWidth(8)
 
@@ -262,7 +256,6 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addWidget(sep1)
         tb_layout.addLayout(grp2)
 
-        # ကျန်ရှိသော Tool များ
         sep2 = QFrame()
         sep2.setFixedWidth(8)
         tb_layout.addWidget(sep2)
