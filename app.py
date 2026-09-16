@@ -38,7 +38,7 @@ def draw_list_icon(size=14, color="#1E293B"):
 
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget (With optional Create Button)
+# Reusable Toolbar Widget
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -50,7 +50,6 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(6, 3, 6, 3)
         layout.setSpacing(5)
 
-        # ညာဘက်အစွန်းသို့ ရွှေ့ရန်အတွက် addStretch()
         layout.addStretch()
 
         self.grid_btn = QPushButton()
@@ -74,7 +73,6 @@ class ViewToggleToolbar(QFrame):
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
 
-        # "+ Create" Button (show_create_btn=True မှသာ ပေါ်မည်)
         if show_create_btn:
             layout.addSpacing(3)
             self.create_btn = QPushButton("+ Create")
@@ -107,7 +105,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Placeholder Workspace View
+# Functional Workspace View with Grid/List Toggle Logic
 # -------------------------------------------------------------
 class GenericWorkspace(QWidget):
     def __init__(self, title_text="Workspace", show_create=False):
@@ -117,14 +115,50 @@ class GenericWorkspace(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        toolbar = ViewToggleToolbar(is_grid_active=False, show_create_btn=show_create)
-        layout.addWidget(toolbar)
+        # Toolbar
+        self.toolbar = ViewToggleToolbar(
+            on_grid_click=self.show_grid_view,
+            on_list_click=self.show_list_view,
+            is_grid_active=False,
+            show_create_btn=show_create
+        )
+        layout.addWidget(self.toolbar)
 
-        content = QLabel(f" {title_text} View Content")
-        content.setFont(QFont("Arial", 11))
-        content.setStyleSheet("color: #6B7280; padding: 20px;")
-        content.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        layout.addWidget(content, stretch=1)
+        # Content Views (Grid & List)
+        self.view_stack = QStackedWidget()
+
+        # 1. Grid View Widget
+        grid_widget = QWidget()
+        grid_layout = QVBoxLayout(grid_widget)
+        grid_label = QLabel(f"⬚ {title_text} - Grid View Content")
+        grid_label.setFont(QFont("Arial", 11, QFont.Bold))
+        grid_label.setStyleSheet("color: #4B5563; padding: 20px;")
+        grid_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        grid_layout.addWidget(grid_label)
+
+        # 2. List View Widget
+        list_widget = QWidget()
+        list_layout = QVBoxLayout(list_widget)
+        list_label = QLabel(f"☰ {title_text} - List / Table View Content")
+        list_label.setFont(QFont("Arial", 11, QFont.Bold))
+        list_label.setStyleSheet("color: #1F2937; padding: 20px;")
+        list_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        list_layout.addWidget(list_label)
+
+        self.view_stack.addWidget(grid_widget)
+        self.view_stack.addWidget(list_widget)
+
+        # Default to List View (Index 1)
+        self.view_stack.setCurrentIndex(1)
+        layout.addWidget(self.view_stack, stretch=1)
+
+    def show_grid_view(self):
+        self.view_stack.setCurrentIndex(0)
+        self.toolbar.set_active_state(is_grid_active=True)
+
+    def show_list_view(self):
+        self.view_stack.setCurrentIndex(1)
+        self.toolbar.set_active_state(is_grid_active=False)
 
 
 # -------------------------------------------------------------
@@ -204,14 +238,14 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
-        # Build Home View Stack (Credentials, Reports) - show_create=False ဟု ပြောင်းထားပါသည်
+        # Build Home View Stack (Credentials, Reports)
         self.home_stack = QStackedWidget()
         self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False)
         self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Build Design View Stack (Design tab အောက်တွင် show_create=True ဖြင့် + Create ကို ထားပေးထားပါသည်)
+        # Build Design View Stack
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True)
