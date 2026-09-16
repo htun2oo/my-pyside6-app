@@ -1,11 +1,42 @@
 import sys
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QEvent
 from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox,
     QToolButton, QDialog, QLineEdit, QTextEdit
 )
+
+# -------------------------------------------------------------
+# Hover Edit Button Class (Mouse Hover လုပ်မှ စာသားပေါ်မည်)
+# -------------------------------------------------------------
+class HoverEditButton(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__("✏", parent)
+        self.setFixedHeight(24)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFFFF;
+                color: #1E293B;
+                border-radius: 3px;
+                font-weight: bold;
+                font-size: 11px;
+                padding: 0 6px;
+            }
+            QPushButton:hover {
+                background-color: #E2E8F0;
+            }
+        """)
+
+    def enterEvent(self, event):
+        self.setText("✏ Edit Properties")
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.setText("✏")
+        super().leaveEvent(event)
+
 
 # -------------------------------------------------------------
 # Icons and Graphics Helpers
@@ -60,7 +91,7 @@ class EditPropertiesDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # 1. Header Bar
+        # Header Bar
         header = QFrame()
         header.setFixedHeight(34)
         header.setStyleSheet("background-color: #7B0082;")
@@ -87,7 +118,7 @@ class EditPropertiesDialog(QDialog):
         header_layout.addWidget(close_btn)
         layout.addWidget(header)
 
-        # 2. Form Content Area
+        # Form Content Area
         form_widget = QWidget()
         form_layout = QVBoxLayout(form_widget)
         form_layout.setContentsMargins(16, 12, 16, 12)
@@ -95,7 +126,6 @@ class EditPropertiesDialog(QDialog):
 
         label_style = "color: #334155; font-size: 8.5pt; font-family: Arial; font-weight: bold;"
         
-        # Dropdown text Color မပေါ်သည့် ပြဿနာကို color: #0F172A ထည့်သွင်း၍ ပြင်ဆင်ထားပါသည်
         input_style = """
             QLineEdit, QComboBox {
                 border: 1px solid #94A3B8;
@@ -125,7 +155,7 @@ class EditPropertiesDialog(QDialog):
             }
         """
 
-        # Name Field (Editable)
+        # Name Field
         lbl_name = QLabel("Name")
         lbl_name.setStyleSheet(label_style)
         self.txt_name = QLineEdit(current_name)
@@ -149,7 +179,7 @@ class EditPropertiesDialog(QDialog):
         self.cbo_units.setFixedSize(140, 26)
         self.cbo_units.setStyleSheet(input_style)
 
-        # Width Input (Default = 8.5725)
+        # Width Input
         lbl_width = QLabel("Width")
         lbl_width.setStyleSheet(label_style)
         width_box = QHBoxLayout()
@@ -163,7 +193,7 @@ class EditPropertiesDialog(QDialog):
         width_box.addWidget(self.unit_w_lbl)
         width_box.addStretch()
 
-        # Height Input (Default = 5.3975)
+        # Height Input
         lbl_height = QLabel("Height")
         lbl_height.setStyleSheet(label_style)
         height_box = QHBoxLayout()
@@ -238,7 +268,7 @@ class EditPropertiesDialog(QDialog):
 
         layout.addWidget(form_widget, stretch=1)
 
-        # 3. Bottom Actions
+        # Bottom Actions
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(44)
         bottom_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
@@ -373,7 +403,7 @@ class CredentialDesignEditorView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # 1. Top Editing Toolbar
+        # Top Editing Toolbar
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(38)
         editor_toolbar.setStyleSheet("background-color: #E2E8F0; border-bottom: 1px solid #CBD5E1;")
@@ -411,7 +441,7 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
 
-        # 2. Canvas Area
+        # Canvas Area
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -514,7 +544,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # 3. Bottom Action Bar
+        # Bottom Action Bar
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(40)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
@@ -701,7 +731,7 @@ class EntrustDashboard(QWidget):
         body_layout.addWidget(self.section_stack, stretch=1)
         main_layout.addWidget(body_container, stretch=1)
 
-        # Default switch
+        # Default View
         self.switch_to_design_section(0)
         self.open_editor_view()
 
@@ -722,16 +752,8 @@ class EntrustDashboard(QWidget):
         self.title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
         self.title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
 
-        edit_icon_btn = QPushButton("✏ Edit Properties")
-        edit_icon_btn.setFixedHeight(22)
-        edit_icon_btn.setCursor(Qt.PointingHandCursor)
-        edit_icon_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #FFFFFF; color: #1E293B; border-radius: 3px; font-weight: bold; font-size: 11px; padding: 0 6px;
-            }
-            QPushButton:hover { background-color: #E2E8F0; }
-        """)
-        
+        # Mouse Hover မှ စာသားပေါ်မည့် Custom Edit Button
+        edit_icon_btn = HoverEditButton(self)
         edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
         self.purple_layout.addWidget(self.title_lbl)
