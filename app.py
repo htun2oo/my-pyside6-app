@@ -39,7 +39,7 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Edit Properties Dialog Popup Window
+# Edit Properties Dialog Popup Window (Fixed Dropdown Issue)
 # -------------------------------------------------------------
 class EditPropertiesDialog(QDialog):
     def __init__(self, parent=None):
@@ -97,42 +97,54 @@ class EditPropertiesDialog(QDialog):
                 background-color: #FFFFFF;
                 color: #0F172A;
             }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 18px;
+                border-left: 1px solid #94A3B8;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #94A3B8;
+                background-color: #FFFFFF;
+                selection-background-color: #0284C7;
+                selection-color: #FFFFFF;
+            }
         """
 
         # Name
         lbl_name = QLabel("Name")
         lbl_name.setStyleSheet(label_style)
-        txt_name = QLineEdit("Credential Design 1")
-        txt_name.setFixedSize(210, 26)
-        txt_name.setStyleSheet(input_style)
+        self.txt_name = QLineEdit("Credential Design 1")
+        self.txt_name.setFixedSize(210, 26)
+        self.txt_name.setStyleSheet(input_style)
 
-        # Dimensions (ISO ID-1, CR-50, Custom ထည့်သွင်းထားပါသည်)
+        # Dimensions (ISO ID-1, CR-50, Custom)
         lbl_dim = QLabel("Dimensions")
         lbl_dim.setStyleSheet(label_style)
-        cbo_dim = QComboBox()
-        cbo_dim.addItems(["ISO ID-1", "CR-50", "Custom"])
-        cbo_dim.setFixedSize(130, 26)
-        cbo_dim.setStyleSheet(input_style)
+        self.cbo_dim = QComboBox()
+        self.cbo_dim.addItems(["ISO ID-1", "CR-50", "Custom"])
+        self.cbo_dim.setFixedSize(130, 26)
+        self.cbo_dim.setStyleSheet(input_style)
 
-        # Units (Centimeters, Millimeters ထည့်သွင်းထားပါသည်)
+        # Units (Centimeters, Millimeters)
         lbl_units = QLabel("Units")
         lbl_units.setStyleSheet(label_style)
-        cbo_units = QComboBox()
-        cbo_units.addItems(["Centimeters", "Millimeters"])
-        cbo_units.setFixedSize(110, 26)
-        cbo_units.setStyleSheet(input_style)
+        self.cbo_units = QComboBox()
+        self.cbo_units.addItems(["Centimeters", "Millimeters"])
+        self.cbo_units.setFixedSize(110, 26)
+        self.cbo_units.setStyleSheet(input_style)
 
         # Width
         lbl_width = QLabel("Width")
         lbl_width.setStyleSheet(label_style)
         width_box = QHBoxLayout()
         width_box.setSpacing(8)
-        txt_width = QLineEdit("8.5725")
-        txt_width.setFixedSize(110, 26)
-        txt_width.setStyleSheet(input_style)
+        self.txt_width = QLineEdit("8.5725")
+        self.txt_width.setFixedSize(110, 26)
+        self.txt_width.setStyleSheet(input_style)
         unit_w_lbl = QLabel("centimeters")
         unit_w_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
-        width_box.addWidget(txt_width)
+        width_box.addWidget(self.txt_width)
         width_box.addWidget(unit_w_lbl)
         width_box.addStretch()
 
@@ -141,16 +153,15 @@ class EditPropertiesDialog(QDialog):
         lbl_height.setStyleSheet(label_style)
         height_box = QHBoxLayout()
         height_box.setSpacing(8)
-        txt_height = QLineEdit("5.3975")
-        txt_height.setFixedSize(110, 26)
-        txt_height.setStyleSheet(input_style)
+        self.txt_height = QLineEdit("5.3975")
+        self.txt_height.setFixedSize(110, 26)
+        self.txt_height.setStyleSheet(input_style)
         unit_h_lbl = QLabel("centimeters")
         unit_h_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
-        height_box.addWidget(txt_height)
+        height_box.addWidget(self.txt_height)
         height_box.addWidget(unit_h_lbl)
         height_box.addStretch()
 
-        # Helper function for Checkboxes with Question Mark Badge
         def make_checkbox_row(text):
             row = QHBoxLayout()
             row.setSpacing(6)
@@ -195,9 +206,9 @@ class EditPropertiesDialog(QDialog):
         # Description
         lbl_desc = QLabel("Description")
         lbl_desc.setStyleSheet(label_style)
-        txt_desc = QTextEdit()
-        txt_desc.setFixedHeight(120)
-        txt_desc.setStyleSheet("""
+        self.txt_desc = QTextEdit()
+        self.txt_desc.setFixedHeight(100)
+        self.txt_desc.setStyleSheet("""
             QTextEdit {
                 border: 1px solid #94A3B8;
                 border-radius: 3px;
@@ -206,13 +217,13 @@ class EditPropertiesDialog(QDialog):
         """)
 
         form_layout.addWidget(lbl_name)
-        form_layout.addWidget(txt_name)
+        form_layout.addWidget(self.txt_name)
         form_layout.addSpacing(2)
         form_layout.addWidget(lbl_dim)
-        form_layout.addWidget(cbo_dim)
+        form_layout.addWidget(self.cbo_dim)
         form_layout.addSpacing(2)
         form_layout.addWidget(lbl_units)
-        form_layout.addWidget(cbo_units)
+        form_layout.addWidget(self.cbo_units)
         form_layout.addSpacing(2)
         form_layout.addWidget(lbl_width)
         form_layout.addLayout(width_box)
@@ -224,7 +235,7 @@ class EditPropertiesDialog(QDialog):
         form_layout.addLayout(row_print_edge)
         form_layout.addSpacing(4)
         form_layout.addWidget(lbl_desc)
-        form_layout.addWidget(txt_desc)
+        form_layout.addWidget(self.txt_desc)
 
         layout.addWidget(form_widget, stretch=1)
 
