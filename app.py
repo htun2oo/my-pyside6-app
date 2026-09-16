@@ -41,7 +41,7 @@ def draw_list_icon(size=14, color="#1E293B"):
 # Reusable Toolbar Widget (With optional Create Button)
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
-    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=True, on_create_click=None):
+    def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
         super().__init__()
         self.setFixedHeight(30)
         self.setStyleSheet("QFrame { background-color: #FFFFFF; border-bottom: 1px solid #D1D5DB; }")
@@ -50,7 +50,7 @@ class ViewToggleToolbar(QFrame):
         layout.setContentsMargins(6, 3, 6, 3)
         layout.setSpacing(5)
 
-        # ညာဘက်အစွန်းသို့ ရွှေ့ရန်အတွက် addStretch() ကို ထိပ်ဆုံးတွင် ထည့်သွင်းထားပါသည်
+        # ညာဘက်အစွန်းသို့ ရွှေ့ရန်အတွက် addStretch()
         layout.addStretch()
 
         self.grid_btn = QPushButton()
@@ -74,7 +74,7 @@ class ViewToggleToolbar(QFrame):
         layout.addWidget(self.grid_btn)
         layout.addWidget(self.list_btn)
 
-        # "+ Create" Button ကို Grid/List Button များ၏ ဘေးတွင် ပြသပါမည်
+        # "+ Create" Button (show_create_btn=True မှသာ ပေါ်မည်)
         if show_create_btn:
             layout.addSpacing(3)
             self.create_btn = QPushButton("+ Create")
@@ -110,7 +110,7 @@ class ViewToggleToolbar(QFrame):
 # Placeholder Workspace View
 # -------------------------------------------------------------
 class GenericWorkspace(QWidget):
-    def __init__(self, title_text="Workspace", show_create=True):
+    def __init__(self, title_text="Workspace", show_create=False):
         super().__init__()
         self.setStyleSheet("background-color: #FFFFFF;")
         layout = QVBoxLayout(self)
@@ -204,14 +204,14 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
-        # Build Home View Stack (Credentials, Reports) - show_create=True ဟု သတ်မှတ်ပေးထားသည်
+        # Build Home View Stack (Credentials, Reports) - show_create=False ဟု ပြောင်းထားပါသည်
         self.home_stack = QStackedWidget()
-        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=True)
-        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=True)
+        self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False)
+        self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Build Design View Stack
+        # Build Design View Stack (Design tab အောက်တွင် show_create=True ဖြင့် + Create ကို ထားပေးထားပါသည်)
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True)
