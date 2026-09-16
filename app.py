@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Toolbar Vector Icon Painter (ဒုတိယပုံအတိုင်း အပြာရောင် Icons များ)
+# Toolbar Vector Icon Painter
 # -------------------------------------------------------------
 def make_toolbar_icon(icon_type, color="#002D62", size=24):
     pixmap = QPixmap(size, size)
@@ -397,7 +397,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View (ဒုတိယပုံအတိုင်း သေသပ်စွာ ပြင်ထားသည်)
+# Credential Design Editor View
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
@@ -415,6 +415,7 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.setContentsMargins(4, 3, 4, 3)
         tb_layout.setSpacing(0)
 
+        # Tooltip Styling ထည့်သွင်းထားသော Button Style
         btn_style = """
             QToolButton {
                 background-color: #F4F4F4;
@@ -424,22 +425,31 @@ class CredentialDesignEditorView(QWidget):
             QToolButton:hover {
                 background-color: #E0E0E0;
             }
+            QToolTip {
+                background-color: #1E293B;
+                color: #FFFFFF;
+                border: none;
+                padding: 4px 8px;
+                font-size: 8pt;
+                font-family: Arial;
+                border-radius: 3px;
+            }
         """
 
-        # Group 1: Undo / Redo (ဒုတိယပုံအတိုင်း)
+        # Group 1: Undo / Redo
         grp1 = QHBoxLayout()
         grp1.setSpacing(0)
         
         btn_undo = QToolButton()
         btn_undo.setFixedSize(28, 26)
         btn_undo.setIcon(make_toolbar_icon("undo"))
-        btn_undo.setToolTip("Undo")
+        btn_undo.setToolTip("Undo")  # Mouse တင်ပါက စာတန်းပေါ်မည်
         btn_undo.setStyleSheet(btn_style)
 
         btn_redo = QToolButton()
         btn_redo.setFixedSize(28, 26)
         btn_redo.setIcon(make_toolbar_icon("redo"))
-        btn_redo.setToolTip("Redo")
+        btn_redo.setToolTip("Redo")  # Mouse တင်ပါက စာတန်းပေါ်မည်
         btn_redo.setStyleSheet(btn_style)
 
         grp1.addWidget(btn_undo)
@@ -448,26 +458,26 @@ class CredentialDesignEditorView(QWidget):
         sep1 = QFrame()
         sep1.setFixedWidth(8)
 
-        # Group 2: Copy / Cut / Paste (ဒုတိယပုံအတိုင်း)
+        # Group 2: Copy / Cut / Paste
         grp2 = QHBoxLayout()
         grp2.setSpacing(0)
 
         btn_copy = QToolButton()
         btn_copy.setFixedSize(28, 26)
         btn_copy.setIcon(make_toolbar_icon("copy"))
-        btn_copy.setToolTip("Copy")
+        btn_copy.setToolTip("Copy")  # Mouse တင်ပါက စာတန်းပေါ်မည်
         btn_copy.setStyleSheet(btn_style)
 
         btn_cut = QToolButton()
         btn_cut.setFixedSize(28, 26)
         btn_cut.setIcon(make_toolbar_icon("cut"))
-        btn_cut.setToolTip("Cut")
+        btn_cut.setToolTip("Cut")  # Mouse တင်ပါက စာတန်းပေါ်မည်
         btn_cut.setStyleSheet(btn_style)
 
         btn_paste = QToolButton()
         btn_paste.setFixedSize(28, 26)
         btn_paste.setIcon(make_toolbar_icon("paste"))
-        btn_paste.setToolTip("Paste")
+        btn_paste.setToolTip("Paste")  # Mouse တင်ပါက စာတန်းပေါ်မည်
         btn_paste.setStyleSheet(btn_style)
 
         grp2.addWidget(btn_copy)
