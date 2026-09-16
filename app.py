@@ -118,6 +118,38 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         path.cubicTo(18, 10, 19, 14, 21, 14)
         p.drawPath(path)
 
+    # ------------------ New Icons ------------------
+    elif icon_type == "barcode":
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(color))
+        # Draw barcode vertical bars with varying thicknesses
+        bars = [(3, 2), (6, 1), (8, 2), (11, 3), (15, 1), (17, 2), (20, 1)]
+        for x, w in bars:
+            p.drawRect(QRectF(x, 4, w, 16))
+
+    elif icon_type == "magnetic_stripe":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.setBrush(Qt.NoBrush)
+        p.drawRoundedRect(QRectF(3, 4, 18, 16), 2, 2)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(color))
+        p.drawRect(QRectF(3, 7, 18, 4))  # Black mag-stripe band
+
+    elif icon_type == "chip":
+        p.setPen(QPen(QColor(color), 1.8))
+        p.setBrush(Qt.NoBrush)
+        p.drawRoundedRect(QRectF(4, 4, 16, 16), 3, 3)
+        # Inner chip pattern lines
+        p.drawLine(4, 9, 8, 9)
+        p.drawLine(4, 15, 8, 15)
+        p.drawLine(16, 9, 20, 9)
+        p.drawLine(16, 15, 20, 15)
+        p.drawLine(9, 4, 9, 8)
+        p.drawLine(15, 4, 15, 8)
+        p.drawLine(9, 16, 9, 20)
+        p.drawLine(15, 16, 15, 20)
+        p.drawRect(QRectF(9, 9, 6, 6))
+
     p.end()
     return QIcon(pixmap)
 
@@ -569,15 +601,38 @@ class CredentialDesignEditorView(QWidget):
             btn_tool.setStyleSheet(btn_style)
             grp3.addWidget(btn_tool)
 
+        sep3 = QFrame()
+        sep3.setFixedWidth(8)
+
+        # Group 4: Barcode, Magnetic Stripe, Smart Card Chip (Newly Added Group)
+        grp4 = QHBoxLayout()
+        grp4.setSpacing(0)
+
+        new_tools_config = [
+            ("barcode", "Barcode"),
+            ("magnetic_stripe", "Magnetic Stripe"),
+            ("chip", "Smart Card Chip")
+        ]
+
+        for icon_key, tooltip_name in new_tools_config:
+            btn_tool = QToolButton()
+            btn_tool.setFixedSize(28, 26)
+            btn_tool.setIcon(make_toolbar_icon(icon_key))
+            btn_tool.setToolTip(tooltip_name)
+            btn_tool.setStyleSheet(btn_style)
+            grp4.addWidget(btn_tool)
+
         tb_layout.addLayout(grp1)
         tb_layout.addWidget(sep1)
         tb_layout.addLayout(grp2)
         tb_layout.addWidget(sep2)
         tb_layout.addLayout(grp3)
-
-        sep3 = QFrame()
-        sep3.setFixedWidth(8)
         tb_layout.addWidget(sep3)
+        tb_layout.addLayout(grp4)
+
+        sep4 = QFrame()
+        sep4.setFixedWidth(8)
+        tb_layout.addWidget(sep4)
 
         other_tools = ["🗑", "▦", "▤", "║", "▭", "╱", "◯"]
         for tool in other_tools:
