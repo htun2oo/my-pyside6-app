@@ -39,15 +39,22 @@ def draw_list_icon(size=14, color="#003366"):
 
 
 # -------------------------------------------------------------
-# Edit Properties Dialog Popup Window (Fixed Dropdown Issue)
+# Edit Properties Dialog Popup Window (Updated)
 # -------------------------------------------------------------
 class EditPropertiesDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, current_name="Credential Design 1", parent=None):
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.setModal(True)
         self.setFixedSize(410, 560)
         self.setStyleSheet("QDialog { background-color: #FFFFFF; border: 1px solid #000000; }")
+
+        # Preset Dimension Values Matrix (Dimensions & Units ၏ Data များ)
+        self.dim_data = {
+            "ISO ID-1": {"Centimeters": (8.5725, 5.3975), "Millimeters": (85.725, 53.975)},
+            "CR-50": {"Centimeters": (8.8900, 4.4450), "Millimeters": (88.900, 44.450)},
+            "Custom": {"Centimeters": (10.0000, 6.0000), "Millimeters": (100.000, 60.000)}
+        }
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -86,7 +93,7 @@ class EditPropertiesDialog(QDialog):
         form_layout.setContentsMargins(16, 12, 16, 12)
         form_layout.setSpacing(6)
 
-        label_style = "color: #334155; font-size: 8.5pt; font-family: Arial;"
+        label_style = "color: #334155; font-size: 8.5pt; font-family: Arial; font-weight: bold;"
         input_style = """
             QLineEdit, QComboBox {
                 border: 1px solid #94A3B8;
@@ -96,6 +103,9 @@ class EditPropertiesDialog(QDialog):
                 font-family: Arial;
                 background-color: #FFFFFF;
                 color: #0F172A;
+            }
+            QLineEdit:focus, QComboBox:focus {
+                border: 1px solid #0284C7;
             }
             QComboBox::drop-down {
                 subcontrol-origin: padding;
@@ -111,30 +121,31 @@ class EditPropertiesDialog(QDialog):
             }
         """
 
-        # Name
+        # Name Field (ပြုပြင်ပြောင်းလဲ၍ ရရှိနိုင်အောင် ပြုလုပ်ထားပါသည်)
         lbl_name = QLabel("Name")
         lbl_name.setStyleSheet(label_style)
-        self.txt_name = QLineEdit("Credential Design 1")
-        self.txt_name.setFixedSize(210, 26)
+        self.txt_name = QLineEdit(current_name)
+        self.txt_name.setReadOnly(False)  # User ပြောင်းလဲရိုက်ထည့်နိုင်အောင် Allow လုပ်ထားသည်
+        self.txt_name.setFixedSize(230, 26)
         self.txt_name.setStyleSheet(input_style)
 
-        # Dimensions (ISO ID-1, CR-50, Custom)
+        # Dimensions Dropdown
         lbl_dim = QLabel("Dimensions")
         lbl_dim.setStyleSheet(label_style)
         self.cbo_dim = QComboBox()
         self.cbo_dim.addItems(["ISO ID-1", "CR-50", "Custom"])
-        self.cbo_dim.setFixedSize(130, 26)
+        self.cbo_dim.setFixedSize(140, 26)
         self.cbo_dim.setStyleSheet(input_style)
 
-        # Units (Centimeters, Millimeters)
+        # Units Dropdown
         lbl_units = QLabel("Units")
         lbl_units.setStyleSheet(label_style)
         self.cbo_units = QComboBox()
         self.cbo_units.addItems(["Centimeters", "Millimeters"])
-        self.cbo_units.setFixedSize(110, 26)
+        self.cbo_units.setFixedSize(140, 26)
         self.cbo_units.setStyleSheet(input_style)
 
-        # Width
+        # Width Input + Unit Label
         lbl_width = QLabel("Width")
         lbl_width.setStyleSheet(label_style)
         width_box = QHBoxLayout()
@@ -142,13 +153,13 @@ class EditPropertiesDialog(QDialog):
         self.txt_width = QLineEdit("8.5725")
         self.txt_width.setFixedSize(110, 26)
         self.txt_width.setStyleSheet(input_style)
-        unit_w_lbl = QLabel("centimeters")
-        unit_w_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
+        self.unit_w_lbl = QLabel("centimeters")
+        self.unit_w_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
         width_box.addWidget(self.txt_width)
-        width_box.addWidget(unit_w_lbl)
+        width_box.addWidget(self.unit_w_lbl)
         width_box.addStretch()
 
-        # Height
+        # Height Input + Unit Label
         lbl_height = QLabel("Height")
         lbl_height.setStyleSheet(label_style)
         height_box = QHBoxLayout()
@@ -156,43 +167,31 @@ class EditPropertiesDialog(QDialog):
         self.txt_height = QLineEdit("5.3975")
         self.txt_height.setFixedSize(110, 26)
         self.txt_height.setStyleSheet(input_style)
-        unit_h_lbl = QLabel("centimeters")
-        unit_h_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
+        self.unit_h_lbl = QLabel("centimeters")
+        self.unit_h_lbl.setStyleSheet("color: #0F172A; font-size: 8.5pt; font-family: Arial;")
         height_box.addWidget(self.txt_height)
-        height_box.addWidget(unit_h_lbl)
+        height_box.addWidget(self.unit_h_lbl)
         height_box.addStretch()
+
+        # Connect Signals for Live Dynamic Dimension Updates
+        self.cbo_dim.currentIndexChanged.connect(self.update_dimensions_and_units)
+        self.cbo_units.currentIndexChanged.connect(self.update_dimensions_and_units)
 
         def make_checkbox_row(text):
             row = QHBoxLayout()
             row.setSpacing(6)
             chk = QCheckBox(text)
             chk.setStyleSheet("""
-                QCheckBox {
-                    font-size: 8.5pt;
-                    font-family: Arial;
-                    color: #334155;
-                }
-                QCheckBox::indicator {
-                    width: 12px;
-                    height: 12px;
-                    border: 1px solid #0284C7;
-                    border-radius: 2px;
-                    background-color: #FFFFFF;
-                }
-                QCheckBox::indicator:checked {
-                    background-color: #0284C7;
-                }
+                QCheckBox { font-size: 8.5pt; font-family: Arial; color: #334155; }
+                QCheckBox::indicator { width: 12px; height: 12px; border: 1px solid #0284C7; border-radius: 2px; background-color: #FFFFFF; }
+                QCheckBox::indicator:checked { background-color: #0284C7; }
             """)
             
             help_btn = QLabel("?")
             help_btn.setFixedSize(16, 16)
             help_btn.setAlignment(Qt.AlignCenter)
             help_btn.setStyleSheet("""
-                background-color: #38BDF8;
-                color: #FFFFFF;
-                font-weight: bold;
-                font-size: 8pt;
-                border-radius: 8px;
+                background-color: #38BDF8; color: #FFFFFF; font-weight: bold; font-size: 8pt; border-radius: 8px;
             """)
             
             row.addWidget(chk)
@@ -207,13 +206,9 @@ class EditPropertiesDialog(QDialog):
         lbl_desc = QLabel("Description")
         lbl_desc.setStyleSheet(label_style)
         self.txt_desc = QTextEdit()
-        self.txt_desc.setFixedHeight(100)
+        self.txt_desc.setFixedHeight(80)
         self.txt_desc.setStyleSheet("""
-            QTextEdit {
-                border: 1px solid #94A3B8;
-                border-radius: 3px;
-                background-color: #FFFFFF;
-            }
+            QTextEdit { border: 1px solid #94A3B8; border-radius: 3px; background-color: #FFFFFF; }
         """)
 
         form_layout.addWidget(lbl_name)
@@ -271,9 +266,35 @@ class EditPropertiesDialog(QDialog):
 
         layout.addWidget(bottom_bar)
 
+    def update_dimensions_and_units(self):
+        """Dimensions နှင့် Units Dropdown Dynamic ပြောင်းလဲသည့်အခါ အောက်မှ Width, Height နှင့် Label များကို Update လုပ်ပေးသည်"""
+        selected_dim = self.cbo_dim.currentText()
+        selected_unit = self.cbo_units.currentText()
+
+        # Update Unit Labels
+        self.unit_w_lbl.setText(selected_unit.lower())
+        self.unit_h_lbl.setText(selected_unit.lower())
+
+        # Update Values
+        if selected_dim in self.dim_data and selected_unit in self.dim_data[selected_dim]:
+            w_val, h_val = self.dim_data[selected_dim][selected_unit]
+            self.txt_width.setText(str(w_val))
+            self.txt_height.setText(str(h_val))
+
+            if selected_dim == "Custom":
+                self.txt_width.setReadOnly(False)
+                self.txt_height.setReadOnly(False)
+            else:
+                self.txt_width.setReadOnly(True)
+                self.txt_height.setReadOnly(True)
+
+    def get_updated_name(self):
+        """ပြောင်းလဲထားသော Name ကို ပြန်လည်ယူရန် Function"""
+        return self.txt_name.text()
+
 
 # -------------------------------------------------------------
-# Reusable Toolbar Widget
+# Toolbar Widget
 # -------------------------------------------------------------
 class ViewToggleToolbar(QFrame):
     def __init__(self, on_grid_click=None, on_list_click=None, is_grid_active=True, show_create_btn=False, on_create_click=None):
@@ -315,16 +336,8 @@ class ViewToggleToolbar(QFrame):
             self.create_btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             self.create_btn.setCursor(Qt.PointingHandCursor)
             self.create_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #E5E7EB;
-                    color: #1F2937;
-                    border: 1px solid #9CA3AF;
-                    border-radius: 3px;
-                    padding: 0 8px;
-                }
-                QPushButton:hover {
-                    background-color: #D1D5DB;
-                }
+                QPushButton { background-color: #E5E7EB; color: #1F2937; border: 1px solid #9CA3AF; border-radius: 3px; padding: 0 8px; }
+                QPushButton:hover { background-color: #D1D5DB; }
             """)
             if on_create_click:
                 self.create_btn.clicked.connect(on_create_click)
@@ -333,45 +346,19 @@ class ViewToggleToolbar(QFrame):
     def set_active_state(self, is_grid_active):
         if is_grid_active:
             self.grid_btn.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
-                    border: 1px solid #888888;
-                    border-top-left-radius: 4px;
-                    border-bottom-left-radius: 4px;
-                }
+                QPushButton { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4); border: 1px solid #888888; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
             """)
             self.list_btn.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
-                    border: 1px solid #B0B0B0;
-                    border-left: none;
-                    border-top-right-radius: 6px;
-                    border-bottom-right-radius: 6px;
-                }
-                QPushButton:hover {
-                    background: #E0E0E0;
-                }
+                QPushButton { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9); border: 1px solid #B0B0B0; border-left: none; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+                QPushButton:hover { background: #E0E0E0; }
             """)
         else:
             self.grid_btn.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9);
-                    border: 1px solid #B0B0B0;
-                    border-top-left-radius: 4px;
-                    border-bottom-left-radius: 4px;
-                }
-                QPushButton:hover {
-                    background: #E0E0E0;
-                }
+                QPushButton { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D9D9D9); border: 1px solid #B0B0B0; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+                QPushButton:hover { background: #E0E0E0; }
             """)
             self.list_btn.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4);
-                    border: 1px solid #888888;
-                    border-left: none;
-                    border-top-right-radius: 6px;
-                    border-bottom-right-radius: 6px;
-                }
+                QPushButton { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #AFAFAF, stop:1 #C4C4C4); border: 1px solid #888888; border-left: none; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
             """)
 
 
@@ -424,7 +411,7 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
 
-        # 2. Canvas Area + Properties Sidebar
+        # 2. Canvas Area
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -527,7 +514,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # 3. Bottom Action Buttons Bar
+        # 3. Bottom Action Bar
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(40)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
@@ -549,20 +536,9 @@ class CredentialDesignEditorView(QWidget):
         if on_close_callback:
             btn_close.clicked.connect(on_close_callback)
 
-        btn_print = QPushButton("Print Sample")
-        btn_print.setFixedSize(90, 28)
-        btn_print.setStyleSheet("background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px;")
-
-        btn_quick = QPushButton("Quick Start")
-        btn_quick.setFixedSize(80, 28)
-        btn_quick.setEnabled(False)
-        btn_quick.setStyleSheet("background-color: #F1F5F9; color: #94A3B8; border: 1px solid #E2E8F0; border-radius: 3px;")
-
         bb_layout.addWidget(btn_save)
         bb_layout.addWidget(btn_save_as)
         bb_layout.addWidget(btn_close)
-        bb_layout.addWidget(btn_print)
-        bb_layout.addWidget(btn_quick)
         bb_layout.addStretch()
 
         main_layout.addWidget(bottom_bar)
@@ -631,6 +607,7 @@ class GenericWorkspace(QWidget):
 class EntrustDashboard(QWidget):
     def __init__(self):
         super().__init__()
+        self.current_title = "Credential Design 1"
         self.setStyleSheet("background-color: #FFFFFF;")
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -666,12 +643,7 @@ class EntrustDashboard(QWidget):
             btn.setFont(QFont("Arial", 8.5, QFont.Bold))
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet("""
-                QPushButton {
-                    border: none; 
-                    color: #1A202C; 
-                    background: transparent; 
-                    padding: 2px 12px;
-                }
+                QPushButton { border: none; color: #1A202C; background: transparent; padding: 2px 12px; }
             """)
 
         self.home_nav_btn.clicked.connect(self.switch_to_home_section)
@@ -701,14 +673,14 @@ class EntrustDashboard(QWidget):
 
         self.section_stack = QStackedWidget()
 
-        # Home Stack Pages
+        # Home Stack
         self.home_stack = QStackedWidget()
         self.home_credentials_page = GenericWorkspace("Home -> Credentials", show_create=False, default_grid_active=True)
         self.home_reports_page = GenericWorkspace("Home -> Reports", show_create=False, default_grid_active=True)
         self.home_stack.addWidget(self.home_credentials_page)
         self.home_stack.addWidget(self.home_reports_page)
 
-        # Design Stack Pages
+        # Design Stack
         self.design_stack = QStackedWidget()
         self.design_cred_page = GenericWorkspace("Design -> Credential Designs", show_create=True, default_grid_active=True, on_create_click=self.open_editor_view)
         self.design_workflow_page = GenericWorkspace("Design -> Workflows", show_create=True, default_grid_active=True)
@@ -727,7 +699,6 @@ class EntrustDashboard(QWidget):
         self.section_stack.addWidget(self.design_stack)
 
         body_layout.addWidget(self.section_stack, stretch=1)
-
         main_layout.addWidget(body_container, stretch=1)
 
         self.switch_to_home_section()
@@ -738,14 +709,16 @@ class EntrustDashboard(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-    # --- ACTION TO OPEN DESIGN EDITOR VIEW & HANDLE PENCIL CLICK ---
     def open_editor_view(self):
         self.design_stack.setCurrentIndex(4)
+        self.update_purple_bar_title()
+
+    def update_purple_bar_title(self):
         self.clear_purple_bar()
 
-        title_lbl = QLabel("Credential Design 1")
-        title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
-        title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
+        self.title_lbl = QLabel(self.current_title)
+        self.title_lbl.setFont(QFont("Arial", 11, QFont.Bold))
+        self.title_lbl.setStyleSheet("color: #FFFFFF; padding-left: 10px;")
 
         edit_icon_btn = QPushButton("✏")
         edit_icon_btn.setFixedSize(22, 22)
@@ -759,19 +732,21 @@ class EntrustDashboard(QWidget):
         
         edit_icon_btn.clicked.connect(self.show_edit_properties_dialog)
 
-        self.purple_layout.addWidget(title_lbl)
+        self.purple_layout.addWidget(self.title_lbl)
         self.purple_layout.addSpacing(6)
         self.purple_layout.addWidget(edit_icon_btn)
         self.purple_layout.addStretch()
 
     def show_edit_properties_dialog(self):
-        dialog = EditPropertiesDialog(self)
-        dialog.exec()
+        dialog = EditPropertiesDialog(current_name=self.current_title, parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            # OK နှိပ်ပါက Name Input သစ်ကို ရယူပြီး Header Text တွင် Update လုပ်ပေးပါမည်
+            self.current_title = dialog.get_updated_name()
+            self.update_purple_bar_title()
 
     def close_editor_view(self):
         self.switch_to_design_section(0)
 
-    # --- HOME SECTION NAVIGATION ---
     def switch_to_home_section(self):
         self.section_stack.setCurrentIndex(0)
         self.clear_purple_bar()
@@ -793,7 +768,6 @@ class EntrustDashboard(QWidget):
 
         self.set_sub_tab(self.home_stack, 0, [btn_credentials, btn_reports])
 
-    # --- DESIGN SECTION NAVIGATION ---
     def switch_to_design_section(self, target_tab_index=0):
         self.section_stack.setCurrentIndex(1)
         self.clear_purple_bar()
@@ -821,19 +795,12 @@ class EntrustDashboard(QWidget):
         for i, btn in enumerate(button_list):
             if i == index:
                 btn.setStyleSheet("""
-                    background-color: #FFFFFF; 
-                    color: #7B0082; 
-                    border: none; 
-                    padding: 0 16px;
-                    border-top-left-radius: 4px;
-                    border-top-right-radius: 4px;
+                    background-color: #FFFFFF; color: #7B0082; border: none; padding: 0 16px;
+                    border-top-left-radius: 4px; border-top-right-radius: 4px;
                 """)
             else:
                 btn.setStyleSheet("""
-                    background-color: transparent; 
-                    color: #FFFFFF; 
-                    border: none; 
-                    padding: 0 16px;
+                    background-color: transparent; color: #FFFFFF; border: none; padding: 0 16px;
                 """)
 
 
