@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen,
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox,
-    QToolButton, QDialog, QLineEdit, QTextEdit
+    QToolButton, QDialog, QLineEdit, QTextEdit, QScrollArea
 )
 
 # -------------------------------------------------------------
@@ -436,7 +436,6 @@ class EditPropertiesDialog(QDialog):
         bb_layout.setContentsMargins(20, 0, 20, 0)
         bb_layout.setSpacing(14)
 
-        # Larger OK / Cancel Dialog Buttons
         btn_ok = QPushButton("OK")
         btn_ok.setFixedSize(90, 36)
         btn_ok.setCursor(Qt.PointingHandCursor)
@@ -534,7 +533,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View
+# Credential Design Editor View (Updated for Horizontal Cards)
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
@@ -544,7 +543,6 @@ class CredentialDesignEditorView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Height increased to 52px for bigger buttons
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(52)
         editor_toolbar.setStyleSheet("background-color: #D6D6D6; border-bottom: 1px solid #B0B0B0;")
@@ -552,7 +550,6 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.setContentsMargins(8, 5, 8, 5)
         tb_layout.setSpacing(0)
 
-        # Significantly enlarged button style (42x38 px)
         btn_style = """
             QToolButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E0E0E0);
@@ -707,7 +704,7 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addWidget(lbl_zoom)
 
         zoom_combo = QComboBox()
-        zoom_combo.addItems(["150%", "100%", "75%", "50%"])
+        zoom_combo.addItems(["100%", "150%", "75%", "50%"])
         zoom_combo.setFixedSize(85, 38)
         zoom_combo.setStyleSheet("""
             QComboBox {
@@ -730,7 +727,6 @@ class CredentialDesignEditorView(QWidget):
 
         tb_layout.addSpacing(8)
 
-        # Larger Orientation Button
         btn_orientation = QToolButton()
         btn_orientation.setFixedSize(42, 38)
         btn_orientation.setIcon(make_toolbar_icon("orientation", size=32))
@@ -747,43 +743,71 @@ class CredentialDesignEditorView(QWidget):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
+        # Scrollable Canvas Container to handle large horizontal cards smoothly
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #B3B3B3; }")
+
         canvas_container = QWidget()
         canvas_container.setStyleSheet("background-color: #B3B3B3;")
         canvas_layout = QHBoxLayout(canvas_container)
-        canvas_layout.setContentsMargins(30, 15, 30, 15)
+        canvas_layout.setContentsMargins(30, 25, 30, 25)
         canvas_layout.setSpacing(30)
 
+        # ---------------- Front Side (Horizontal/Landscape) ----------------
         front_box = QVBoxLayout()
-        front_title = QLabel("Front Side                                Active Design Layer: Color")
+        front_box.setSpacing(8)
+        
+        front_header_layout = QHBoxLayout()
+        front_title = QLabel("Front Side")
         front_title.setFont(QFont("Arial", 9.5, QFont.Bold))
         front_title.setStyleSheet("color: #0F172A;")
-        front_box.addWidget(front_title)
 
+        self.active_layer_lbl = QLabel("Active Design Layer: Color")
+        self.active_layer_lbl.setFont(QFont("Arial", 9.5, QFont.Bold))
+        self.active_layer_lbl.setStyleSheet("color: #0F172A;")
+
+        front_header_layout.addWidget(front_title)
+        front_header_layout.addSpacing(40)
+        front_header_layout.addWidget(self.active_layer_lbl)
+        front_header_layout.addStretch()
+        
+        front_box.addLayout(front_header_layout)
+
+        # Horizontal Background Outer Dimensions (380x300)
         front_card_bg = QFrame()
-        front_card_bg.setFixedSize(300, 380)
+        front_card_bg.setFixedSize(380, 300)
         front_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
         fc_layout = QVBoxLayout(front_card_bg)
-        fc_layout.setContentsMargins(20, 50, 20, 50)
+        fc_layout.setContentsMargins(10, 35, 10, 35)
+        fc_layout.setAlignment(Qt.AlignCenter)
 
+        # Horizontal Inner Card Dimensions (360x230) matching Standard ID Card aspect ratio
         front_card = QFrame()
-        front_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        front_card.setFixedSize(360, 230)
+        front_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 16px;")
         fc_layout.addWidget(front_card)
         front_box.addWidget(front_card_bg)
 
+        # ---------------- Back Side (Horizontal/Landscape) ----------------
         back_box = QVBoxLayout()
+        back_box.setSpacing(8)
+        
         back_title = QLabel("Back Side")
         back_title.setFont(QFont("Arial", 9.5, QFont.Bold))
         back_title.setStyleSheet("color: #0F172A;")
         back_box.addWidget(back_title)
 
         back_card_bg = QFrame()
-        back_card_bg.setFixedSize(300, 380)
+        back_card_bg.setFixedSize(380, 300)
         back_card_bg.setStyleSheet("background-color: #8C8C8C; border-radius: 2px;")
         bc_layout = QVBoxLayout(back_card_bg)
-        bc_layout.setContentsMargins(20, 50, 20, 50)
+        bc_layout.setContentsMargins(10, 35, 10, 35)
+        bc_layout.setAlignment(Qt.AlignCenter)
 
         back_card = QFrame()
-        back_card.setStyleSheet("background-color: #FFFFFF; border: 2px solid #000000; border-radius: 12px;")
+        back_card.setFixedSize(360, 230)
+        back_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 16px;")
         bc_layout.addWidget(back_card)
         back_box.addWidget(back_card_bg)
 
@@ -791,8 +815,10 @@ class CredentialDesignEditorView(QWidget):
         canvas_layout.addLayout(back_box)
         canvas_layout.addStretch()
 
-        content_layout.addWidget(canvas_container, stretch=1)
+        scroll_area.setWidget(canvas_container)
+        content_layout.addWidget(scroll_area, stretch=1)
 
+        # ---------------- Right Sidebar ----------------
         sidebar = QFrame()
         sidebar.setFixedWidth(230)
         sidebar.setStyleSheet("background-color: #F8FAFC; border-left: 1px solid #CBD5E1;")
@@ -842,37 +868,51 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # Bottom Bar Buttons enlarged to height 36px
+        # ---------------- Bottom Control Bar ----------------
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(54)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
         bb_layout = QHBoxLayout(bottom_bar)
         bb_layout.setContentsMargins(16, 6, 16, 6)
-        bb_layout.setSpacing(12)
+        bb_layout.setSpacing(10)
 
         btn_save = QPushButton("Save")
-        btn_save.setFixedSize(90, 36)
-        btn_save.setFont(QFont("Arial", 9.5, QFont.Bold))
+        btn_save.setFixedSize(75, 36)
+        btn_save.setFont(QFont("Arial", 9, QFont.Bold))
         btn_save.setCursor(Qt.PointingHandCursor)
-        btn_save.setStyleSheet("QPushButton { background-color: #0284C7; color: #FFFFFF; border: none; border-radius: 4px; } QPushButton:hover { background-color: #0369A1; }")
+        btn_save.setStyleSheet("QPushButton { background-color: #0284C7; color: #FFFFFF; border: none; border-radius: 3px; } QPushButton:hover { background-color: #0369A1; }")
 
         btn_save_as = QPushButton("Save As...")
-        btn_save_as.setFixedSize(100, 36)
-        btn_save_as.setFont(QFont("Arial", 9.5))
+        btn_save_as.setFixedSize(90, 36)
+        btn_save_as.setFont(QFont("Arial", 9))
         btn_save_as.setCursor(Qt.PointingHandCursor)
-        btn_save_as.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 4px; } QPushButton:hover { background-color: #CBD5E1; }")
+        btn_save_as.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px; } QPushButton:hover { background-color: #CBD5E1; }")
 
         btn_close = QPushButton("Close")
-        btn_close.setFixedSize(90, 36)
-        btn_close.setFont(QFont("Arial", 9.5))
+        btn_close.setFixedSize(80, 36)
+        btn_close.setFont(QFont("Arial", 9))
         btn_close.setCursor(Qt.PointingHandCursor)
-        btn_close.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 4px; } QPushButton:hover { background-color: #CBD5E1; }")
+        btn_close.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px; } QPushButton:hover { background-color: #CBD5E1; }")
         if on_close_callback:
             btn_close.clicked.connect(on_close_callback)
+
+        btn_print_sample = QPushButton("Print Sample")
+        btn_print_sample.setFixedSize(100, 36)
+        btn_print_sample.setFont(QFont("Arial", 9))
+        btn_print_sample.setCursor(Qt.PointingHandCursor)
+        btn_print_sample.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; border: 1px solid #CBD5E1; border-radius: 3px; } QPushButton:hover { background-color: #CBD5E1; }")
+
+        btn_quick_start = QPushButton("Quick Start")
+        btn_quick_start.setFixedSize(95, 36)
+        btn_quick_start.setFont(QFont("Arial", 9))
+        btn_quick_start.setEnabled(False)
+        btn_quick_start.setStyleSheet("QPushButton { background-color: #F1F5F9; color: #94A3B8; border: 1px solid #E2E8F0; border-radius: 3px; }")
 
         bb_layout.addWidget(btn_save)
         bb_layout.addWidget(btn_save_as)
         bb_layout.addWidget(btn_close)
+        bb_layout.addWidget(btn_print_sample)
+        bb_layout.addWidget(btn_quick_start)
         bb_layout.addStretch()
 
         main_layout.addWidget(bottom_bar)
@@ -1113,7 +1153,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
-        self.resize(1280, 750)
+        self.resize(1300, 750)
         self.setCentralWidget(EntrustDashboard())
 
 
