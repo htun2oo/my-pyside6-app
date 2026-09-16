@@ -137,22 +137,65 @@ def make_toolbar_icon(icon_type, color="#002D62", size=24):
         p.drawLine(20, 7, 15, 9)
         p.drawLine(20, 17, 15, 15)
 
-    # 45 Degree Pencil Icon (Rotated to the opposite direction)
+    # Drawing Tools Icons
+    elif icon_type == "line":
+        p.drawLine(4, 19, 20, 5)
+
+    elif icon_type == "rectangle":
+        p.drawRect(QRectF(4, 4, 16, 16))
+
+    elif icon_type == "ellipse":
+        p.drawEllipse(QRectF(3, 3, 18, 18))
+
+    elif icon_type == "ruler":
+        p.drawRoundedRect(QRectF(3, 6, 18, 12), 2, 2)
+        p.drawLine(7, 13, 7, 18)
+        p.drawLine(10, 15, 10, 18)
+        p.drawLine(13, 13, 13, 18)
+        p.drawLine(16, 15, 16, 18)
+
+    elif icon_type == "grid_lines":
+        p.drawRect(QRectF(3, 3, 18, 18))
+        p.drawLine(9, 3, 9, 21)
+        p.drawLine(15, 3, 15, 21)
+        p.drawLine(3, 9, 21, 9)
+        p.drawLine(3, 15, 21, 15)
+
+    elif icon_type == "zoom_out":
+        p.drawEllipse(QRectF(3, 3, 13, 13))
+        p.drawLine(12, 12, 20, 20)
+        p.drawLine(6, 9.5, 13, 9.5)
+
+    elif icon_type == "zoom_in":
+        p.drawEllipse(QRectF(3, 3, 13, 13))
+        p.drawLine(12, 12, 20, 20)
+        p.drawLine(6, 9.5, 13, 9.5)
+        p.drawLine(9.5, 6, 9.5, 13)
+
+    elif icon_type == "card_rotate":
+        p.drawRoundedRect(QRectF(3, 8, 12, 13), 2, 2)
+        p.drawRoundedRect(QRectF(8, 4, 13, 12), 2, 2)
+        path = QPainterPath()
+        path.moveTo(3, 6)
+        path.arcTo(2, 2, 8, 8, 180, -120)
+        p.drawPath(path)
+        p.setBrush(QColor(color))
+        p.drawPolygon([QPointF(2, 4), QPointF(6, 2), QPointF(6, 6)])
+
+    # 45 Degree Pencil Icon
     elif icon_type == "pencil_45":
         p.save()
         p.translate(size / 2, size / 2)
-        p.rotate(45)  # Rotated +45° instead of -45°
+        p.rotate(45)
         
         pen_body = QPen(QColor(color), 1.6)
         pen_body.setCapStyle(Qt.SquareCap)
         pen_body.setJoinStyle(Qt.MiterJoin)
         p.setPen(pen_body)
         
-        # Eraser & Pencil Body
         p.drawRoundedRect(QRectF(-4, -9, 8, 4), 1, 1)
         p.drawRect(QRectF(-4, -5, 8, 10))
         
-        # Pencil Tip
         p.setBrush(QColor(color))
         p.drawPolygon([QPointF(-4, 5), QPointF(4, 5), QPointF(0, 10)])
         p.restore()
@@ -510,14 +553,15 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.setContentsMargins(4, 3, 4, 3)
         tb_layout.setSpacing(0)
 
+        # Standardized Style for ALL Toolbar Buttons
         btn_style = """
             QToolButton {
-                background-color: #F4F4F4;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E0E0E0);
                 border: 1px solid #B0B0B0;
                 margin-right: -1px;
             }
             QToolButton:hover {
-                background-color: #E0E0E0;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F0F0, stop:1 #D0D0D0);
             }
             QToolTip {
                 background-color: #1E293B;
@@ -602,8 +646,6 @@ class CredentialDesignEditorView(QWidget):
 
         grp4 = QHBoxLayout()
         grp4.setSpacing(0)
-        
-        # Tooltip for chip is changed from "Smart Card Chip" to "Chip"
         new_tools_config = [
             ("barcode", "Barcode"),
             ("magnetic_stripe", "Magnetic Stripe"),
@@ -618,6 +660,30 @@ class CredentialDesignEditorView(QWidget):
             btn_tool.setStyleSheet(btn_style)
             grp4.addWidget(btn_tool)
 
+        sep4 = QFrame()
+        sep4.setFixedWidth(8)
+
+        # Drawing & View Tools Group (Line, Rectangle, Ellipse, Ruler, Grid, Zoom, Rotate)
+        grp5 = QHBoxLayout()
+        grp5.setSpacing(0)
+        drawing_tools = [
+            ("line", "Line"),
+            ("rectangle", "Rectangle"),
+            ("ellipse", "Ellipse"),
+            ("ruler", "Ruler"),
+            ("grid_lines", "Grid Lines"),
+            ("zoom_out", "Zoom Out"),
+            ("zoom_in", "Zoom In")
+        ]
+
+        for icon_key, tooltip_name in drawing_tools:
+            btn_tool = QToolButton()
+            btn_tool.setFixedSize(28, 26)
+            btn_tool.setIcon(make_toolbar_icon(icon_key))
+            btn_tool.setToolTip(tooltip_name)
+            btn_tool.setStyleSheet(btn_style)
+            grp5.addWidget(btn_tool)
+
         tb_layout.addLayout(grp1)
         tb_layout.addWidget(sep1)
         tb_layout.addLayout(grp2)
@@ -625,24 +691,44 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addLayout(grp3)
         tb_layout.addWidget(sep3)
         tb_layout.addLayout(grp4)
-
-        sep4 = QFrame()
-        sep4.setFixedWidth(8)
         tb_layout.addWidget(sep4)
+        tb_layout.addLayout(grp5)
 
-        other_tools = ["🗑", "▦", "▤", "║", "▭", "╱", "◯"]
-        for tool in other_tools:
-            btn = QToolButton()
-            btn.setText(tool)
-            btn.setFixedSize(26, 26)
-            btn.setStyleSheet("QToolButton { background-color: #FFFFFF; border: 1px solid #CBD5E1; margin: 1px; } QToolButton:hover { background-color: #E2E8F0; }")
-            tb_layout.addWidget(btn)
+        lbl_zoom = QLabel("Zoom ")
+        lbl_zoom.setFont(QFont("Arial", 8.5))
+        lbl_zoom.setStyleSheet("color: #333333; margin-left: 6px;")
+        tb_layout.addWidget(lbl_zoom)
 
         zoom_combo = QComboBox()
-        zoom_combo.addItems(["100%", "75%", "50%", "150%"])
+        zoom_combo.addItems(["150%", "100%", "75%", "50%"])
         zoom_combo.setFixedSize(70, 26)
-        zoom_combo.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px;")
+        zoom_combo.setStyleSheet("""
+            QComboBox {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E0E0E0);
+                border: 1px solid #B0B0B0;
+                border-radius: 3px;
+                padding-left: 4px;
+                font-size: 8.5pt;
+                font-family: Arial;
+                color: #000000;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 16px;
+                border-left: none;
+            }
+        """)
         tb_layout.addWidget(zoom_combo)
+
+        tb_layout.addSpacing(4)
+
+        btn_rotate = QToolButton()
+        btn_rotate.setFixedSize(28, 26)
+        btn_rotate.setIcon(make_toolbar_icon("card_rotate"))
+        btn_rotate.setToolTip("Rotate Card")
+        btn_rotate.setStyleSheet(btn_style)
+        tb_layout.addWidget(btn_rotate)
 
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
