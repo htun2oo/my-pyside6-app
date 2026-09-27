@@ -1,14 +1,14 @@
 import sys
 from PySide6.QtCore import Qt, QRectF, QPointF
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QBrush, QPen, QPainterPath
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFrame, QStackedWidget, QComboBox, QCheckBox,
-    QToolButton, QDialog, QLineEdit, QTextEdit, QScrollArea, QTabWidget
+    QLabel, QPushButton, QFrame, QComboBox, QCheckBox,
+    QToolButton, QScrollArea, QTabWidget
 )
 
 # -------------------------------------------------------------
-# Toolbar & Custom Vector Icon Painter
+# Toolbar & Icons (နဂိုအတိုင်း)
 # -------------------------------------------------------------
 def make_toolbar_icon(icon_type, color="#002D62", size=32):
     pixmap = QPixmap(size, size)
@@ -172,232 +172,32 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
         pen_card.setCapStyle(Qt.RoundCap)
         pen_card.setJoinStyle(Qt.RoundJoin)
         p.setPen(pen_card)
-
         p.drawRoundedRect(QRectF(9, 14, 8, 14), 1.5, 1.5)
         p.drawRoundedRect(QRectF(16, 6, 12, 22), 1.5, 1.5)
-
         p.setPen(QPen(QColor(color), 2.0, Qt.SolidLine, Qt.RoundCap))
         arrow_path = QPainterPath()
         arrow_path.moveTo(7, 12)
         arrow_path.quadTo(7, 6, 14, 6)
         p.drawPath(arrow_path)
-
         p.setBrush(QColor(color))
         p.drawPolygon([QPointF(14, 3), QPointF(18, 6), QPointF(14, 9)])
-
-    elif icon_type == "pencil_45":
-        p.save()
-        p.translate(size / 2, size / 2)
-        p.rotate(45)
-        
-        pen_body = QPen(QColor(color), 2.0)
-        pen_body.setCapStyle(Qt.SquareCap)
-        pen_body.setJoinStyle(Qt.MiterJoin)
-        p.setPen(pen_body)
-        
-        p.drawRoundedRect(QRectF(-6, -13, 12, 6), 1, 1)
-        p.drawRect(QRectF(-6, -7, 12, 14))
-        
-        p.setBrush(QColor(color))
-        p.drawPolygon([QPointF(-6, 7), QPointF(6, 7), QPointF(0, 14)])
-        p.restore()
 
     p.end()
     return QIcon(pixmap)
 
 
 # -------------------------------------------------------------
-# Hover Edit Button Class
-# -------------------------------------------------------------
-class HoverEditButton(QPushButton):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(34, 34)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setIcon(make_toolbar_icon("pencil_45", color="#002D62", size=26))
-        self.setIconSize(self.icon().actualSize(self.size()))
-        self.setToolTip("Edit Properties")
-        self.setStyleSheet("""
-            QPushButton {
-                background-color: #FFFFFF;
-                border-radius: 4px;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: #E2E8F0;
-            }
-        """)
-
-
-# -------------------------------------------------------------
-# Edit Properties Dialog Popup Window
-# -------------------------------------------------------------
-class EditPropertiesDialog(QDialog):
-    def __init__(self, current_name="Credential Design 1", parent=None):
-        super().__init__(parent)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
-        self.setModal(True)
-        self.setFixedSize(450, 600)
-        self.setStyleSheet("QDialog { background-color: #FFFFFF; border: 1px solid #000000; }")
-
-        self.dim_data = {
-            "ISO ID-1": {"Centimeters": (8.5725, 5.3975), "Millimeters": (85.725, 53.975)},
-            "CR-50": {"Centimeters": (8.8900, 4.4450), "Millimeters": (88.900, 44.450)},
-            "Custom": {"Centimeters": (8.5725, 5.3975), "Millimeters": (85.725, 53.975)}
-        }
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
-        header = QFrame()
-        header.setFixedHeight(45)
-        header.setStyleSheet("background-color: #7B0082;")
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(16, 0, 12, 0)
-
-        title = QLabel("Edit Properties")
-        title.setFont(QFont("Arial", 11, QFont.Bold))
-        title.setStyleSheet("color: #FFFFFF;")
-
-        close_btn = QPushButton("✕")
-        close_btn.setFixedSize(28, 28)
-        close_btn.setCursor(Qt.PointingHandCursor)
-        close_btn.setStyleSheet("QPushButton { background: #6B0072; color: #FFFFFF; border: none; border-radius: 14px; font-weight: bold; font-size: 12px; } QPushButton:hover { background: #92009C; }")
-        close_btn.clicked.connect(self.reject)
-
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-        header_layout.addWidget(close_btn)
-        layout.addWidget(header)
-
-        form_widget = QWidget()
-        form_layout = QVBoxLayout(form_widget)
-        form_layout.setContentsMargins(20, 16, 20, 16)
-        form_layout.setSpacing(10)
-
-        label_style = "color: #334155; font-size: 9.5pt; font-family: Arial; font-weight: bold;"
-        
-        input_style = """
-            QLineEdit, QComboBox {
-                border: 1px solid #94A3B8;
-                border-radius: 4px;
-                padding: 4px 8px;
-                font-size: 9.5pt;
-                font-family: Arial;
-                background-color: #FFFFFF;
-                color: #0F172A;
-            }
-        """
-
-        lbl_name = QLabel("Name")
-        lbl_name.setStyleSheet(label_style)
-        self.txt_name = QLineEdit(current_name)
-        self.txt_name.setFixedSize(270, 34)
-        self.txt_name.setStyleSheet(input_style)
-
-        lbl_dim = QLabel("Dimensions")
-        lbl_dim.setStyleSheet(label_style)
-        self.cbo_dim = QComboBox()
-        self.cbo_dim.addItems(["ISO ID-1", "CR-50", "Custom"])
-        self.cbo_dim.setFixedSize(160, 34)
-        self.cbo_dim.setStyleSheet(input_style)
-
-        lbl_units = QLabel("Units")
-        lbl_units.setStyleSheet(label_style)
-        self.cbo_units = QComboBox()
-        self.cbo_units.addItems(["Centimeters", "Millimeters"])
-        self.cbo_units.setFixedSize(160, 34)
-        self.cbo_units.setStyleSheet(input_style)
-
-        lbl_width = QLabel("Width")
-        lbl_width.setStyleSheet(label_style)
-        width_box = QHBoxLayout()
-        width_box.setSpacing(8)
-        self.txt_width = QLineEdit("8.5725")
-        self.txt_width.setFixedSize(140, 34)
-        self.txt_width.setStyleSheet(input_style)
-        self.unit_w_lbl = QLabel("centimeters")
-        self.unit_w_lbl.setStyleSheet("color: #0F172A; font-size: 9.5pt; font-family: Arial;")
-        width_box.addWidget(self.txt_width)
-        width_box.addWidget(self.unit_w_lbl)
-        width_box.addStretch()
-
-        lbl_height = QLabel("Height")
-        lbl_height.setStyleSheet(label_style)
-        height_box = QHBoxLayout()
-        height_box.setSpacing(8)
-        self.txt_height = QLineEdit("5.3975")
-        self.txt_height.setFixedSize(140, 34)
-        self.txt_height.setStyleSheet(input_style)
-        self.unit_h_lbl = QLabel("centimeters")
-        self.unit_h_lbl.setStyleSheet("color: #0F172A; font-size: 9.5pt; font-family: Arial;")
-        height_box.addWidget(self.txt_height)
-        height_box.addWidget(self.unit_h_lbl)
-        height_box.addStretch()
-
-        lbl_desc = QLabel("Description")
-        lbl_desc.setStyleSheet(label_style)
-        self.txt_desc = QTextEdit()
-        self.txt_desc.setFixedHeight(85)
-        self.txt_desc.setStyleSheet("QTextEdit { border: 1px solid #94A3B8; border-radius: 4px; background-color: #FFFFFF; }")
-
-        form_layout.addWidget(lbl_name)
-        form_layout.addWidget(self.txt_name)
-        form_layout.addWidget(lbl_dim)
-        form_layout.addWidget(self.cbo_dim)
-        form_layout.addWidget(lbl_units)
-        form_layout.addWidget(self.cbo_units)
-        form_layout.addWidget(lbl_width)
-        form_layout.addLayout(width_box)
-        form_layout.addWidget(lbl_height)
-        form_layout.addLayout(height_box)
-        form_layout.addWidget(lbl_desc)
-        form_layout.addWidget(self.txt_desc)
-
-        layout.addWidget(form_widget, stretch=1)
-
-        bottom_bar = QFrame()
-        bottom_bar.setFixedHeight(56)
-        bottom_bar.setStyleSheet("background-color: #F8FAFC; border-top: 1px solid #E2E8F0;")
-        bb_layout = QHBoxLayout(bottom_bar)
-        bb_layout.setContentsMargins(20, 0, 20, 0)
-        bb_layout.setSpacing(14)
-
-        btn_ok = QPushButton("OK")
-        btn_ok.setFixedSize(90, 36)
-        btn_ok.setCursor(Qt.PointingHandCursor)
-        btn_ok.setStyleSheet("QPushButton { background-color: #0284C7; color: #FFFFFF; font-weight: bold; font-size: 9.5pt; border: none; border-radius: 4px; }")
-        btn_ok.clicked.connect(self.accept)
-
-        btn_cancel = QPushButton("Cancel")
-        btn_cancel.setFixedSize(90, 36)
-        btn_cancel.setCursor(Qt.PointingHandCursor)
-        btn_cancel.setStyleSheet("QPushButton { background-color: #E2E8F0; color: #1E293B; font-size: 9.5pt; border: 1px solid #CBD5E1; border-radius: 4px; }")
-        btn_cancel.clicked.connect(self.reject)
-
-        bb_layout.addWidget(btn_ok)
-        bb_layout.addWidget(btn_cancel)
-        bb_layout.addStretch()
-
-        layout.addWidget(bottom_bar)
-
-    def get_updated_name(self):
-        return self.txt_name.text()
-
-
-# -------------------------------------------------------------
-# Credential Design Editor View (Exact Second Image Match)
+# Main View Design
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
-    def __init__(self, on_close_callback=None):
+    def __init__(self):
         super().__init__()
         self.setStyleSheet("background-color: #FFFFFF;")
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # ---------------- TOP TOOLBAR ----------------
+        # --- 1. TOP TOOLBAR (နဂိုအတိုင်း) ---
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(52)
         editor_toolbar.setStyleSheet("background-color: #D6D6D6; border-bottom: 1px solid #B0B0B0;")
@@ -419,89 +219,65 @@ class CredentialDesignEditorView(QWidget):
 
         grp1 = QHBoxLayout()
         grp1.setSpacing(0)
-        btn_undo = QToolButton()
-        btn_undo.setFixedSize(42, 38)
-        btn_undo.setIcon(make_toolbar_icon("undo", size=32))
-        btn_undo.setIconSize(btn_undo.size())
-        btn_undo.setStyleSheet(btn_style)
-
-        btn_redo = QToolButton()
-        btn_redo.setFixedSize(42, 38)
-        btn_redo.setIcon(make_toolbar_icon("redo", size=32))
-        btn_redo.setIconSize(btn_redo.size())
-        btn_redo.setStyleSheet(btn_style)
-
-        grp1.addWidget(btn_undo)
-        grp1.addWidget(btn_redo)
+        for ik in ["undo", "redo"]:
+            btn = QToolButton()
+            btn.setFixedSize(42, 38)
+            btn.setIcon(make_toolbar_icon(ik, size=32))
+            btn.setIconSize(btn.size())
+            btn.setStyleSheet(btn_style)
+            grp1.addWidget(btn)
 
         sep1 = QFrame()
         sep1.setFixedWidth(12)
 
         grp2 = QHBoxLayout()
         grp2.setSpacing(0)
-        btn_copy = QToolButton()
-        btn_copy.setFixedSize(42, 38)
-        btn_copy.setIcon(make_toolbar_icon("copy", size=32))
-        btn_copy.setIconSize(btn_copy.size())
-        btn_copy.setStyleSheet(btn_style)
-
-        btn_cut = QToolButton()
-        btn_cut.setFixedSize(42, 38)
-        btn_cut.setIcon(make_toolbar_icon("cut", size=32))
-        btn_cut.setIconSize(btn_cut.size())
-        btn_cut.setStyleSheet(btn_style)
-
-        btn_paste = QToolButton()
-        btn_paste.setFixedSize(42, 38)
-        btn_paste.setIcon(make_toolbar_icon("paste", size=32))
-        btn_paste.setIconSize(btn_paste.size())
-        btn_paste.setStyleSheet(btn_style)
-
-        grp2.addWidget(btn_copy)
-        grp2.addWidget(btn_cut)
-        grp2.addWidget(btn_paste)
+        for ik in ["copy", "cut", "paste"]:
+            btn = QToolButton()
+            btn.setFixedSize(42, 38)
+            btn.setIcon(make_toolbar_icon(ik, size=32))
+            btn.setIconSize(btn.size())
+            btn.setStyleSheet(btn_style)
+            grp2.addWidget(btn)
 
         sep2 = QFrame()
         sep2.setFixedWidth(12)
 
         grp3 = QHBoxLayout()
         grp3.setSpacing(0)
-        tools_config = ["text", "static_text", "photo", "static_graphic", "variable_graphic", "date", "signature"]
-        for icon_key in tools_config:
-            btn_tool = QToolButton()
-            btn_tool.setFixedSize(42, 38)
-            btn_tool.setIcon(make_toolbar_icon(icon_key, size=32))
-            btn_tool.setIconSize(btn_tool.size())
-            btn_tool.setStyleSheet(btn_style)
-            grp3.addWidget(btn_tool)
+        for ik in ["text", "static_text", "photo", "static_graphic", "variable_graphic", "date", "signature"]:
+            btn = QToolButton()
+            btn.setFixedSize(42, 38)
+            btn.setIcon(make_toolbar_icon(ik, size=32))
+            btn.setIconSize(btn.size())
+            btn.setStyleSheet(btn_style)
+            grp3.addWidget(btn)
 
         sep3 = QFrame()
         sep3.setFixedWidth(12)
 
         grp4 = QHBoxLayout()
         grp4.setSpacing(0)
-        new_tools_config = ["barcode", "magnetic_stripe", "chip"]
-        for icon_key in new_tools_config:
-            btn_tool = QToolButton()
-            btn_tool.setFixedSize(42, 38)
-            btn_tool.setIcon(make_toolbar_icon(icon_key, size=32))
-            btn_tool.setIconSize(btn_tool.size())
-            btn_tool.setStyleSheet(btn_style)
-            grp4.addWidget(btn_tool)
+        for ik in ["barcode", "magnetic_stripe", "chip"]:
+            btn = QToolButton()
+            btn.setFixedSize(42, 38)
+            btn.setIcon(make_toolbar_icon(ik, size=32))
+            btn.setIconSize(btn.size())
+            btn.setStyleSheet(btn_style)
+            grp4.addWidget(btn)
 
         sep4 = QFrame()
         sep4.setFixedWidth(12)
 
         grp5 = QHBoxLayout()
         grp5.setSpacing(0)
-        drawing_tools = ["line", "rectangle", "ellipse", "ruler", "grid_lines", "zoom_out", "zoom_in"]
-        for icon_key in drawing_tools:
-            btn_tool = QToolButton()
-            btn_tool.setFixedSize(42, 38)
-            btn_tool.setIcon(make_toolbar_icon(icon_key, size=32))
-            btn_tool.setIconSize(btn_tool.size())
-            btn_tool.setStyleSheet(btn_style)
-            grp5.addWidget(btn_tool)
+        for ik in ["line", "rectangle", "ellipse", "ruler", "grid_lines", "zoom_out", "zoom_in"]:
+            btn = QToolButton()
+            btn.setFixedSize(42, 38)
+            btn.setIcon(make_toolbar_icon(ik, size=32))
+            btn.setIconSize(btn.size())
+            btn.setStyleSheet(btn_style)
+            grp5.addWidget(btn)
 
         tb_layout.addLayout(grp1)
         tb_layout.addWidget(sep1)
@@ -533,7 +309,6 @@ class CredentialDesignEditorView(QWidget):
             }
         """)
         tb_layout.addWidget(zoom_combo)
-
         tb_layout.addSpacing(8)
 
         btn_orientation = QToolButton()
@@ -546,13 +321,12 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
 
-        # ---------------- CONTENT AREA ----------------
+        # --- 2. WORKSPACE / CARD AREA (ဒုတိယပုံအတိုင်း ပြင်ဆင်ထားသည့် အပိုင်း) ---
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Main Scroll Workspace
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #FFFFFF; }")
@@ -560,11 +334,11 @@ class CredentialDesignEditorView(QWidget):
         canvas_container = QWidget()
         canvas_container.setStyleSheet("background-color: #FFFFFF;")
         canvas_layout = QHBoxLayout(canvas_container)
-        canvas_layout.setContentsMargins(15, 12, 15, 0)
-        canvas_layout.setSpacing(30)
+        canvas_layout.setContentsMargins(12, 10, 12, 0)
+        canvas_layout.setSpacing(25)
         canvas_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # --- FRONT SIDE CARD AREA ---
+        # --- FRONT SIDE AREA ---
         front_container = QVBoxLayout()
         front_container.setSpacing(6)
         front_container.setContentsMargins(0, 0, 0, 0)
@@ -576,17 +350,17 @@ class CredentialDesignEditorView(QWidget):
         front_title.setFont(QFont("Arial", 10, QFont.Bold))
         front_title.setStyleSheet("color: #000000;")
 
-        self.active_layer_lbl = QLabel("Active Design Layer: Color")
-        self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
-        self.active_layer_lbl.setStyleSheet("color: #000000;")
+        active_layer_lbl = QLabel("Active Design Layer: Color")
+        active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
+        active_layer_lbl.setStyleSheet("color: #000000;")
 
         front_header_row.addWidget(front_title)
         front_header_row.addStretch()
-        front_header_row.addWidget(self.active_layer_lbl)
+        front_header_row.addWidget(active_layer_lbl)
 
-        # ဒုတိယပုံအတိုင်း အောက်ခြေအထိ ထိကပ်သော မီးခိုးရောင် Canvas (Screenshot 2026-09-27 104356.png)
+        # ဒုတိယပုံအတိုင်း မီးခိုးရောင် အကွက်ကြီး အောက်ထိ အပြည့်ဆွဲဆန့်ထားခြင်း
         front_card_bg = QFrame()
-        front_card_bg.setFixedSize(360, 520)
+        front_card_bg.setFixedSize(360, 540)
         front_card_bg.setStyleSheet("background-color: #8C8C8C; border: none;")
         
         fc_layout = QVBoxLayout(front_card_bg)
@@ -601,7 +375,7 @@ class CredentialDesignEditorView(QWidget):
         front_container.addLayout(front_header_row)
         front_container.addWidget(front_card_bg)
 
-        # --- BACK SIDE CARD AREA ---
+        # --- BACK SIDE AREA ---
         back_container = QVBoxLayout()
         back_container.setSpacing(6)
         back_container.setContentsMargins(0, 0, 0, 0)
@@ -616,9 +390,9 @@ class CredentialDesignEditorView(QWidget):
         back_header_row.addWidget(back_title)
         back_header_row.addStretch()
 
-        # ဒုတိယပုံအတိုင်း အောက်ခြေအထိ ထိကပ်သော မီးခိုးရောင် Canvas (Screenshot 2026-09-27 104356.png)
+        # ဒုတိယပုံအတိုင်း မီးခိုးရောင် အကွက်ကြီး အောက်ထိ အပြည့်ဆွဲဆန့်ထားခြင်း
         back_card_bg = QFrame()
-        back_card_bg.setFixedSize(360, 520)
+        back_card_bg.setFixedSize(360, 540)
         back_card_bg.setStyleSheet("background-color: #8C8C8C; border: none;")
 
         bc_layout = QVBoxLayout(back_card_bg)
@@ -639,7 +413,7 @@ class CredentialDesignEditorView(QWidget):
         scroll_area.setWidget(canvas_container)
         content_layout.addWidget(scroll_area, stretch=1)
 
-        # ---------------- RIGHT SIDEBAR PANEL ----------------
+        # --- 3. RIGHT SIDEBAR (နဂိုအတိုင်း) ---
         sidebar = QFrame()
         sidebar.setFixedWidth(270)
         sidebar.setStyleSheet("background-color: #FFFFFF; border-left: 1px solid #CCCCCC;")
@@ -655,28 +429,14 @@ class CredentialDesignEditorView(QWidget):
         prop_tab_layout.setAlignment(Qt.AlignTop)
 
         card_frame = QFrame()
-        card_frame.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 1px solid #D0D0D0;
-                border-radius: 4px;
-            }
-        """)
+        card_frame.setStyleSheet("QFrame { background-color: #FFFFFF; border: 1px solid #D0D0D0; border-radius: 4px; }")
         
         card_layout = QVBoxLayout(card_frame)
         card_layout.setContentsMargins(0, 0, 0, 12)
         card_layout.setSpacing(10)
 
         header_frame = QFrame()
-        header_frame.setStyleSheet("""
-            QFrame {
-                background-color: #EAEAEA;
-                border: none;
-                border-bottom: 1px solid #D0D0D0;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-            }
-        """)
+        header_frame.setStyleSheet("QFrame { background-color: #EAEAEA; border: none; border-bottom: 1px solid #D0D0D0; border-top-left-radius: 4px; border-top-right-radius: 4px; }")
         header_layout = QHBoxLayout(header_frame)
         header_layout.setContentsMargins(10, 6, 10, 6)
         header_layout.setSpacing(6)
@@ -721,14 +481,14 @@ class CredentialDesignEditorView(QWidget):
             }
         """
 
-        self.cb1 = QCheckBox("Rotate print orientation 180\ndegrees")
-        self.cb1.setStyleSheet(checkbox_style)
+        cb1 = QCheckBox("Rotate print orientation 180\ndegrees")
+        cb1.setStyleSheet(checkbox_style)
 
-        self.cb2 = QCheckBox("Tactile Impression Module")
-        self.cb2.setStyleSheet(checkbox_style)
+        cb2 = QCheckBox("Tactile Impression Module")
+        cb2.setStyleSheet(checkbox_style)
 
-        checkbox_layout.addWidget(self.cb1)
-        checkbox_layout.addWidget(self.cb2)
+        checkbox_layout.addWidget(cb1)
+        checkbox_layout.addWidget(cb2)
 
         card_layout.addWidget(checkbox_container)
         prop_tab_layout.addWidget(card_frame)
@@ -768,7 +528,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # ---------------- BOTTOM BUTTON BAR ----------------
+        # --- 4. BOTTOM BUTTON BAR (နဂိုအတိုင်း) ---
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(54)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
@@ -793,8 +553,6 @@ class CredentialDesignEditorView(QWidget):
         btn_close.setFont(QFont("Arial", 9.5))
         btn_close.setCursor(Qt.PointingHandCursor)
         btn_close.setStyleSheet("QPushButton { background-color: #E1E1E1; color: #000000; border: none; border-radius: 2px; }")
-        if on_close_callback:
-            btn_close.clicked.connect(on_close_callback)
 
         btn_print_sample = QPushButton("Print Sample")
         btn_print_sample.setFixedSize(100, 36)
@@ -818,9 +576,6 @@ class CredentialDesignEditorView(QWidget):
         main_layout.addWidget(bottom_bar)
 
 
-# -------------------------------------------------------------
-# Main Application Window
-# -------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
