@@ -23,20 +23,22 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
     p.setBrush(Qt.NoBrush)
 
     if icon_type == "undo":
+        # ဒုတိယပုံပါ Arrow Curved Downward Undo Icon
         path = QPainterPath()
-        path.arcMoveTo(4, 6, 24, 24, 45)
-        path.arcTo(4, 6, 24, 24, 45, 200)
+        path.arcMoveTo(6, 6, 20, 20, 0)
+        path.arcTo(6, 6, 20, 20, 0, 200)
         p.drawPath(path)
         p.setBrush(QColor(color))
-        p.drawPolygon([QPointF(4, 10), QPointF(12, 4), QPointF(12, 14)])
+        p.drawPolygon([QPointF(4, 18), QPointF(14, 12), QPointF(12, 22)])
 
     elif icon_type == "redo":
+        # ဒုတိယပုံပါ Arrow Curved Downward Redo Icon
         path = QPainterPath()
-        path.arcMoveTo(4, 6, 24, 24, 135)
-        path.arcTo(4, 6, 24, 24, 135, -200)
+        path.arcMoveTo(6, 6, 20, 20, 180)
+        path.arcTo(6, 6, 20, 20, 180, -200)
         p.drawPath(path)
         p.setBrush(QColor(color))
-        p.drawPolygon([QPointF(28, 10), QPointF(20, 4), QPointF(20, 14)])
+        p.drawPolygon([QPointF(28, 18), QPointF(18, 12), QPointF(20, 22)])
 
     elif icon_type == "copy":
         p.drawRoundedRect(QRectF(5, 4, 14, 16), 2, 2)
@@ -533,7 +535,7 @@ class ViewToggleToolbar(QFrame):
 
 
 # -------------------------------------------------------------
-# Credential Design Editor View (Matching Image 2 Layout Perfectly)
+# Credential Design Editor View
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self, on_close_callback=None):
@@ -760,7 +762,6 @@ class CredentialDesignEditorView(QWidget):
         front_container = QVBoxLayout()
         front_container.setSpacing(6)
 
-        # Headers Row Above Grey Container
         front_header_row = QHBoxLayout()
         front_header_row.setContentsMargins(0, 0, 0, 0)
 
@@ -776,7 +777,6 @@ class CredentialDesignEditorView(QWidget):
         front_header_row.addStretch()
         front_header_row.addWidget(self.active_layer_lbl)
 
-        # Outer Grey Card Container Frame
         front_card_bg = QFrame()
         front_card_bg.setFixedSize(360, 390)
         front_card_bg.setStyleSheet("background-color: #999999; border: none;")
@@ -785,7 +785,6 @@ class CredentialDesignEditorView(QWidget):
         fc_layout.setContentsMargins(0, 0, 0, 0)
         fc_layout.setAlignment(Qt.AlignCenter)
 
-        # White Card Canvas Area
         front_card = QFrame()
         front_card.setFixedSize(325, 205)
         front_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 18px;")
@@ -798,7 +797,6 @@ class CredentialDesignEditorView(QWidget):
         back_container = QVBoxLayout()
         back_container.setSpacing(6)
 
-        # Header Row Above Grey Container
         back_header_row = QHBoxLayout()
         back_header_row.setContentsMargins(0, 0, 0, 0)
 
@@ -809,7 +807,6 @@ class CredentialDesignEditorView(QWidget):
         back_header_row.addWidget(back_title)
         back_header_row.addStretch()
 
-        # Outer Grey Card Container Frame
         back_card_bg = QFrame()
         back_card_bg.setFixedSize(360, 390)
         back_card_bg.setStyleSheet("background-color: #999999; border: none;")
@@ -818,7 +815,6 @@ class CredentialDesignEditorView(QWidget):
         bc_layout.setContentsMargins(0, 0, 0, 0)
         bc_layout.setAlignment(Qt.AlignCenter)
 
-        # White Card Canvas Area
         back_card = QFrame()
         back_card.setFixedSize(325, 205)
         back_card.setStyleSheet("background-color: #FFFFFF; border: 3px solid #000000; border-radius: 18px;")
@@ -827,7 +823,6 @@ class CredentialDesignEditorView(QWidget):
         back_container.addLayout(back_header_row)
         back_container.addWidget(back_card_bg)
 
-        # Add Both Containers to Canvas
         canvas_layout.addLayout(front_container)
         canvas_layout.addLayout(back_container)
 
@@ -843,7 +838,6 @@ class CredentialDesignEditorView(QWidget):
 
         right_tabs = QTabWidget()
         
-        # Tab 1: Properties
         properties_tab = QWidget()
         properties_tab.setStyleSheet("background-color: #FFFFFF;")
         prop_tab_layout = QVBoxLayout(properties_tab)
@@ -929,7 +923,6 @@ class CredentialDesignEditorView(QWidget):
         card_layout.addWidget(checkbox_container)
         prop_tab_layout.addWidget(card_frame)
 
-        # Tab 2: Layers
         layers_tab = QWidget()
         layers_tab.setStyleSheet("background-color: #FFFFFF;")
 
