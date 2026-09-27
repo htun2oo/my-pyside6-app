@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 
 # -------------------------------------------------------------
-# Toolbar & Icons (နဂိုအတိုင်း)
+# Icons Generator Function
 # -------------------------------------------------------------
 def make_toolbar_icon(icon_type, color="#002D62", size=32):
     pixmap = QPixmap(size, size)
@@ -187,7 +187,7 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
 
 
 # -------------------------------------------------------------
-# Main View Design
+# Main Application View (Header + Tabs + Workspace + Sidebar + Footer)
 # -------------------------------------------------------------
 class CredentialDesignEditorView(QWidget):
     def __init__(self):
@@ -197,7 +197,73 @@ class CredentialDesignEditorView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # --- 1. TOP TOOLBAR (နဂိုအတိုင်း) ---
+        # --- 1. TOP HEADER & NAVIGATION TABS (ပြန်လည်ဖြည့်သွင်းပေးထားသော မူရင်း Home, Design, Printer Queues Tabs) ---
+        top_bar = QFrame()
+        top_bar.setFixedHeight(48)
+        top_bar.setStyleSheet("background-color: #7B0082; border: none;")
+        top_layout = QHBoxLayout(top_bar)
+        top_layout.setContentsMargins(15, 0, 15, 0)
+        top_layout.setSpacing(10)
+
+        app_title = QLabel("ENTRUST Adaptive Issuance Instant ID")
+        app_title.setFont(QFont("Arial", 11, QFont.Bold))
+        app_title.setStyleSheet("color: #FFFFFF;")
+        top_layout.addWidget(app_title)
+
+        top_layout.addSpacing(30)
+
+        # Home, Design, Printer Queues Navigation Tabs
+        nav_tabs_layout = QHBoxLayout()
+        nav_tabs_layout.setSpacing(2)
+
+        tab_home = QPushButton("Home")
+        tab_design = QPushButton("Design")
+        tab_queues = QPushButton("Printer Queues")
+
+        active_tab_style = """
+            QPushButton {
+                background-color: #FFFFFF;
+                color: #7B0082;
+                font-family: Arial;
+                font-size: 9.5pt;
+                font-weight: bold;
+                border: none;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                padding: 6px 16px;
+            }
+        """
+        inactive_tab_style = """
+            QPushButton {
+                background-color: transparent;
+                color: #E2D0E6;
+                font-family: Arial;
+                font-size: 9.5pt;
+                border: none;
+                padding: 6px 16px;
+            }
+            QPushButton:hover {
+                color: #FFFFFF;
+                background-color: #8C0094;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+        """
+
+        tab_home.setStyleSheet(inactive_tab_style)
+        tab_design.setStyleSheet(active_tab_style)  # Active Tab
+        tab_queues.setStyleSheet(inactive_tab_style)
+
+        nav_tabs_layout.addWidget(tab_home)
+        nav_tabs_layout.addWidget(tab_design)
+        nav_tabs_layout.addWidget(tab_queues)
+
+        top_layout.addLayout(nav_tabs_layout)
+        top_layout.addStretch()
+
+        main_layout.addWidget(top_bar)
+
+        # --- 2. TOOLBAR ---
         editor_toolbar = QFrame()
         editor_toolbar.setFixedHeight(52)
         editor_toolbar.setStyleSheet("background-color: #D6D6D6; border-bottom: 1px solid #B0B0B0;")
@@ -321,7 +387,7 @@ class CredentialDesignEditorView(QWidget):
         tb_layout.addStretch()
         main_layout.addWidget(editor_toolbar)
 
-        # --- 2. WORKSPACE / CARD AREA (ဒုတိယပုံအတိုင်း ပြင်ဆင်ထားသည့် အပိုင်း) ---
+        # --- 3. WORKSPACE / CARD AREA (ဒုတိယပုံအတိုင်း ပြင်ဆင်ထားသည့် မီးခိုးရောင် နောက်ခံကွက် အကွက်ကြီး) ---
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -338,7 +404,7 @@ class CredentialDesignEditorView(QWidget):
         canvas_layout.setSpacing(25)
         canvas_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # --- FRONT SIDE AREA ---
+        # FRONT SIDE AREA
         front_container = QVBoxLayout()
         front_container.setSpacing(6)
         front_container.setContentsMargins(0, 0, 0, 0)
@@ -358,7 +424,7 @@ class CredentialDesignEditorView(QWidget):
         front_header_row.addStretch()
         front_header_row.addWidget(active_layer_lbl)
 
-        # ဒုတိယပုံအတိုင်း မီးခိုးရောင် အကွက်ကြီး အောက်ထိ အပြည့်ဆွဲဆန့်ထားခြင်း
+        # ဒုတိယပုံအတိုင်း အောက်ထိ အပြည့်ထိကပ်သော မီးခိုးရောင် Canvas
         front_card_bg = QFrame()
         front_card_bg.setFixedSize(360, 540)
         front_card_bg.setStyleSheet("background-color: #8C8C8C; border: none;")
@@ -375,7 +441,7 @@ class CredentialDesignEditorView(QWidget):
         front_container.addLayout(front_header_row)
         front_container.addWidget(front_card_bg)
 
-        # --- BACK SIDE AREA ---
+        # BACK SIDE AREA
         back_container = QVBoxLayout()
         back_container.setSpacing(6)
         back_container.setContentsMargins(0, 0, 0, 0)
@@ -390,7 +456,7 @@ class CredentialDesignEditorView(QWidget):
         back_header_row.addWidget(back_title)
         back_header_row.addStretch()
 
-        # ဒုတိယပုံအတိုင်း မီးခိုးရောင် အကွက်ကြီး အောက်ထိ အပြည့်ဆွဲဆန့်ထားခြင်း
+        # ဒုတိယပုံအတိုင်း အောက်ထိ အပြည့်ထိကပ်သော မီးခိုးရောင် Canvas
         back_card_bg = QFrame()
         back_card_bg.setFixedSize(360, 540)
         back_card_bg.setStyleSheet("background-color: #8C8C8C; border: none;")
@@ -413,7 +479,7 @@ class CredentialDesignEditorView(QWidget):
         scroll_area.setWidget(canvas_container)
         content_layout.addWidget(scroll_area, stretch=1)
 
-        # --- 3. RIGHT SIDEBAR (နဂိုအတိုင်း) ---
+        # --- 4. RIGHT SIDEBAR ---
         sidebar = QFrame()
         sidebar.setFixedWidth(270)
         sidebar.setStyleSheet("background-color: #FFFFFF; border-left: 1px solid #CCCCCC;")
@@ -528,7 +594,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(content_area, stretch=1)
 
-        # --- 4. BOTTOM BUTTON BAR (နဂိုအတိုင်း) ---
+        # --- 5. BOTTOM BUTTON BAR ---
         bottom_bar = QFrame()
         bottom_bar.setFixedHeight(54)
         bottom_bar.setStyleSheet("background-color: #FFFFFF; border-top: 1px solid #CBD5E1;")
@@ -580,7 +646,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
-        self.resize(1350, 780)
+        self.resize(1350, 820)
         self.setCentralWidget(CredentialDesignEditorView())
 
 
