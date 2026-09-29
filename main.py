@@ -187,14 +187,15 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
 
 
 # -------------------------------------------------------------
-# ဒုတိယပုံအတိုင်း Gradient & Card Drawing သီးသန့် ရေးဆွဲထားသည့် Custom Canvas
+# ဘေးဘက်သို့ ပိုမိုကျယ်ပြန့်အောင် ပြင်ဆင်ထားသော Canvas Class
 # -------------------------------------------------------------
 class CustomGradientCardArea(QFrame):
     clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(360, 540)
+        # Background Width ကို 360 မှ 480 သို့ တိုးမြှင့်၍ ဘေးဘက်သို့ ချဲ့ပေးထားပါသည်။
+        self.setFixedSize(480, 540)
         self.is_selected = False
 
     def mousePressEvent(self, event):
@@ -204,37 +205,37 @@ class CustomGradientCardArea(QFrame):
 
     def set_selected(self, selected: bool):
         self.is_selected = selected
-        self.update()  # Redraw with Selection Border
+        self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        # 1. ဒုတိယပုံပါ အပေါ်မှအောက်သို့ Linear Gradient Background
+        # 1. Linear Gradient Background
         gradient = QLinearGradient(0, 0, 0, self.height())
-        gradient.setColorAt(0.0, QColor("#A2A2A2"))  # အပေါ်ဘက် ခပ်ဖျော့ဖျော့မီးခိုး
-        gradient.setColorAt(1.0, QColor("#828282"))  # အောက်ဘက် အနည်းငယ်ရောင်မှောင် မီးခိုး
+        gradient.setColorAt(0.0, QColor("#A2A2A2"))
+        gradient.setColorAt(1.0, QColor("#828282"))
 
         painter.fillRect(self.rect(), gradient)
 
-        # 2. Card Dimensions
+        # 2. Card Dimensions (Canvas ကျယ်သွားသည့်အတွက် အလယ်တည့်တည့်သို့ အလိုအလျောက် ရောက်ရှိပါမည်)
         card_w, card_h = 285, 180
         card_x = (self.width() - card_w) / 2
         card_y = 65
 
         card_rect = QRectF(card_x, card_y, card_w, card_h)
 
-        # 3. ဒုတိယပုံပါ ထောင့်ချွန်အနက်ကွက် (Black Corner Outlines)
+        # 3. Corner Outlines (Black Background behind inner card)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor("#000000"))
         painter.drawRect(card_rect)
 
-        # 4. အတွင်းဘက် Card ဖြူ (White Inner Card with Rounded Corners)
+        # 4. Inner White Card with Rounded Corners
         inner_rect = card_rect.adjusted(2, 2, -2, -2)
         painter.setBrush(QColor("#FFFFFF"))
         painter.drawRoundedRect(inner_rect, 14, 14)
 
-        # 5. Selection Border (Active ဖြစ်ချိန် အပြာရောင် Highlight ပြသပေးရန်)
+        # 5. Active Selection Border
         if self.is_selected:
             pen = QPen(QColor("#0078D7"), 3)
             painter.setPen(pen)
@@ -496,7 +497,6 @@ class CredentialDesignEditorView(QWidget):
         front_header_row.addStretch()
         front_header_row.addWidget(self.active_layer_lbl)
 
-        # ပြင်ဆင်ထားသည့် Custom Gradient Canvas
         self.front_card_bg = CustomGradientCardArea()
 
         front_container.addLayout(front_header_row)
@@ -517,7 +517,6 @@ class CredentialDesignEditorView(QWidget):
         back_header_row.addWidget(back_title)
         back_header_row.addStretch()
 
-        # ပြင်ဆင်ထားသည့် Custom Gradient Canvas
         self.back_card_bg = CustomGradientCardArea()
 
         back_container.addLayout(back_header_row)
