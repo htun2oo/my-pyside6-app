@@ -432,9 +432,21 @@ class CredentialDesignEditorView(QWidget):
         lbl_zoom.setStyleSheet("color: #333333; margin-left: 10px;")
         tb_layout.addWidget(lbl_zoom)
 
+        # --- Zoom ComboBox ( Updated with required Zoom values ) ---
         zoom_combo = QComboBox()
-        zoom_combo.addItems(["100%", "150%", "75%", "50%"])
-        zoom_combo.setFixedSize(85, 38)
+        zoom_combo.addItems([
+            "100%",
+            "Auto-zoom",
+            "150%",
+            "200%",
+            "250%",
+            "300%",
+            "350%",
+            "400%",
+            "450%",
+            "500%"
+        ])
+        zoom_combo.setFixedSize(110, 38)
         zoom_combo.setStyleSheet("""
             QComboBox {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #E0E0E0);
@@ -699,7 +711,6 @@ class CredentialDesignEditorView(QWidget):
         self.front_card_bg.set_selected(True)
         self.back_card_bg.set_selected(False)
         
-        # Label ကို Front Side ညာဘက်သို့ ရွှေ့ပြီး Text ပြောင်းလဲခြင်း
         self.back_header_row.removeWidget(self.active_layer_lbl)
         self.front_header_row.addWidget(self.active_layer_lbl)
         self.active_layer_lbl.setText("Active Design Layer: Color")
@@ -709,7 +720,6 @@ class CredentialDesignEditorView(QWidget):
         self.front_card_bg.set_selected(False)
         self.back_card_bg.set_selected(True)
         
-        # Label ကို Back Side ညာဘက်သို့ ရွှေ့ပြီး Text ပြောင်းလဲခြင်း
         self.front_header_row.removeWidget(self.active_layer_lbl)
         self.back_header_row.addWidget(self.active_layer_lbl)
         self.active_layer_lbl.setText("Active Design Layer: Black")
