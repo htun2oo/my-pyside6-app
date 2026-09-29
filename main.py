@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 # -------------------------------------------------------------
 # Toolbar & Icons Generator
 # -------------------------------------------------------------
-def make_toolbar_icon(icon_type, color="#002D62", size=32):
+def make_toolbar_icon(icon_type, color="#888888", size=24):
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.transparent)
     p = QPainter(pixmap)
@@ -183,39 +183,46 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
         p.drawPolygon([QPointF(14, 3), QPointF(18, 6), QPointF(14, 9)])
 
     elif icon_type == "eye":
-        p.setPen(QPen(QColor(color), 1.5))
+        pen_eye = QPen(QColor(color), 1.5)
+        pen_eye.setCapStyle(Qt.RoundCap)
+        p.setPen(pen_eye)
         path = QPainterPath()
-        path.moveTo(2, 10)
-        path.quadTo(10, 3, 18, 10)
-        path.quadTo(10, 17, 2, 10)
+        path.moveTo(3, 12)
+        path.quadTo(12, 5, 21, 12)
+        path.quadTo(12, 19, 3, 12)
         p.drawPath(path)
         p.setBrush(QColor(color))
-        p.drawEllipse(QRectF(8, 8, 4, 4))
+        p.drawEllipse(QRectF(10, 10, 4, 4))
 
     p.end()
     return QIcon(pixmap)
 
 
 # -------------------------------------------------------------
-# Layer Item Widget (Eye Icon + Layer Name + Checkbox)
+# Layer Item Widget (Matching Image 2 Design Cleanly)
 # -------------------------------------------------------------
 class LayerItemWidget(QWidget):
-    def __init__(self, layer_name, is_checked=False, parent=None):
+    def __init__(self, layer_name, is_checked=False, is_selected=False, parent=None):
         super().__init__(parent)
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(6, 2, 6, 2)
-        layout.setSpacing(6)
+        layout.setContentsMargins(10, 4, 10, 4)
+        layout.setSpacing(10)
 
         # Eye Icon
+        eye_color = "#1D3A67" if is_selected else "#888888"
         lbl_eye = QLabel()
-        lbl_eye.setPixmap(make_toolbar_icon("eye", color="#888888", size=20).pixmap(20, 20))
+        lbl_eye.setPixmap(make_toolbar_icon("eye", color=eye_color, size=22).pixmap(22, 22))
+        lbl_eye.setStyleSheet("background: transparent;")
         layout.addWidget(lbl_eye)
 
-        # Layer Name Text
-        lbl_name = QLabel(layer_name)
-        lbl_name.setFont(QFont("Arial", 9))
-        lbl_name.setStyleSheet("color: #222222;")
-        layout.addWidget(lbl_name)
+        # Layer Name Label
+        self.lbl_name = QLabel(layer_name)
+        font_weight = QFont.Bold if is_selected else QFont.Normal
+        self.lbl_name.setFont(QFont("Arial", 10, font_weight))
+        
+        text_color = "#FFFFFF" if is_selected else "#333333"
+        self.lbl_name.setStyleSheet(f"color: {text_color}; background: transparent; border: none;")
+        layout.addWidget(self.lbl_name)
 
         layout.addStretch()
 
@@ -223,18 +230,29 @@ class LayerItemWidget(QWidget):
         self.checkbox = QCheckBox()
         self.checkbox.setChecked(is_checked)
         self.checkbox.setStyleSheet("""
+            QCheckBox {
+                background: transparent;
+            }
             QCheckBox::indicator {
-                width: 13px;
-                height: 13px;
+                width: 15px;
+                height: 15px;
                 border: 1px solid #777777;
                 border-radius: 2px;
                 background-color: #FFFFFF;
             }
             QCheckBox::indicator:checked {
                 background-color: #0078D7;
+                border: 1px solid #005A9E;
+                image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3.5 6.5L5 8L8.5 4.5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
             }
         """)
         layout.addWidget(self.checkbox)
+
+    def set_selected_state(self, is_selected: bool):
+        text_color = "#FFFFFF" if is_selected else "#333333"
+        font_weight = QFont.Bold if is_selected else QFont.Normal
+        self.lbl_name.setFont(QFont("Arial", 10, font_weight))
+        self.lbl_name.setStyleSheet(f"color: {text_color}; background: transparent; border: none;")
 
 
 # -------------------------------------------------------------
@@ -573,7 +591,7 @@ class CredentialDesignEditorView(QWidget):
         scroll_area.setWidget(canvas_container)
         content_layout.addWidget(scroll_area, stretch=1)
 
-        # --- 4. RIGHT SIDEBAR ( Updated Layers Tab ) ---
+        # --- 4. RIGHT SIDEBAR ---
         sidebar = QFrame()
         sidebar.setFixedWidth(270)
         sidebar.setStyleSheet("background-color: #FFFFFF; border-left: 1px solid #CCCCCC;")
@@ -650,7 +668,7 @@ class CredentialDesignEditorView(QWidget):
         card_layout.addWidget(checkbox_container)
         prop_tab_layout.addWidget(card_frame)
 
-        # --- LAYERS TAB IMPLEMENTATION ---
+        # --- LAYERS TAB ( Matching Image 2 ) ---
         layers_tab = QWidget()
         layers_tab.setStyleSheet("background-color: #FFFFFF;")
         layers_tab_layout = QVBoxLayout(layers_tab)
@@ -675,8 +693,8 @@ class CredentialDesignEditorView(QWidget):
 
         layers_card_layout.addWidget(layers_header_frame)
 
-        layers_list = QListWidget()
-        layers_list.setStyleSheet("""
+        self.layers_list = QListWidget()
+        self.layers_list.setStyleSheet("""
             QListWidget {
                 border: none;
                 background-color: #FFFFFF;
@@ -686,12 +704,10 @@ class CredentialDesignEditorView(QWidget):
                 padding: 0px;
             }
             QListWidget::item:selected {
-                background-color: #92B3D0;
-                color: #FFFFFF;
+                background-color: #8CA0B8;
             }
         """)
 
-        # Layers Data: (Name, Checkbox Checked)
         layers_data = [
             ("All layers", False),
             ("Background", False),
@@ -706,23 +722,30 @@ class CredentialDesignEditorView(QWidget):
             ("Magnetic stripe", False)
         ]
 
+        self.item_widgets = []
         for layer_name, is_checked in layers_data:
-            item = QListWidgetItem(layers_list)
-            item_widget = LayerItemWidget(layer_name, is_checked)
+            item = QListWidgetItem(self.layers_list)
+            is_selected = (layer_name == "Color")
+            
+            item_widget = LayerItemWidget(layer_name, is_checked, is_selected)
             item.setSizeHint(item_widget.sizeHint())
-            layers_list.addItem(item)
-            layers_list.setItemWidget(item, item_widget)
+            
+            self.layers_list.addItem(item)
+            self.layers_list.setItemWidget(item, item_widget)
+            self.item_widgets.append((item, item_widget))
 
-            if layer_name == "Color":
-                layers_list.setCurrentItem(item)
+            if is_selected:
+                self.layers_list.setCurrentItem(item)
 
-        layers_card_layout.addWidget(layers_list)
+        self.layers_list.currentItemChanged.connect(self.on_layer_selection_changed)
+
+        layers_card_layout.addWidget(self.layers_list)
         layers_tab_layout.addWidget(layers_card_frame)
 
         right_tabs.addTab(properties_tab, "Properties")
         right_tabs.addTab(layers_tab, "Layers")
 
-        right_tabs.setCurrentIndex(1)  # Select Layers Tab by default to match image
+        right_tabs.setCurrentIndex(1)
 
         right_tabs.setStyleSheet("""
             QTabWidget::pane {
@@ -805,6 +828,11 @@ class CredentialDesignEditorView(QWidget):
         self.back_card_bg.clicked.connect(self.select_back_side)
 
         self.select_front_side()
+
+    def on_layer_selection_changed(self, current, previous):
+        for item, widget in self.item_widgets:
+            is_selected = (item == current)
+            widget.set_selected_state(is_selected)
 
     def select_front_side(self):
         self.front_card_bg.set_selected(True)
