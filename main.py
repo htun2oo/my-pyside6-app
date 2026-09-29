@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainte
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QComboBox, QCheckBox,
-    QToolButton, QScrollArea, QTabWidget
+    QToolButton, QScrollArea, QTabWidget, QListWidget, QListWidgetItem
 )
 
 # -------------------------------------------------------------
@@ -182,8 +182,59 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
         p.setBrush(QColor(color))
         p.drawPolygon([QPointF(14, 3), QPointF(18, 6), QPointF(14, 9)])
 
+    elif icon_type == "eye":
+        p.setPen(QPen(QColor(color), 1.5))
+        path = QPainterPath()
+        path.moveTo(2, 10)
+        path.quadTo(10, 3, 18, 10)
+        path.quadTo(10, 17, 2, 10)
+        p.drawPath(path)
+        p.setBrush(QColor(color))
+        p.drawEllipse(QRectF(8, 8, 4, 4))
+
     p.end()
     return QIcon(pixmap)
+
+
+# -------------------------------------------------------------
+# Layer Item Widget (Eye Icon + Layer Name + Checkbox)
+# -------------------------------------------------------------
+class LayerItemWidget(QWidget):
+    def __init__(self, layer_name, is_checked=False, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 2, 6, 2)
+        layout.setSpacing(6)
+
+        # Eye Icon
+        lbl_eye = QLabel()
+        lbl_eye.setPixmap(make_toolbar_icon("eye", color="#888888", size=20).pixmap(20, 20))
+        layout.addWidget(lbl_eye)
+
+        # Layer Name Text
+        lbl_name = QLabel(layer_name)
+        lbl_name.setFont(QFont("Arial", 9))
+        lbl_name.setStyleSheet("color: #222222;")
+        layout.addWidget(lbl_name)
+
+        layout.addStretch()
+
+        # Checkbox
+        self.checkbox = QCheckBox()
+        self.checkbox.setChecked(is_checked)
+        self.checkbox.setStyleSheet("""
+            QCheckBox::indicator {
+                width: 13px;
+                height: 13px;
+                border: 1px solid #777777;
+                border-radius: 2px;
+                background-color: #FFFFFF;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #0078D7;
+            }
+        """)
+        layout.addWidget(self.checkbox)
 
 
 # -------------------------------------------------------------
@@ -210,31 +261,26 @@ class CustomGradientCardArea(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        # 1. Gradient Background
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0.0, QColor("#A2A2A2"))
         gradient.setColorAt(1.0, QColor("#828282"))
 
         painter.fillRect(self.rect(), gradient)
 
-        # 2. Card Dimensions
         card_w, card_h = 285, 180
         card_x = (self.width() - card_w) / 2
         card_y = 65
 
         card_rect = QRectF(card_x, card_y, card_w, card_h)
 
-        # 3. Black Corner Outlines
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor("#000000"))
         painter.drawRect(card_rect)
 
-        # 4. Inner White Card
         inner_rect = card_rect.adjusted(2, 2, -2, -2)
         painter.setBrush(QColor("#FFFFFF"))
         painter.drawRoundedRect(inner_rect, 14, 14)
 
-        # 5. Active Selection Border
         if self.is_selected:
             pen = QPen(QColor("#0078D7"), 3)
             painter.setPen(pen)
@@ -432,19 +478,10 @@ class CredentialDesignEditorView(QWidget):
         lbl_zoom.setStyleSheet("color: #333333; margin-left: 10px;")
         tb_layout.addWidget(lbl_zoom)
 
-        # --- Zoom ComboBox ( Updated with required Zoom values ) ---
         zoom_combo = QComboBox()
         zoom_combo.addItems([
-            "100%",
-            "Auto-zoom",
-            "150%",
-            "200%",
-            "250%",
-            "300%",
-            "350%",
-            "400%",
-            "450%",
-            "500%"
+            "100%", "Auto-zoom", "150%", "200%", "250%",
+            "300%", "350%", "400%", "450%", "500%"
         ])
         zoom_combo.setFixedSize(110, 38)
         zoom_combo.setStyleSheet("""
@@ -488,12 +525,10 @@ class CredentialDesignEditorView(QWidget):
         canvas_layout.setSpacing(25)
         canvas_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # Active Layer Label
         self.active_layer_lbl = QLabel()
         self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
         self.active_layer_lbl.setStyleSheet("color: #000000;")
 
-        # FRONT SIDE CONTAINER
         front_container = QVBoxLayout()
         front_container.setSpacing(6)
         front_container.setContentsMargins(0, 0, 0, 0)
@@ -513,7 +548,6 @@ class CredentialDesignEditorView(QWidget):
         front_container.addLayout(self.front_header_row)
         front_container.addWidget(self.front_card_bg)
 
-        # BACK SIDE CONTAINER
         back_container = QVBoxLayout()
         back_container.setSpacing(6)
         back_container.setContentsMargins(0, 0, 0, 0)
@@ -539,7 +573,7 @@ class CredentialDesignEditorView(QWidget):
         scroll_area.setWidget(canvas_container)
         content_layout.addWidget(scroll_area, stretch=1)
 
-        # --- 4. RIGHT SIDEBAR ---
+        # --- 4. RIGHT SIDEBAR ( Updated Layers Tab ) ---
         sidebar = QFrame()
         sidebar.setFixedWidth(270)
         sidebar.setStyleSheet("background-color: #FFFFFF; border-left: 1px solid #CCCCCC;")
@@ -547,7 +581,8 @@ class CredentialDesignEditorView(QWidget):
         sb_layout.setContentsMargins(0, 0, 0, 0)
 
         right_tabs = QTabWidget()
-        
+
+        # Properties Tab
         properties_tab = QWidget()
         properties_tab.setStyleSheet("background-color: #FFFFFF;")
         prop_tab_layout = QVBoxLayout(properties_tab)
@@ -556,7 +591,6 @@ class CredentialDesignEditorView(QWidget):
 
         card_frame = QFrame()
         card_frame.setStyleSheet("QFrame { background-color: #FFFFFF; border: 1px solid #D0D0D0; border-radius: 4px; }")
-        
         card_layout = QVBoxLayout(card_frame)
         card_layout.setContentsMargins(0, 0, 0, 12)
         card_layout.setSpacing(10)
@@ -565,7 +599,6 @@ class CredentialDesignEditorView(QWidget):
         header_frame.setStyleSheet("QFrame { background-color: #EAEAEA; border: none; border-bottom: 1px solid #D0D0D0; border-top-left-radius: 4px; border-top-right-radius: 4px; }")
         header_layout = QHBoxLayout(header_frame)
         header_layout.setContentsMargins(10, 6, 10, 6)
-        header_layout.setSpacing(6)
 
         minus_lbl = QLabel("-")
         minus_lbl.setFont(QFont("Arial", 11, QFont.Bold))
@@ -609,21 +642,87 @@ class CredentialDesignEditorView(QWidget):
 
         cb1 = QCheckBox("Rotate print orientation 180\ndegrees")
         cb1.setStyleSheet(checkbox_style)
-
         cb2 = QCheckBox("Tactile Impression Module")
         cb2.setStyleSheet(checkbox_style)
 
         checkbox_layout.addWidget(cb1)
         checkbox_layout.addWidget(cb2)
-
         card_layout.addWidget(checkbox_container)
         prop_tab_layout.addWidget(card_frame)
 
+        # --- LAYERS TAB IMPLEMENTATION ---
         layers_tab = QWidget()
         layers_tab.setStyleSheet("background-color: #FFFFFF;")
+        layers_tab_layout = QVBoxLayout(layers_tab)
+        layers_tab_layout.setContentsMargins(8, 8, 8, 8)
+
+        layers_card_frame = QFrame()
+        layers_card_frame.setStyleSheet("QFrame { background-color: #FFFFFF; border: 1px solid #D0D0D0; border-radius: 4px; }")
+        layers_card_layout = QVBoxLayout(layers_card_frame)
+        layers_card_layout.setContentsMargins(0, 0, 0, 0)
+        layers_card_layout.setSpacing(0)
+
+        layers_header_frame = QFrame()
+        layers_header_frame.setStyleSheet("QFrame { background-color: #D9D9D9; border: none; border-bottom: 1px solid #C0C0C0; border-top-left-radius: 4px; border-top-right-radius: 4px; }")
+        layers_header_layout = QHBoxLayout(layers_header_frame)
+        layers_header_layout.setContentsMargins(10, 6, 10, 6)
+
+        lbl_front_side_layer = QLabel("Front Side")
+        lbl_front_side_layer.setFont(QFont("Arial", 9.5, QFont.Bold))
+        lbl_front_side_layer.setStyleSheet("color: #222222; border: none;")
+        layers_header_layout.addWidget(lbl_front_side_layer)
+        layers_header_layout.addStretch()
+
+        layers_card_layout.addWidget(layers_header_frame)
+
+        layers_list = QListWidget()
+        layers_list.setStyleSheet("""
+            QListWidget {
+                border: none;
+                background-color: #FFFFFF;
+            }
+            QListWidget::item {
+                border-bottom: 1px solid #EFEFEF;
+                padding: 0px;
+            }
+            QListWidget::item:selected {
+                background-color: #92B3D0;
+                color: #FFFFFF;
+            }
+        """)
+
+        # Layers Data: (Name, Checkbox Checked)
+        layers_data = [
+            ("All layers", False),
+            ("Background", False),
+            ("Color", True),
+            ("Black", False),
+            ("Topcoat", True),
+            ("Retransfer Material", False),
+            ("Luster/Fluorescent", False),
+            ("Non-printable area", False),
+            ("Lamination", False),
+            ("Emboss or indent", False),
+            ("Magnetic stripe", False)
+        ]
+
+        for layer_name, is_checked in layers_data:
+            item = QListWidgetItem(layers_list)
+            item_widget = LayerItemWidget(layer_name, is_checked)
+            item.setSizeHint(item_widget.sizeHint())
+            layers_list.addItem(item)
+            layers_list.setItemWidget(item, item_widget)
+
+            if layer_name == "Color":
+                layers_list.setCurrentItem(item)
+
+        layers_card_layout.addWidget(layers_list)
+        layers_tab_layout.addWidget(layers_card_frame)
 
         right_tabs.addTab(properties_tab, "Properties")
         right_tabs.addTab(layers_tab, "Layers")
+
+        right_tabs.setCurrentIndex(1)  # Select Layers Tab by default to match image
 
         right_tabs.setStyleSheet("""
             QTabWidget::pane {
