@@ -187,15 +187,15 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
 
 
 # -------------------------------------------------------------
-# ဘေးဘက်သို့ ပိုမိုကျယ်ပြန့်အောင် ပြင်ဆင်ထားသော Canvas Class
+# ဘေးဘက်သို့ 600px အထိ ပိုမိုကျယ်ပြန့်သွားအောင် ပြင်ဆင်ထားသော Custom Canvas
 # -------------------------------------------------------------
 class CustomGradientCardArea(QFrame):
     clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # Background Width ကို 360 မှ 480 သို့ တိုးမြှင့်၍ ဘေးဘက်သို့ ချဲ့ပေးထားပါသည်။
-        self.setFixedSize(480, 540)
+        # Background Canvas Width ကို 600px အထိ ပိုမိုကျယ်ပြန့်အောင် ပြင်ဆင်ထားပါသည်
+        self.setFixedSize(600, 540)
         self.is_selected = False
 
     def mousePressEvent(self, event):
@@ -211,14 +211,14 @@ class CustomGradientCardArea(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        # 1. Linear Gradient Background
+        # 1. Smooth Linear Gradient Background
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0.0, QColor("#A2A2A2"))
         gradient.setColorAt(1.0, QColor("#828282"))
 
         painter.fillRect(self.rect(), gradient)
 
-        # 2. Card Dimensions (Canvas ကျယ်သွားသည့်အတွက် အလယ်တည့်တည့်သို့ အလိုအလျောက် ရောက်ရှိပါမည်)
+        # 2. Card Dimensions (Canvas Width ကျယ်သွားသော်လည်း အလယ်တည့်တည့်၌ အလိုအလျောက် ရောက်ရှိနေပါမည်)
         card_w, card_h = 285, 180
         card_x = (self.width() - card_w) / 2
         card_y = 65
@@ -713,7 +713,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("ENTRUST Adaptive Issuance Instant ID")
-        self.resize(1350, 820)
+        self.resize(1500, 820)
         self.setCentralWidget(CredentialDesignEditorView())
 
 
