@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal
-from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath
+from PySide6.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QLinearGradient
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QComboBox, QCheckBox,
@@ -187,16 +187,15 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
 
 
 # -------------------------------------------------------------
-# Clickable Card Background Frame (Selection Support)
+# ဒုတိယပုံအတိုင်း Gradient & Card Drawing သီးသန့် ရေးဆွဲထားသည့် Custom Canvas
 # -------------------------------------------------------------
-class SelectableCardArea(QFrame):
+class CustomGradientCardArea(QFrame):
     clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(360, 540)
         self.is_selected = False
-        self.update_style()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -205,14 +204,44 @@ class SelectableCardArea(QFrame):
 
     def set_selected(self, selected: bool):
         self.is_selected = selected
-        self.update_style()
+        self.update()  # Redraw with Selection Border
 
-    def update_style(self):
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        # 1. ဒုတိယပုံပါ အပေါ်မှအောက်သို့ Linear Gradient Background
+        gradient = QLinearGradient(0, 0, 0, self.height())
+        gradient.setColorAt(0.0, QColor("#A2A2A2"))  # အပေါ်ဘက် ခပ်ဖျော့ဖျော့မီးခိုး
+        gradient.setColorAt(1.0, QColor("#828282"))  # အောက်ဘက် အနည်းငယ်ရောင်မှောင် မီးခိုး
+
+        painter.fillRect(self.rect(), gradient)
+
+        # 2. Card Dimensions
+        card_w, card_h = 285, 180
+        card_x = (self.width() - card_w) / 2
+        card_y = 65
+
+        card_rect = QRectF(card_x, card_y, card_w, card_h)
+
+        # 3. ဒုတိယပုံပါ ထောင့်ချွန်အနက်ကွက် (Black Corner Outlines)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor("#000000"))
+        painter.drawRect(card_rect)
+
+        # 4. အတွင်းဘက် Card ဖြူ (White Inner Card with Rounded Corners)
+        inner_rect = card_rect.adjusted(2, 2, -2, -2)
+        painter.setBrush(QColor("#FFFFFF"))
+        painter.drawRoundedRect(inner_rect, 14, 14)
+
+        # 5. Selection Border (Active ဖြစ်ချိန် အပြာရောင် Highlight ပြသပေးရန်)
         if self.is_selected:
-            # Active ဖြစ်နေလျှင် အပြာရောင် Border ဖြင့် ထင်းနေစေရန်
-            self.setStyleSheet("background-color: #8C8C8C; border: 3px solid #0078D7;")
-        else:
-            self.setStyleSheet("background-color: #8C8C8C; border: none;")
+            pen = QPen(QColor("#0078D7"), 3)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRect(self.rect().adjusted(1, 1, -1, -1))
+
+        painter.end()
 
 
 # -------------------------------------------------------------
@@ -459,7 +488,6 @@ class CredentialDesignEditorView(QWidget):
         front_title.setFont(QFont("Arial", 10, QFont.Bold))
         front_title.setStyleSheet("color: #000000;")
 
-        # Active Design Layer စာသား Label
         self.active_layer_lbl = QLabel("Active Design Layer: Color")
         self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
         self.active_layer_lbl.setStyleSheet("color: #000000;")
@@ -468,15 +496,8 @@ class CredentialDesignEditorView(QWidget):
         front_header_row.addStretch()
         front_header_row.addWidget(self.active_layer_lbl)
 
-        self.front_card_bg = SelectableCardArea()
-        fc_layout = QVBoxLayout(self.front_card_bg)
-        fc_layout.setContentsMargins(0, 70, 0, 0)
-        fc_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
-
-        front_card = QFrame()
-        front_card.setFixedSize(305, 195)
-        front_card.setStyleSheet("background-color: #FFFFFF; border: 3.5px solid #000000; border-radius: 18px;")
-        fc_layout.addWidget(front_card)
+        # ပြင်ဆင်ထားသည့် Custom Gradient Canvas
+        self.front_card_bg = CustomGradientCardArea()
 
         front_container.addLayout(front_header_row)
         front_container.addWidget(self.front_card_bg)
@@ -496,15 +517,8 @@ class CredentialDesignEditorView(QWidget):
         back_header_row.addWidget(back_title)
         back_header_row.addStretch()
 
-        self.back_card_bg = SelectableCardArea()
-        bc_layout = QVBoxLayout(self.back_card_bg)
-        bc_layout.setContentsMargins(0, 70, 0, 0)
-        bc_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
-
-        back_card = QFrame()
-        back_card.setFixedSize(305, 195)
-        back_card.setStyleSheet("background-color: #FFFFFF; border: 3.5px solid #000000; border-radius: 18px;")
-        bc_layout.addWidget(back_card)
+        # ပြင်ဆင်ထားသည့် Custom Gradient Canvas
+        self.back_card_bg = CustomGradientCardArea()
 
         back_container.addLayout(back_header_row)
         back_container.addWidget(self.back_card_bg)
@@ -677,11 +691,10 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(bottom_bar)
 
-        # --- SIGNALS CONNECTIVITY FOR CARD SELECTION ---
+        # Signals
         self.front_card_bg.clicked.connect(self.select_front_side)
         self.back_card_bg.clicked.connect(self.select_back_side)
 
-        # Default Active: Front Side
         self.select_front_side()
 
     def select_front_side(self):
