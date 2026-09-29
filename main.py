@@ -187,14 +187,13 @@ def make_toolbar_icon(icon_type, color="#002D62", size=32):
 
 
 # -------------------------------------------------------------
-# ဘေးဘက်သို့ 600px အထိ ပိုမိုကျယ်ပြန့်သွားအောင် ပြင်ဆင်ထားသော Custom Canvas
+# Custom Gradient Canvas
 # -------------------------------------------------------------
 class CustomGradientCardArea(QFrame):
     clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # Background Canvas Width ကို 600px အထိ ပိုမိုကျယ်ပြန့်အောင် ပြင်ဆင်ထားပါသည်
         self.setFixedSize(600, 540)
         self.is_selected = False
 
@@ -211,26 +210,26 @@ class CustomGradientCardArea(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        # 1. Smooth Linear Gradient Background
+        # 1. Gradient Background
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0.0, QColor("#A2A2A2"))
         gradient.setColorAt(1.0, QColor("#828282"))
 
         painter.fillRect(self.rect(), gradient)
 
-        # 2. Card Dimensions (Canvas Width ကျယ်သွားသော်လည်း အလယ်တည့်တည့်၌ အလိုအလျောက် ရောက်ရှိနေပါမည်)
+        # 2. Card Dimensions
         card_w, card_h = 285, 180
         card_x = (self.width() - card_w) / 2
         card_y = 65
 
         card_rect = QRectF(card_x, card_y, card_w, card_h)
 
-        # 3. Corner Outlines (Black Background behind inner card)
+        # 3. Black Corner Outlines
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor("#000000"))
         painter.drawRect(card_rect)
 
-        # 4. Inner White Card with Rounded Corners
+        # 4. Inner White Card
         inner_rect = card_rect.adjusted(2, 2, -2, -2)
         painter.setBrush(QColor("#FFFFFF"))
         painter.drawRoundedRect(inner_rect, 14, 14)
@@ -477,49 +476,49 @@ class CredentialDesignEditorView(QWidget):
         canvas_layout.setSpacing(25)
         canvas_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # FRONT SIDE
+        # Active Layer Label
+        self.active_layer_lbl = QLabel()
+        self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
+        self.active_layer_lbl.setStyleSheet("color: #000000;")
+
+        # FRONT SIDE CONTAINER
         front_container = QVBoxLayout()
         front_container.setSpacing(6)
         front_container.setContentsMargins(0, 0, 0, 0)
 
-        front_header_row = QHBoxLayout()
-        front_header_row.setContentsMargins(0, 0, 0, 0)
+        self.front_header_row = QHBoxLayout()
+        self.front_header_row.setContentsMargins(0, 0, 0, 0)
 
         front_title = QLabel("Front Side")
         front_title.setFont(QFont("Arial", 10, QFont.Bold))
         front_title.setStyleSheet("color: #000000;")
 
-        self.active_layer_lbl = QLabel("Active Design Layer: Color")
-        self.active_layer_lbl.setFont(QFont("Arial", 10, QFont.Bold))
-        self.active_layer_lbl.setStyleSheet("color: #000000;")
-
-        front_header_row.addWidget(front_title)
-        front_header_row.addStretch()
-        front_header_row.addWidget(self.active_layer_lbl)
+        self.front_header_row.addWidget(front_title)
+        self.front_header_row.addStretch()
 
         self.front_card_bg = CustomGradientCardArea()
 
-        front_container.addLayout(front_header_row)
+        front_container.addLayout(self.front_header_row)
         front_container.addWidget(self.front_card_bg)
 
-        # BACK SIDE
+        # BACK SIDE CONTAINER
         back_container = QVBoxLayout()
         back_container.setSpacing(6)
         back_container.setContentsMargins(0, 0, 0, 0)
 
-        back_header_row = QHBoxLayout()
-        back_header_row.setContentsMargins(0, 0, 0, 0)
+        self.back_header_row = QHBoxLayout()
+        self.back_header_row.setContentsMargins(0, 0, 0, 0)
 
         back_title = QLabel("Back Side")
         back_title.setFont(QFont("Arial", 10, QFont.Bold))
         back_title.setStyleSheet("color: #000000;")
 
-        back_header_row.addWidget(back_title)
-        back_header_row.addStretch()
+        self.back_header_row.addWidget(back_title)
+        self.back_header_row.addStretch()
 
         self.back_card_bg = CustomGradientCardArea()
 
-        back_container.addLayout(back_header_row)
+        back_container.addLayout(self.back_header_row)
         back_container.addWidget(self.back_card_bg)
 
         canvas_layout.addLayout(front_container)
@@ -690,7 +689,7 @@ class CredentialDesignEditorView(QWidget):
 
         main_layout.addWidget(bottom_bar)
 
-        # Signals
+        # Signals Connection
         self.front_card_bg.clicked.connect(self.select_front_side)
         self.back_card_bg.clicked.connect(self.select_back_side)
 
@@ -699,13 +698,21 @@ class CredentialDesignEditorView(QWidget):
     def select_front_side(self):
         self.front_card_bg.set_selected(True)
         self.back_card_bg.set_selected(False)
-        self.active_layer_lbl.setText("Active Design Layer: Color (Front Side)")
+        
+        # Label ကို Front Side ညာဘက်သို့ ရွှေ့ပြီး Text ပြောင်းလဲခြင်း
+        self.back_header_row.removeWidget(self.active_layer_lbl)
+        self.front_header_row.addWidget(self.active_layer_lbl)
+        self.active_layer_lbl.setText("Active Design Layer: Color")
         self.prop_title_lbl.setText("Front Side Properties")
 
     def select_back_side(self):
         self.front_card_bg.set_selected(False)
         self.back_card_bg.set_selected(True)
-        self.active_layer_lbl.setText("Active Design Layer: Color (Back Side)")
+        
+        # Label ကို Back Side ညာဘက်သို့ ရွှေ့ပြီး Text ပြောင်းလဲခြင်း
+        self.front_header_row.removeWidget(self.active_layer_lbl)
+        self.back_header_row.addWidget(self.active_layer_lbl)
+        self.active_layer_lbl.setText("Active Design Layer: Black")
         self.prop_title_lbl.setText("Back Side Properties")
 
 
