@@ -199,7 +199,7 @@ def make_toolbar_icon(icon_type, color="#888888", size=24):
 
 
 # -------------------------------------------------------------
-# Layer Item Widget (Matching Image 2 Design Cleanly)
+# Layer Item Widget
 # -------------------------------------------------------------
 class LayerItemWidget(QWidget):
     def __init__(self, layer_name, is_checked=False, is_selected=False, parent=None):
@@ -668,7 +668,7 @@ class CredentialDesignEditorView(QWidget):
         card_layout.addWidget(checkbox_container)
         prop_tab_layout.addWidget(card_frame)
 
-        # --- LAYERS TAB ( Matching Image 2 ) ---
+        # --- LAYERS TAB ---
         layers_tab = QWidget()
         layers_tab.setStyleSheet("background-color: #FFFFFF;")
         layers_tab_layout = QVBoxLayout(layers_tab)
@@ -685,10 +685,10 @@ class CredentialDesignEditorView(QWidget):
         layers_header_layout = QHBoxLayout(layers_header_frame)
         layers_header_layout.setContentsMargins(10, 6, 10, 6)
 
-        lbl_front_side_layer = QLabel("Front Side")
-        lbl_front_side_layer.setFont(QFont("Arial", 9.5, QFont.Bold))
-        lbl_front_side_layer.setStyleSheet("color: #222222; border: none;")
-        layers_header_layout.addWidget(lbl_front_side_layer)
+        self.lbl_side_layer = QLabel("Front Side")
+        self.lbl_side_layer.setFont(QFont("Arial", 9.5, QFont.Bold))
+        self.lbl_side_layer.setStyleSheet("color: #222222; border: none;")
+        layers_header_layout.addWidget(self.lbl_side_layer)
         layers_header_layout.addStretch()
 
         layers_card_layout.addWidget(layers_header_frame)
@@ -708,34 +708,22 @@ class CredentialDesignEditorView(QWidget):
             }
         """)
 
-        layers_data = [
-            ("All layers", False),
-            ("Background", False),
-            ("Color", True),
-            ("Black", False),
-            ("Topcoat", True),
-            ("Retransfer Material", False),
-            ("Luster/Fluorescent", False),
-            ("Non-printable area", False),
-            ("Lamination", False),
-            ("Emboss or indent", False),
-            ("Magnetic stripe", False)
+        # General Layer Items
+        self.layer_names = [
+            "All layers", "Background", "Color", "Black",
+            "Topcoat", "Retransfer Material", "Luster/Fluorescent",
+            "Non-printable area", "Lamination", "Emboss or indent", "Magnetic stripe"
         ]
 
-        self.item_widgets = []
-        for layer_name, is_checked in layers_data:
+        self.item_widgets = {}
+        for layer_name in self.layer_names:
             item = QListWidgetItem(self.layers_list)
-            is_selected = (layer_name == "Color")
-            
-            item_widget = LayerItemWidget(layer_name, is_checked, is_selected)
+            item_widget = LayerItemWidget(layer_name, is_checked=False, is_selected=False)
             item.setSizeHint(item_widget.sizeHint())
             
             self.layers_list.addItem(item)
             self.layers_list.setItemWidget(item, item_widget)
-            self.item_widgets.append((item, item_widget))
-
-            if is_selected:
-                self.layers_list.setCurrentItem(item)
+            self.item_widgets[layer_name] = (item, item_widget)
 
         self.layers_list.currentItemChanged.connect(self.on_layer_selection_changed)
 
@@ -830,7 +818,7 @@ class CredentialDesignEditorView(QWidget):
         self.select_front_side()
 
     def on_layer_selection_changed(self, current, previous):
-        for item, widget in self.item_widgets:
+        for name, (item, widget) in self.item_widgets.items():
             is_selected = (item == current)
             widget.set_selected_state(is_selected)
 
@@ -842,6 +830,18 @@ class CredentialDesignEditorView(QWidget):
         self.front_header_row.addWidget(self.active_layer_lbl)
         self.active_layer_lbl.setText("Active Design Layer: Color")
         self.prop_title_lbl.setText("Front Side Properties")
+        
+        # Update Layers Header Label
+        self.lbl_side_layer.setText("Front Side")
+
+        # Update Layer Checkboxes & Selection for Front Side
+        front_checked_layers = {"Color", "Topcoat"}
+        for name, (item, widget) in self.item_widgets.items():
+            widget.checkbox.setChecked(name in front_checked_layers)
+        
+        # Set Active Selection to 'Color'
+        color_item, _ = self.item_widgets["Color"]
+        self.layers_list.setCurrentItem(color_item)
 
     def select_back_side(self):
         self.front_card_bg.set_selected(False)
@@ -851,6 +851,18 @@ class CredentialDesignEditorView(QWidget):
         self.back_header_row.addWidget(self.active_layer_lbl)
         self.active_layer_lbl.setText("Active Design Layer: Black")
         self.prop_title_lbl.setText("Back Side Properties")
+        
+        # Update Layers Header Label to "Back Side"
+        self.lbl_side_layer.setText("Back Side")
+
+        # Update Layer Checkboxes for Back Side (Black and Topcoat checked)
+        back_checked_layers = {"Black", "Topcoat"}
+        for name, (item, widget) in self.item_widgets.items():
+            widget.checkbox.setChecked(name in back_checked_layers)
+            
+        # Set Active Selection to 'Black' as shown in the screenshot
+        black_item, _ = self.item_widgets["Black"]
+        self.layers_list.setCurrentItem(black_item)
 
 
 class MainWindow(QMainWindow):
